@@ -24,21 +24,27 @@ Detects obsolete libraries, unsupported hardware, deprecated functions - and inc
 
 ## Usage
 
-Run the main analysis script from the command line:
+Run any of the scripts from the command line:
+
+```bash
+python script_name.py "C:\path\to\AutomationStudio4Project"
+```
+
+Example:
 
 ```bash
 python as4_to_as6_analyzer.py "C:\path\to\AutomationStudio4Project"
 ```
 
 ---
-
 ## Included Scripts
 
 | Script                          | Purpose |
 |---------------------------------|---------|
 | `as4_to_as6_analyzer.py`           | Main analysis and migration report generator |
-| `asmath_to_asbrmath.py`            | Example helper script: replaces deprecated AsMath functions |
-| `asstring_to_asbrstr.py`           | Example helper script: replaces deprecated AsString functions |
+| `helpers/asmath_to_asbrmath.py`    | Replaces deprecated AsMath functions |
+| `helpers/asstring_to_asbrstr.py`   | Replaces deprecated AsString functions |
+| `helpers/asopcua_update.py`   	 | Updates OPC UA client code for AR 6 compatibility |
 
 Additional helper scripts may be added in future versions — pull requests welcome.
 
