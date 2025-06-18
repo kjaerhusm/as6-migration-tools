@@ -1,0 +1,13 @@
+[
+"atan2", 
+"ceil", 
+"cosh", 
+"floor", 
+"fmod", 
+"frexp", 
+"ldexp", 
+"modf",
+"pow", 
+"sinh", 
+"tanh"
+]
