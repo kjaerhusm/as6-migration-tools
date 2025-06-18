@@ -37,6 +37,18 @@ python as4_to_as6_analyzer.py "C:\path\to\AutomationStudio4Project"
 ```
 
 ---
+
+## Example Output
+
+The `as4_to_as6_analyzer.py` script generates a detailed migration report (saved as `as4_to_as6_analyzer_result.txt` in the project folder).
+
+The report shows which obsolete libraries, hardware components, and function blocks were found - along with suggested actions.
+
+Example (partial output):
+
+![Example Analysis Output](docs/example_output.png)
+
+---
 ## Included Scripts
 
 | Script                          | Purpose |
