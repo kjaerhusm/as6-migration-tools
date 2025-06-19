@@ -1,4 +1,4 @@
-# br-as6-migration-tools
+# as6-migration-tools
 
 **Open-source tools for analyzing and migrating B&R Automation Studio 4 (AS4) projects to Automation Studio 6 (AS6).**  
 Detects obsolete libraries, unsupported hardware, deprecated functions - and includes helper scripts for automatic code conversion.
