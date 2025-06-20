@@ -36,6 +36,12 @@ Example:
 python as4_to_as6_analyzer.py "C:\path\to\AutomationStudio4Project"
 ```
 
+Run the script from WSL on a project that is on the Windows partition (replace "C:/" with "/mnt/c/"):  
+
+```bash
+python as4_to_as6_analyzer.py "/mnt/c/path/to/AutomationStudio4Project"
+```  
+
 ---
 
 ## Example Output
