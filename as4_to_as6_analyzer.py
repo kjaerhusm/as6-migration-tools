@@ -418,15 +418,23 @@ def main():
             else:
                 log("- All project and hardware files are valid.")
 
-            log("\n\nChecking for misplaced .uad files...")
-            uad_results = check_uad_files(os.path.join(project_path, "Physical"))
-            if uad_results:
+            log("\n\nChecking OPC configuration...")
+            uad_misplaced_files, uad_old_version = check_uad_files(os.path.join(project_path, "Physical"))
+            if uad_misplaced_files:
                 log("The following .uad files are not located in the required Connectivity/OpcUA directory:")
-                for file_path in uad_results:
+                for file_path in uad_misplaced_files:
                     log(f"- {file_path}")
                 log("\nPlease create (via AS 4.12) and move these files to the required directory: Connectivity/OpcUA.")
             else:
                 log("- All .uad files are in the correct location.")
+
+            if uad_old_version:
+                log("\nThe following .uad files do not have the minimum file version 9:")
+                for file_path in uad_old_version:
+                    log(f"- {file_path}")
+                log("\nPlease edit the uad file, make a small change and save the file to trigger the file update.")
+            else:
+                log("- All .uad files have the correct minimum version.")
 
             log("\n\nThe following unsupported hardware were found:")
             if hardware_results:
