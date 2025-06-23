@@ -8,5 +8,6 @@
     "MTTemp": "Must be deleted and re-added with a version >= 6.0",
     "MTTypes": "Must be deleted and re-added with a version >= 6.0",
     "MTWinder": "Must be deleted and re-added with a version >= 6.0",
-    "MTLinAlg": "Must be deleted and re-added with a version >= 6.0"
+    "MTLinAlg": "Must be deleted and re-added with a version >= 6.0",
+    "AsOpcUac": "OPC UA client library updated in AR 6. Manual adjustments required. Consider using the helper asopcua_update.py"
 }
