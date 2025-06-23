@@ -346,11 +346,11 @@ def main():
 
             # Use project_path as the root directory for scanning
             reinstall_library_results = scan_files_parallel(
-                os.path.join(project_path, "Logical", "Libraries"), [".pkg"], process_reinstall_libraries, reinstall_libraries
+                os.path.join(project_path, "Logical"), [".pkg"], process_reinstall_libraries, reinstall_libraries
             )
             
             invalid_pkg_files = scan_files_parallel(
-                os.path.join(project_path, "Logical", "Libraries"), [".pkg"], process_pkg_file, obsolete_dict
+                os.path.join(project_path, "Logical"), [".pkg"], process_pkg_file, obsolete_dict
             )
 
             invalid_var_typ_files = scan_files_parallel(
@@ -366,7 +366,7 @@ def main():
             )
 
             lby_dependency_results = scan_files_parallel(
-                os.path.join(project_path, "Logical", "Libraries"), [".lby"], process_lby_file, obsolete_dict
+                os.path.join(project_path, "Logical"), [".lby"], process_lby_file, obsolete_dict
             )
 
             c_include_dependency_results = scan_files_parallel(
