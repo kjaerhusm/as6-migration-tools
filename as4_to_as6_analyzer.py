@@ -20,7 +20,7 @@ script_directory = Path(__file__).resolve().parent
 # filens containing discontinuation information
 discontinuation_info = {
     "obsolete_libs": {},
-    "reinstall_libs": {},
+    "manual_process_libs": {},
     "obsolete_fbks": {},
     "obsolete_funcs": {},
     "unsupported_hw": {},
@@ -37,7 +37,7 @@ except Exception as e:
     sys.exit(1)
     
 obsolete_dict = discontinuation_info["obsolete_libs"] # obsolete libraries with reasons
-reinstall_libraries = discontinuation_info["reinstall_libs"] # Libraries that must be deleted and re-added with a version >= 6.0
+manual_process_libraries = discontinuation_info["manual_process_libs"] # Libraries that must be handled manually
 obsolete_function_blocks = discontinuation_info["obsolete_fbks"] # list of obsolete function blocks with reasons
 obsolete_functions = discontinuation_info["obsolete_funcs"] # Hardcoded list of obsolete functions with reasons
 unsupported_hardware = discontinuation_info["unsupported_hw"] # hardware not supported by >= 6.0
@@ -273,14 +273,14 @@ def process_c_cpp_hpp_includes_file(file_path, patterns):
     
     return results
 
-# Function to process libraries requiring reinstallation
-def process_reinstall_libraries(file_path, patterns):
+# Function to process libraries requiring manual process
+def process_manual_libraries(file_path, patterns):
     """
-    Processes a .pkg or .lby file to find libraries that need reinstallation.
+    Processes .pkg or .lby files to find libraries that require manual action during migration.
 
     Args:
         file_path (str): Path to the file.
-        patterns (dict): Libraries to be checked for reinstallation.
+        patterns (dict): Libraries to be checked for manual process.
 
     Returns:
         list: Matches found in the file.
@@ -345,8 +345,8 @@ def main():
             start_time = time.time()
 
             # Use project_path as the root directory for scanning
-            reinstall_library_results = scan_files_parallel(
-                os.path.join(project_path, "Logical"), [".pkg"], process_reinstall_libraries, reinstall_libraries
+            manual_libs_results = scan_files_parallel(
+                os.path.join(project_path, "Logical"), [".pkg"], process_manual_libraries, manual_process_libraries
             )
             
             invalid_pkg_files = scan_files_parallel(
@@ -457,9 +457,9 @@ def main():
             else:
                 log("- None")
 
-            log("\n\nThe following libraries must be deleted and re-added with a version >= 6.0:")
-            if reinstall_library_results:
-                for library, reason, file_path in reinstall_library_results:
+            log("\n\nThe following libraries might require manual action after migrating the project to Automation Studio 6:")
+            if manual_libs_results:
+                for library, reason, file_path in manual_libs_results:
                     log(f"- {library}: {reason} (Found in: {file_path})")
             else:
                 log("- None")
