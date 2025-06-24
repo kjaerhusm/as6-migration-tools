@@ -1,0 +1,35 @@
+name: Increment Build Number
+
+on:
+  push:
+    branches: [ main, master ]  # Adjust branch names as needed
+    paths-ignore:
+      - 'version.txt'  # Avoid triggering the workflow when version.txt itself is committed
+
+jobs:
+  increment-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed for pushing the updated version.txt
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history
+      
+      - name: Increment build number
+        run: |
+          # Read current build number
+          BUILD_NUM=$(cat version.txt)
+          # Increment build number
+          NEW_BUILD_NUM=$((BUILD_NUM + 1))
+          # Update version.txt
+          echo $NEW_BUILD_NUM > version.txt
+          echo "New build number: $NEW_BUILD_NUM"
+      
+      - name: Commit and push
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add version.txt
+          git commit -m "Increment build number to $(cat version.txt) [skip ci]"
+          git push
