@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 from checks import *
 
-
 # Path to the main package file
 root_pkg_path = r"Logical\Libraries\Package.pkg"
 
@@ -66,12 +65,13 @@ def process_stub(file_path, *args):
     """
     return []
 
+# Get build number from version.txt
 def get_build_number():
-    version_file = os.path.join(os.path.dirname(__file__), 'version.txt')
+    version_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.txt')
     if os.path.exists(version_file):
         with open(version_file, 'r') as file:
             return file.read().strip()
-    return "Unknown"
+    return "1"  # Default build number if version.txt doesn't exist
 
 def scan_files_parallel(root_dir, extensions, process_function, *args):
     """
