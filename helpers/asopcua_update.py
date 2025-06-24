@@ -17,7 +17,7 @@ def calculate_file_hash(file_path):
 
 def replace_enums(file_path, enum_mapping ):
     """
-    Replace enumarators in a file based on the provided mappings.
+    Replace enumerators in a file based on the provided mappings.
     """
     original_hash = calculate_file_hash(file_path)
 
