@@ -24,6 +24,10 @@ Detects obsolete libraries, unsupported hardware, deprecated functions - and inc
 
 ## Usage
 
+Double click the `gui_launcher.py` script to open the GUI. Select the project folder you want to analyze. Select the script you want to run from the dropdown menu, then click "Run".
+
+![Example Analysis Output](docs/gui1.png)
+
 Run any of the scripts from the command line:
 
 ```bash
@@ -41,6 +45,8 @@ options:
 ```
 
 Example:
+
+Run the main script to analyze an Automation Studio 4 project:
 
 ```bash
 python as4_to_as6_analyzer.py "C:\path\to\AutomationStudio4Project"
@@ -70,6 +76,7 @@ Example (partial output):
 
 | Script                          | Purpose |
 |---------------------------------|---------|
+| `gui_launcher.py`           | GUI for running the scripts |
 | `as4_to_as6_analyzer.py`           | Main analysis and migration report generator |
 | `helpers/asmath_to_asbrmath.py`    | Replaces deprecated AsMath functions |
 | `helpers/asstring_to_asbrstr.py`   | Replaces deprecated AsString functions |
@@ -110,6 +117,4 @@ MIT License - free to use for personal or commercial purposes.
 
 ---
 
-This project aims to help the B&R developer community prepare and streamline the migration from AS4 to AS6.  
-It can be used to analyze projects, plan necessary updates, and identify elements that can be addressed already in AS4 — making the migration process smoother and more predictable.  
-We hope it saves you time — and we welcome all feedback and contributions 🚀.
+This project aims to help the B&R developer community prepare and streamline the migration from AS4 to AS6. It can be used to analyze projects, plan necessary updates, and identify elements that can be addressed already in AS4 — making the migration process smoother and more predictable. We hope it saves you time — and we welcome all feedback and contributions 🚀.

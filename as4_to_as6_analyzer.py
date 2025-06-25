@@ -3,12 +3,10 @@ import sys
 import re
 import concurrent.futures
 import time
+import json
 import argparse
 from pathlib import Path
-import json
-
 from checks import *
-
 
 # Path to the main package file
 root_pkg_path = r"Logical\Libraries\Package.pkg"
@@ -68,6 +66,13 @@ def process_stub(file_path, *args):
     """
     return []
 
+# Get build number from version.txt
+def get_build_number():
+    version_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.txt')
+    if os.path.exists(version_file):
+        with open(version_file, 'r') as file:
+            return file.read().strip()
+    return "1"  # Default build number if version.txt doesn't exist
 
 def scan_files_parallel(root_dir, extensions, process_function, *args):
     """
@@ -303,6 +308,10 @@ def main():
     Main function to scan for obsolete libraries, function blocks, functions, and unsupported hardware.
     Outputs the results to a file as well as the console.
     """
+
+    build_number = get_build_number()
+    print(f"Script build number: {build_number}")
+
     
     class CONSOLE_COLORS:
         RESET =  '\x1b[1;0m'   # reset all modes (styles and colors)
@@ -529,7 +538,7 @@ def main():
 
 
             if vision_settings_results['total_files'] > 2:
-                log("\n\nFound vision configuration. Make sure that IP forwarding is activated under the Powerlink interface!")
+                log("\n\nFound vision configuration. After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!")
                 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
                 if args.verbose and vision_settings_results['locations']:
