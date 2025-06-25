@@ -28,11 +28,20 @@ Double click the `gui_launcher.py` script to open the GUI. Select the project fo
 
 ![Example Analysis Output](docs/gui1.png)
 
-
 Run any of the scripts from the command line:
 
 ```bash
-python script_name.py "C:\path\to\AutomationStudio4Project"
+usage: python as4_to_as6_analyzer.py project_path [options]
+
+Scans Automation Studio project for transition from AS4 to AS6
+
+positional arguments:
+  project_path   Automation Studio 4.x path containing *.apj file
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose  Outputs verbose information
+
 ```
 
 Example:
@@ -62,6 +71,7 @@ Example (partial output):
 ![Example Analysis Output](docs/example_output.png)
 
 ---
+
 ## Included Scripts
 
 | Script                          | Purpose |
@@ -70,7 +80,7 @@ Example (partial output):
 | `as4_to_as6_analyzer.py`           | Main analysis and migration report generator |
 | `helpers/asmath_to_asbrmath.py`    | Replaces deprecated AsMath functions |
 | `helpers/asstring_to_asbrstr.py`   | Replaces deprecated AsString functions |
-| `helpers/asopcua_update.py`   	 | Updates OPC UA client code for AR 6 compatibility |
+| `helpers/asopcua_update.py`        | Updates OPC UA client code for AR 6 compatibility |
 
 Additional helper scripts may be added in future versions — pull requests welcome.
 

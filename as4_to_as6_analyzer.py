@@ -4,6 +4,7 @@ import re
 import concurrent.futures
 import time
 import json
+import argparse
 from pathlib import Path
 from checks import *
 
@@ -299,7 +300,9 @@ def process_manual_libraries(file_path, patterns):
                     results.append((library, action, file_path))
     return results
 
-# Update main function to handle project directory input and optional debug flag
+
+
+# Update main function to handle project directory input and optional verbose flag
 def main():
     """
     Main function to scan for obsolete libraries, function blocks, functions, and unsupported hardware.
@@ -309,36 +312,48 @@ def main():
     build_number = get_build_number()
     print(f"Script build number: {build_number}")
 
-    # Check if debug flag is provided
-    debug_mode = "--debug" in sys.argv
+    
+    class CONSOLE_COLORS:
+        RESET =  '\x1b[1;0m'   # reset all modes (styles and colors)
+        ERROR =  '\x1b[1;31m'  # Set style to bold, red foreground.
+    
+    
+    parser = argparse.ArgumentParser( prog= os.path.basename(__file__), 
+                        description="Scans Automation Studio project for transition from AS4 to AS6",
+                        usage='python %(prog)s project_path [options]',
+                        epilog = "Ensure the path is correct and the project folder exists.\n"\
+                            "A valid AS 4 project folder must contain an *.apj file.\n"\
+                            'If the path contains spaces, make sure to wrap it in quotes (e.g. like this: "C:\\My documents\\project")\n'\
+                            "If you enter a  '.' as project_path the current directory will be used.\n",
+                        formatter_class=argparse.RawDescriptionHelpFormatter                            
+                        )
+     # Add arguments
+    parser.add_argument('project_path', type=str, help='Automation Studio 4.x path containing *.apj file')
+    parser.add_argument('-v','--verbose', action='store_true', required=False, help='Outputs verbose information')
+    # Parse the arguments
 
-    # Check if a project path is provided
-    project_path = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else os.getcwd()
-
+    args = parser.parse_args()    
+       
     # Check if valid project path
-    if not os.path.exists(project_path):
-        print(f"Error: The provided project path does not exist: {project_path}")
-        print("\nEnsure the path is correct and the project folder exists.")
-        print("\nIf the path contains spaces, make sure to wrap it in quotes, like this:")
-        print('   python as4_to_as6_analyzer.py "C:\\path\\to\\your\\project"')
+    if not os.path.exists(args.project_path):
+        sys.stderr.write(f"{CONSOLE_COLORS.ERROR}Error: The provided project path does not exist: '{args.project_path}'\n")
+        sys.stderr.write(CONSOLE_COLORS.RESET + "\n")        
+        parser.print_help()
         sys.exit(1)
 
     # Check if .apj file exists in the provided path
-    apj_files = [file for file in os.listdir(project_path) if file.endswith(".apj")]
+    apj_files = [file for file in os.listdir(args.project_path) if file.endswith(".apj")]
     if not apj_files:
-        print(f"Error: No .apj file found in the provided path: {project_path}")
-        print("\nPlease specify a valid Automation Studio 4 project path.")
-        print("\nExample usage:")
-        print("1. To scan a specific Automation Studio 4 project directory:")
-        print(r"   python as4_to_as6_analyzer.py C:\path\to\your\AutomationStudioProject")
-        print("\n2. To scan the current directory where the script is located:")
-        print("   python as4_to_as6_analyzer.py")
+        sys.stderr.write(CONSOLE_COLORS.ERROR + f"Error: No .apj file found in the provided path: '{args.project_path}'\n")
+        sys.stderr.write("Please specify a valid Automation Studio 4 project path.\n")
+        sys.stderr.write(CONSOLE_COLORS.RESET + "\n")
+        parser.print_help()
         sys.exit(1)
 
-    print(f"Project path validated: {project_path}")
+    print(f"Project path validated: {args.project_path}")
     print(f"Using project file: {apj_files[0]}")
 
-    output_file = os.path.join(project_path, "as4_to_as6_analyzer_result.txt")
+    output_file = os.path.join(args.project_path, "as4_to_as6_analyzer_result.txt")
     with open(output_file, "w", encoding="utf-8") as file:
         try:
             def log(message, log_file=file):
@@ -352,42 +367,42 @@ def main():
 
             # Use project_path as the root directory for scanning
             manual_libs_results = scan_files_parallel(
-                os.path.join(project_path, "Logical"), [".pkg"], process_manual_libraries, manual_process_libraries
+                os.path.join(args.project_path, "Logical"), [".pkg"], process_manual_libraries, manual_process_libraries
             )
             
             invalid_pkg_files = scan_files_parallel(
-                os.path.join(project_path, "Logical"), [".pkg"], process_pkg_file, obsolete_dict
+                os.path.join(args.project_path, "Logical"), [".pkg"], process_pkg_file, obsolete_dict
             )
 
             invalid_var_typ_files = scan_files_parallel(
-                os.path.join(project_path, "Logical"), [".var", ".typ"], process_var_file, obsolete_function_blocks
+                os.path.join(args.project_path, "Logical"), [".var", ".typ"], process_var_file, obsolete_function_blocks
             )
 
             invalid_st_c_files = scan_files_parallel(
-                os.path.join(project_path, "Logical"), [".st", ".c", ".cpp"], process_st_c_file, obsolete_functions
+                os.path.join(args.project_path, "Logical"), [".st", ".c", ".cpp"], process_st_c_file, obsolete_functions
             )
 
             hardware_results = scan_files_parallel(
-                os.path.join(project_path, "Physical"), [".hw"], process_hw_file, unsupported_hardware
+                os.path.join(args.project_path, "Physical"), [".hw"], process_hw_file, unsupported_hardware
             )
 
             lby_dependency_results = scan_files_parallel(
-                os.path.join(project_path, "Logical"), [".lby"], process_lby_file, obsolete_dict
+                os.path.join(args.project_path, "Logical"), [".lby"], process_lby_file, obsolete_dict
             )
 
             c_include_dependency_results = scan_files_parallel(
-                os.path.join(project_path, "Logical"), [".c", ".cpp", ".hpp"], process_c_cpp_hpp_includes_file, obsolete_dict
+                os.path.join(args.project_path, "Logical"), [".c", ".cpp", ".hpp"], process_c_cpp_hpp_includes_file, obsolete_dict
             )
 
-            vision_settings_results = check_vision_settings(os.path.join(project_path, "Physical"))
+            vision_settings_results = check_vision_settings(os.path.join(args.project_path, "Physical"))
 
-            mappView_settings_results = check_mappView(os.path.join(project_path, "Physical"))
+            mappView_settings_results = check_mappView(os.path.join(args.project_path, "Physical"))
 
-            mapp_version_results = check_mapp_version(project_path)
+            mapp_version_results = check_mapp_version(args.project_path)
 
             # Store the list of files containing deprecated string functions
             deprecated_string_files = check_deprecated_string_functions(
-                os.path.join(project_path, "Logical"), 
+                os.path.join(args.project_path, "Logical"), 
                 [".st"], 
                 deprecated_string_functions 
             )
@@ -402,7 +417,7 @@ def main():
 
             # Store the list of files containing deprecated math functions
             deprecated_math_files = check_deprecated_math_functions(
-                os.path.join(project_path, "Logical"),
+                os.path.join(args.project_path, "Logical"),
                 [".st"],
                 deprecated_math_functions
             )
@@ -416,7 +431,7 @@ def main():
 
             log("\n\nChecking project and hardware files for compatibility...")
             file_patterns = ["*.apj", "*.hw"]
-            compatibility_results = check_files_for_compatibility(project_path, file_patterns)
+            compatibility_results = check_files_for_compatibility(args.project_path, file_patterns)
             if compatibility_results:
                 for file_path, issue in compatibility_results:
                     log(f"- {file_path}: {issue}")
@@ -425,7 +440,7 @@ def main():
                 log("- All project and hardware files are valid.")
 
             log("\n\nChecking OPC configuration...")
-            uad_misplaced_files, uad_old_version = check_uad_files(os.path.join(project_path, "Physical"))
+            uad_misplaced_files, uad_old_version = check_uad_files(os.path.join(args.project_path, "Physical"))
             if uad_misplaced_files:
                 log("The following .uad files are not located in the required Connectivity/OpcUA directory:")
                 for file_path in uad_misplaced_files:
@@ -502,21 +517,21 @@ def main():
                 log("- Deprecated AsString functions detected in the project: Consider using the helper asstring_to_asbrstr.py to replace them.")
                 found_any_invalid_functions = True
 
-                # Debug: Print where the deprecated string functions were found only if --debug is enabled
-                if debug_mode and deprecated_string_files:
-                    print("\n[DEBUG] Deprecated AsString functions detected in the following files:")
+                # Verbose: Print where the deprecated string functions were found only if --verbose is enabled
+                if  args.verbose and deprecated_string_files:
+                    print("\n[VERBOSE] Deprecated AsString functions detected in the following files:")
                     for file in deprecated_string_files:
-                        print(f"[DEBUG] - {file}")
+                        print(f"[VERBOSE] - {file}")
 
             if found_deprecated_math:
                 log("- Deprecated AsMath functions detected in the project: Consider using the helper asmath_to_asbrmath.py to replace them.")
                 found_any_invalid_functions = True
 
-                # Debug: Print where the deprecated math functions were found only if --debug is enabled
-                if debug_mode and found_deprecated_math:
-                    print("\n[DEBUG] Deprecated AsMath functions detected in the following files:")
+                # Verbose: Print where the deprecated math functions were found only if --verbose is enabled
+                if args.verbose and found_deprecated_math:
+                    print("\n[VERBOSE] Deprecated AsMath functions detected in the following files:")
                     for file in deprecated_math_files:
-                        print(f"[DEBUG] - {file}")
+                        print(f"[VERBOSE] - {file}")
             
             if not found_any_invalid_functions:
                 log("- None")
@@ -525,11 +540,11 @@ def main():
             if vision_settings_results['total_files'] > 2:
                 log("\n\nFound vision configuration. After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!")
                 
-                # Debug: Print detailed information about mappVision locations if debug mode is enabled
-                if debug_mode and vision_settings_results['locations']:
-                    print("\n[DEBUG] mappVision folders found at:")
+                # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
+                if args.verbose and vision_settings_results['locations']:
+                    print("\n[VERBOSE] mappVision folders found at:")
                     for location in vision_settings_results['locations']:
-                        print(f"[DEBUG] - {location}")
+                        print(f"[VERBOSE] - {location}")
                 
                 found_any_invalid_functions = True
 
@@ -545,16 +560,16 @@ def main():
                 log("  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled")
                 log("  ClientServerConfiguration->Security->Authorization->Anonymous Access Add new user role and select \"everyone\"")
                                     
-                # Debug: Print detailed information about mappVision locations if debug mode is enabled
-                if debug_mode and vision_settings_results['locations']:
-                    print("\n[DEBUG] mappView folders found at:")
+                # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
+                if args.verbose and vision_settings_results['locations']:
+                    print("\n[VERBOSE] mappView folders found at:")
                     for location in vision_settings_results['locations']:
-                        print(f"[DEBUG] - {location}")
+                        print(f"[VERBOSE] - {location}")
                 
                 found_any_invalid_functions = True                
 
             log("\n\nChecking mapp version in project file...")
-            mapp_results = check_mapp_version(project_path)
+            mapp_results = check_mapp_version(args.project_path)
             if mapp_version_results:
                 for msg in mapp_version_results:
                     log(f"- {msg}")
