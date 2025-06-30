@@ -12,19 +12,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - id: bump
-        name: Read and bump version
+      - name: Read and bump version
+        id: bump
         run: |
           VERSION=$(cat version.txt)
           NEW_VERSION=$((VERSION + 1))
           echo $NEW_VERSION > version.txt
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
+      - name: Validate version
+        run: |
+          if [ -z "${{ steps.bump.outputs.new_version }}" ]; then
+            echo "Version empty!"
+            exit 1
+          fi
+
       - name: Commit bumped version
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@github.com"
-          git add version.txt && git commit -m "Bump version to v${{ steps.bump.outputs.new_version }}"
+          git add version.txt
+          git commit -m "Bump version to v${{ steps.bump.outputs.new_version }}"
           git push
 
       - name: Create Git tag
@@ -37,18 +45,27 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Python
+
+      - name: Setup Python 3.12
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-      - run: pip install pyinstaller
-      - run: pyinstaller --noconfirm gui_launcher.spec
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build EXE via PyInstaller
+        run: pyinstaller --noconfirm gui_launcher.spec
+
       - name: Rename with version
         run: |
           ren dist\as6-migration-tools.exe as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe
+
       - name: Zip EXE
         run: |
-          powershell Compress-Archive -Path dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe -DestinationPath dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
+          powershell Compress-Archive -Path dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe `
+            -DestinationPath dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -64,18 +81,20 @@ jobs:
         with:
           name: release-artifacts
           path: release
+
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.prepare.outputs.version }}
           files: |
             release/*.zip
-          overwrite_files: true
-      - name: Cleanup old releases
-        uses: Nats-ji/delete-old-releases@v1
+
+  cleanup:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Nats-ji/delete-old-releases@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           keep-count: 1
           keep-old-minor-releases: false
-          remove-tags: true
