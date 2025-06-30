@@ -80,5 +80,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.prepare.outputs.version }}
-          files: release/*.exe
-          files: release/*.zip
+          files: |
+            release/*.exe
+            release/*.zip
