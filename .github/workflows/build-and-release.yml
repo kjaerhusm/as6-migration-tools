@@ -10,7 +10,6 @@ jobs:
       version: ${{ steps.bump.outputs.new_version }}
     steps:
       - uses: actions/checkout@v4
-
       - id: bump
         name: Read and bump version
         run: |
@@ -18,7 +17,6 @@ jobs:
           NEW_VERSION=$((VERSION + 1))
           echo $NEW_VERSION > version.txt
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
       - name: Commit bumped version
         run: |
           git config user.name "GitHub Actions"
@@ -26,7 +24,6 @@ jobs:
           git add version.txt
           git commit -m "Bump version to v${{ steps.bump.outputs.new_version }}"
           git push
-
       - name: Create Git tag
         run: |
           git tag v${{ steps.bump.outputs.new_version }}
@@ -40,19 +37,15 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-
       - run: pip install pyinstaller
       - run: pyinstaller --noconfirm gui_launcher.spec
-
       - name: Rename with version
         run: ren dist\as6-migration-tools.exe as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe
-
       - name: Zip EXE
         shell: pwsh
         run: |
           Compress-Archive -Path "dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe" `
                            -DestinationPath "dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip"
-
       - uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
@@ -66,11 +59,10 @@ jobs:
         with:
           name: release-artifacts
           path: release
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.prepare.outputs.version }}
+          tag_name: ${{ github.event.release.tag_name }}
           files: |
             release/*.zip
 
@@ -82,4 +74,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           keep-count: 1
-          semver-loose: true
+          keep-old-minor-releases: false
