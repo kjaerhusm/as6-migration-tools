@@ -1,0 +1,82 @@
+name: Build and Release 
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: bump
+        name: Read and bump version
+        run: |
+          VERSION=$(cat version.txt)
+          NEW_VERSION=$((VERSION + 1))
+          echo $NEW_VERSION > version.txt
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit bumped version
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@github.com"
+          git add version.txt
+          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
+          git push
+
+  build:
+    needs: prepare
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build executable
+        run: pyinstaller --noconfirm gui_launcher.spec
+
+      - name: Zip EXE file
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist/as6-migration-tools.exe" -DestinationPath "dist/as6-migration-tools.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: dist/as6-migration-tools.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: release
+
+      - name: Delete previous release (if exists)
+        run: |
+          gh release delete latest --yes || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release (always one)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "AS6 Migration Tools"
+          body: "Latest build of AS6 migration tool."
+          files: release/as6-migration-tools.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

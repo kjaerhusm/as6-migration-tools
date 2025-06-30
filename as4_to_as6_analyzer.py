@@ -31,7 +31,7 @@ try:
         with open( f"{script_directory}/discontinuations/{filename}.json", "r") as json_file:
             discontinuation_info[filename]  = json.load(json_file)
 except Exception as e:
-    sys.stderr.write(f"error reading discontinuation lists: {e}")
+    print(f"\033[1;31m[ERROR]\033[0m Error reading discontinuation lists: {e}", file=sys.stderr)
     sys.exit(1)
     
 obsolete_dict = discontinuation_info["obsolete_libs"] # obsolete libraries with reasons
@@ -46,11 +46,15 @@ pass
 def display_progress(message):
     """
     Displays a progress message on the same line in the terminal.
-    Ensures old text is cleared before writing new text.
+    In GUI mode, stdout may be None, so we fall back to printing.
     """
-    sys.stdout.write('\r' + ' ' * 80)  # Clear line with space
-    sys.stdout.write('\r' + message)  # Write new message
-    sys.stdout.flush()
+    try:
+        sys.stdout.write('\r' + ' ' * 80)
+        sys.stdout.write('\r' + message)
+        sys.stdout.flush()
+    except Exception:
+        # Fallback: simple print if stdout is unavailable
+        print(message)
 
 def process_stub(file_path, *args):
     """
@@ -332,21 +336,28 @@ def main():
     parser.add_argument('-v','--verbose', action='store_true', required=False, help='Outputs verbose information')
     # Parse the arguments
 
-    args = parser.parse_args()    
+    # Fallback if no arguments are provided (e.g. when run from GUI)
+    if len(sys.argv) == 1:
+        # Default to current directory as project path
+        sys.argv += [".", "-v"]
+        # Optionally enable verbose mode by default from GUI
+        # sys.argv += ["-v"]
+
+    args = parser.parse_args()
        
     # Check if valid project path
     if not os.path.exists(args.project_path):
-        sys.stderr.write(f"{CONSOLE_COLORS.ERROR}Error: The provided project path does not exist: '{args.project_path}'\n")
-        sys.stderr.write(CONSOLE_COLORS.RESET + "\n")        
+        print(f"{CONSOLE_COLORS.ERROR}Error: The provided project path does not exist: '{args.project_path}'", file=sys.stderr)
+        print(CONSOLE_COLORS.RESET + "\n", file=sys.stderr)
         parser.print_help()
         sys.exit(1)
 
     # Check if .apj file exists in the provided path
     apj_files = [file for file in os.listdir(args.project_path) if file.endswith(".apj")]
     if not apj_files:
-        sys.stderr.write(CONSOLE_COLORS.ERROR + f"Error: No .apj file found in the provided path: '{args.project_path}'\n")
-        sys.stderr.write("Please specify a valid Automation Studio 4 project path.\n")
-        sys.stderr.write(CONSOLE_COLORS.RESET + "\n")
+        print(f"{CONSOLE_COLORS.ERROR}Error: No .apj file found in the provided path: '{args.project_path}'", file=sys.stderr)
+        print("Please specify a valid Automation Studio 4 project path.", file=sys.stderr)
+        print(CONSOLE_COLORS.RESET + "\n", file=sys.stderr)
         parser.print_help()
         sys.exit(1)
 
