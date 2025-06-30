@@ -63,15 +63,15 @@ jobs:
 
       - name: Zip EXE
         run: |
-          powershell Compress-Archive -Path dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe `
+          powershell Compress-Archive \
+            -Path dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe \
             -DestinationPath dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
-          path: |
-            dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
+          path: dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
 
   release:
     needs: build
@@ -97,4 +97,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           keep-count: 1
-          keep-old-minor-releases: false
+          semver-loose: true
+          remove-tags: false
