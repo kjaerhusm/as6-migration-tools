@@ -1,8 +1,7 @@
 name: Build, Tag and Release
-
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   prepare:
@@ -11,21 +10,13 @@ jobs:
       version: ${{ steps.bump.outputs.new_version }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Read and bump version
-        id: bump
+      - id: bump
+        name: Read and bump version
         run: |
           VERSION=$(cat version.txt)
           NEW_VERSION=$((VERSION + 1))
           echo $NEW_VERSION > version.txt
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Validate version
-        run: |
-          if [ -z "${{ steps.bump.outputs.new_version }}" ]; then
-            echo "Version empty!"
-            exit 1
-          fi
 
       - name: Commit bumped version
         run: |
@@ -45,33 +36,23 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Python 3.12
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-
-      - name: Install PyInstaller
-        run: pip install pyinstaller
-
-      - name: Build EXE via PyInstaller
-        run: pyinstaller --noconfirm gui_launcher.spec
-
+      - run: pip install pyinstaller
+      - run: pyinstaller --noconfirm gui_launcher.spec
       - name: Rename with version
-        run: |
-          ren dist\as6-migration-tools.exe as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe
-
+        run: ren dist\as6-migration-tools.exe as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe
       - name: Zip EXE
+        shell: pwsh
         run: |
-          powershell Compress-Archive \
-            -Path dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe \
-            -DestinationPath dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+          Compress-Archive -Path "dist/as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe" `
+                           -DestinationPath "dist/as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip"
+      - uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
-          path: dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
+          path: |
+            dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
 
   release:
     needs: build
@@ -81,7 +62,6 @@ jobs:
         with:
           name: release-artifacts
           path: release
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -97,5 +77,3 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           keep-count: 1
-          semver-loose: true
-          remove-tags: false
