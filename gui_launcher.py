@@ -1,32 +1,56 @@
 import os
 import sys
-import subprocess
 import threading
 import importlib.util
 import tkinter as tk
 from tkinter import filedialog, ttk
 from tkinter import messagebox
+from pathlib import Path
+
+def resource_path(rel_path):
+    base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.normpath(os.path.join(base, rel_path))
+
+def get_build_number():
+    try:
+        version_file = Path(__file__).resolve().parent.parent / "version.txt"
+        return version_file.read_text(encoding="utf-8").strip()
+    except Exception:
+        return "?"
+
+class RedirectText:
+    def __init__(self, append_func, status_func):
+        self.append_func = append_func
+        self.status_func = status_func
+
+    def write(self, string):
+        if '\r' in string:
+            self.status_func(string.strip())
+        else:
+            self.append_func(string)
+
+    def flush(self):
+        pass
 
 class MigrationGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("AS4 to AS6 Migration Tool")
+        build = get_build_number()
+        self.root.title(f"AS4 to AS6 Migration Tool (Build {build})")
         self.root.geometry("1500x700")
 
         self.selected_folder = tk.StringVar()
         self.selected_script = tk.StringVar(value='Evaluate AS4 project')
-        self.last_line_was_status = False
-
-        base_dir = os.path.dirname(os.path.abspath(__file__))
 
         self.scripts = {
-            'Evaluate AS4 project': os.path.join(base_dir, '', 'as4_to_as6_analyzer.py'),
-            'AsMathToAsBrMath': os.path.join(base_dir, 'helpers', 'asmath_to_asbrmath.py'),
-            'AsStringToAsBrStr': os.path.join(base_dir, 'helpers', 'asstring_to_asbrstr.py'),
-            'OpcUa Update': os.path.join(base_dir, 'helpers', 'asopcua_update.py')
+            'Evaluate AS4 project': resource_path('as4_to_as6_analyzer.py'),
+            'AsMathToAsBrMath':     resource_path('helpers/asmath_to_asbrmath.py'),
+            'AsStringToAsBrStr':    resource_path('helpers/asstring_to_asbrstr.py'),
+            'OpcUa Update':         resource_path('helpers/asopcua_update.py'),
         }
 
         self.build_ui()
+        #self.append_log(f"Running from: {os.getcwd()}\n")
 
     def build_ui(self):
         frame = ttk.Frame(self.root, padding=10)
@@ -44,11 +68,12 @@ class MigrationGUI:
         script_menu_frame.pack(side='left', padx=5, pady=5)
         script_menu = ttk.OptionMenu(script_menu_frame, self.selected_script, self.selected_script.get(), *self.scripts.keys())
         script_menu.pack(anchor='w')
-        script_menu.config(width=20)  # Set fixed width to approximately 100px
-        run_button = ttk.Button(script_frame, text="Run", command=self.run_script)
+        script_menu.config(width=20)
+        run_button = ttk.Button(script_frame, text="Run", command=self.execute_script)
         run_button.pack(side='left', padx=5)
         run_button.config(state='disabled')
         self.selected_folder.trace_add('write', lambda *args: run_button.config(state='normal' if self.selected_folder.get() else 'disabled'))
+
         save_log_button = ttk.Button(script_frame, text="Save Log As...", command=self.save_log)
         save_log_button.pack(side='left', padx=5)
         save_log_button.config(state='disabled')
@@ -67,50 +92,53 @@ class MigrationGUI:
         if folder:
             self.selected_folder.set(folder)
 
-    def run_script(self):
-        self.log_text.config(state='normal')
-        self.log_text.delete('1.0', tk.END)
-        self.log_text.config(state='disabled')
-        self.status_label.config(text="")
-        self.last_line_was_status = False
-        thread = threading.Thread(target=self.execute_script, daemon=True)
-        thread.start()
-
     def execute_script(self):
+        threading.Thread(target=self._worker_execute_script, daemon=True).start()
+
+    def _worker_execute_script(self):
+        self.clear_log()
         folder = self.selected_folder.get()
         script = self.scripts.get(self.selected_script.get())
+        #self.append_log(f"[DEBUG] Selected script -> {script}\n")
 
-        if not os.path.exists(folder) or not os.path.exists(script):
-            self.append_log("Error: Invalid folder or script path.")
+        if not os.path.exists(folder):
+            self.append_log(f"Error: Folder does not exist:\n{folder}")
+            return
+        if not os.path.exists(script):
+            self.append_log(f"Error: Script not found:\n{script}")
             return
 
-        env = os.environ.copy()
-        env['PYTHONUNBUFFERED'] = '1'
-        env['PYTHONIOENCODING'] = 'utf-8'
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            stdlib_path = Path(sys._MEIPASS) / 'lib'
+            if stdlib_path.exists():
+                sys.path.insert(0, str(stdlib_path.resolve()))
 
-        process = subprocess.Popen(
-            [sys.executable, script, folder],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-            universal_newlines=True,
-            env=env
-        )
+        spec = importlib.util.spec_from_file_location("selected_script", script)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["selected_script"] = module
 
-        for line in process.stdout:
-            stripped = line.strip()
-            if "Processing file" in line:
-                self.status_label.config(text=stripped)
-                self.last_line_was_status = True
-            elif stripped == "" and self.last_line_was_status:
-                self.last_line_was_status = False  # skip the empty line after status
-            else:
-                self.status_label.config(text="")
-                self.append_log(line)
-                self.last_line_was_status = False
+        try:
+            spec.loader.exec_module(module)
+        except Exception as e:
+            self.append_log(f"Error loading script: {e}\n")
+            return
 
-        process.wait()
+        original_stdout, original_stderr = sys.stdout, sys.stderr
+        redirector = RedirectText(self.append_log, self.update_status)
+        sys.stdout = redirector
+        sys.stderr = redirector
+
+        try:
+            sys.argv = ['analyzer', folder]
+            module.main()
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] Execution failed: {e}")
+            print(traceback.format_exc())
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
+
         self.status_label.config(text="--- Script Finished ---")
         self.script_ran.set(True)
 
@@ -123,6 +151,8 @@ class MigrationGUI:
         self.log_text.see(tk.END)
         self.log_text.config(state='disabled')
 
+    def update_status(self, message):
+        self.status_label.after(0, lambda: self.status_label.config(text=message))
 
     def save_log(self):
         file_path = filedialog.asksaveasfilename(
@@ -138,6 +168,10 @@ class MigrationGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save file:\n{e}")
 
+    def clear_log(self):
+        self.log_text.config(state='normal')
+        self.log_text.delete("1.0", tk.END)
+        self.log_text.config(state='disabled')
 
 if __name__ == '__main__':
     root = tk.Tk()
