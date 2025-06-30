@@ -51,21 +51,16 @@ jobs:
       - name: Build EXE via PyInstaller
         run: pyinstaller --noconfirm gui_launcher.spec
 
-      - name: Rename with version
+      - name: Rename and Zip EXE
         run: |
           ren dist\as6-migration-tools.exe as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe
-
-      - name: Zip EXE
-        run: |
           powershell Compress-Archive -Path dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe -DestinationPath dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
 
-      - name: Upload artifacts
+      - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
-          path: |
-            dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe
-            dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
+          path: dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
 
   release:
     needs: build
@@ -80,6 +75,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.prepare.outputs.version }}
-          files: |
-            release/*.exe
-            release/*.zip
+          files: release/*.zip
