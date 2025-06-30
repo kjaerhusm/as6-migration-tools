@@ -1,55 +1,64 @@
 name: Build, Tag and Release
+
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
-  prepare:
+  bump-version:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.bump.outputs.new_version }}
     steps:
       - uses: actions/checkout@v4
+
       - id: bump
-        name: Read and bump version
+        name: Bump version
         run: |
           VERSION=$(cat version.txt)
           NEW_VERSION=$((VERSION + 1))
           echo $NEW_VERSION > version.txt
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-      - name: Commit bumped version
+
+      - name: Commit version bump
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@github.com"
           git add version.txt
           git commit -m "Bump version to v${{ steps.bump.outputs.new_version }}"
-          git push
-      - name: Create Git tag
-        run: |
           git tag v${{ steps.bump.outputs.new_version }}
-          git push origin v${{ steps.bump.outputs.new_version }}
+          git push --follow-tags
 
   build:
-    needs: prepare
+    needs: bump-version
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-      - run: pip install pyinstaller
-      - run: pyinstaller --noconfirm gui_launcher.spec
-      - name: Rename with version
-        run: ren dist\as6-migration-tools.exe as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe
-      - name: Zip EXE
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build EXE
+        run: pyinstaller --noconfirm gui_launcher.spec
+
+      - name: Rename EXE to include version
+        run: |
+          ren dist\as6-migration-tools.exe as6-migration-tools-v${{ needs.bump-version.outputs.version }}.exe
+
+      - name: Create ZIP archive
         shell: pwsh
         run: |
-          Compress-Archive -Path "dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.exe" `
-                           -DestinationPath "dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip"
+          Compress-Archive -Path "dist/as6-migration-tools-v${{ needs.bump-version.outputs.version }}.exe" `
+                           -DestinationPath "dist/as6-migration-tools-v${{ needs.bump-version.outputs.version }}.zip"
+
       - uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
-          path: dist\as6-migration-tools-v${{ needs.prepare.outputs.version }}.zip
+          path: dist/*.zip
 
   release:
     needs: build
@@ -59,12 +68,16 @@ jobs:
         with:
           name: release-artifacts
           path: release
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ github.ref_name }}
           files: |
             release/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   cleanup:
     needs: release
@@ -74,4 +87,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           keep-count: 1
-          keep-old-minor-releases: false
+          semver-loose: true
