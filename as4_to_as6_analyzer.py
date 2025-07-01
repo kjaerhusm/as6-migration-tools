@@ -407,7 +407,7 @@ def main():
 
             vision_settings_results = check_vision_settings(os.path.join(args.project_path, "Physical"))
 
-            mappView_settings_results = check_mappView(os.path.join(args.project_path, "Physical"))
+            mappView_settings_results = check_mappView(args.project_path)
 
             mapp_version_results = check_mapp_version(args.project_path)
 
@@ -560,7 +560,7 @@ def main():
                 found_any_invalid_functions = True
 
             if mappView_settings_results['found']:
-                log("\n\nFound mappView configuration. Several security seetings will be enforced after the migration.")
+                log(f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security seetings will be enforced after the migration.")
                 log("\n- To allow access without a certificate")
                 log("  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):")
                 log("  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled")
