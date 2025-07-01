@@ -187,10 +187,10 @@ def main():
     total_type_replacements = 0
     total_files_changed = 0
 
-    # Loop through the files in the "Logical" directory and process .st, .c, and .cpp files
+    # Loop through the files in the "Logical" directory and process .st, .c, .cpp and .ab files
     for root, _, files in os.walk(logical_path):
         for file in files:
-            if file.endswith((".st")) or file.endswith((".c")) or file.endswith((".cpp")):
+            if file.endswith((".st", ".c", ".cpp", ".ab")):
                 file_path = os.path.join(root, file)
                 enum_replacements, changed = replace_enums(
                     file_path, enum_mapping
