@@ -28,7 +28,7 @@ def check_mappView(directory):
     if not apj_file:
         return mappView_settings_result
 
-    # If .apj file is found, check for mappView settings in the .apj file
+    # If .apj file is found, check for mappView line in the .apj file
     with open(apj_file, "r", encoding="utf-8", errors="ignore") as f:
         for line in f:
             if "<mappView " in line and "Version=" in line:

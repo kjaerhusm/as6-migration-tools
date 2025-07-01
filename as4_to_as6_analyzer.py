@@ -405,7 +405,7 @@ def main():
                 os.path.join(args.project_path, "Logical"), [".c", ".cpp", ".hpp"], process_c_cpp_hpp_includes_file, obsolete_dict
             )
 
-            vision_settings_results = check_vision_settings(os.path.join(args.project_path, "Physical"))
+            vision_settings_results = check_vision_settings(args.project_path)
 
             mappView_settings_results = check_mappView(args.project_path)
 
@@ -548,8 +548,8 @@ def main():
                 log("- None")
 
 
-            if vision_settings_results['total_files'] > 2:
-                log("\n\nFound vision configuration. After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!")
+            if vision_settings_results['found']:
+                log(f"\n\nFound usage of mapp Vision (Version: {vision_settings_results['version']}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!")
                 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
                 if args.verbose and vision_settings_results['locations']:
