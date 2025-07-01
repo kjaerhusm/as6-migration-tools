@@ -101,22 +101,24 @@ def main():
     print("Checking for AsMath library in the project...")
     library_found = check_for_asmath_library(project_path)
 
-    if not library_found:
-        print("AsMath library not found.")
-        proceed = input("Do you want to proceed with replacing functions and constants anyway? (y/n): ").strip().lower()
-        if proceed != 'y':
-            print("Operation cancelled. No changes were made.")
-            return
-        print()
-
     print(
         "This script will search for usages of AsMath functions and constants and replace them with the AsBrMath equivalents.\n"
         "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n"
     )
-    proceed = input("Do you want to continue? (y/n): ").strip().lower()
-    if proceed != 'y':
-        print("Operation cancelled. No changes were made.")
-        return
+
+    if __name__ == "__main__" and sys.stdin.isatty():
+
+        if not library_found:
+            print("AsMath library not found.")
+            proceed = input("Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ").strip().lower()
+            if proceed not in ('', 'y'):
+                print("Operation cancelled. No changes were made.")
+                return
+        else:
+            proceed = input("Do you want to continue? (y/n) [y]: ").strip().lower()
+            if proceed not in ('', 'y'):
+                print("Operation cancelled. No changes were made.")
+                return
 
     function_mapping = {
         "atan2": "brmatan2",

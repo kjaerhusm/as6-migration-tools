@@ -100,21 +100,26 @@ def main():
     library_names = ["AsString", "AsWStr"]
     found_libraries = check_for_library(project_path, library_names)
 
-    if not found_libraries:
-        print("Neither AsString nor AsWStr libraries found.\n")
-        proceed = input("Do you want to proceed with replacing functions and constants anyway? (y/n): ").strip().lower()
-        if proceed != 'y':
-            print("Operation cancelled. No changes were made.")
-            return
+    print(
+        "This script will search for usages of AsString and AsWStr functions and constants and replace them with the AsBr equivalents.\n"
+        "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n"
+    )
 
-    else:
-        print(f"Libraries found: {', '.join(found_libraries)}.\n"
-              "This script will search for usages of AsString and AsWStr functions and constants and replace them with their AsBr equivalents.\n"
-              "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n")
-        proceed = input("Do you want to continue? (y/n): ").strip().lower()
-        if proceed != 'y':
-            print("Operation cancelled. No changes were made.")
-            return
+    if __name__ == "__main__" and sys.stdin.isatty():
+
+        if not found_libraries:
+            print("Neither AsString nor AsWStr libraries found.\n")
+            proceed = input("Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ").strip().lower()
+            if proceed not in ('', 'y'):
+                print("Operation cancelled. No changes were made.")
+                return
+
+        else:
+            print(f"Libraries found: {', '.join(found_libraries)}.\n")
+            proceed = input("Do you want to continue? (y/n) [y]: ").strip().lower()
+            if proceed not in ('', 'y'):
+                print("Operation cancelled. No changes were made.")
+                return
 
     function_mapping = {
         "ftoa": "brsftoa",
