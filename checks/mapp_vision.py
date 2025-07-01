@@ -44,7 +44,7 @@ def check_vision_settings(directory):
                     vision_settings_result['version'] = f"{major}.{minor}"
     
     # Walk through all directories
-    for root, dirs, files in os.walk(directory):
+    for root, dirs, files in os.walk(os.path.join(directory, "Physical")):
         # Check if "mappVision" folder exists in current directory
         if "mappVision" in dirs:
             vision_path = os.path.join(root, "mappVision")

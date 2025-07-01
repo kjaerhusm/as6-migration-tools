@@ -15,7 +15,8 @@ def check_mappView(directory):
     """
     mappView_settings_result = {
         'found': False,
-        'version': ""
+        'version': "",
+        'locations': []
     }
 
     # Find the .apj file in the directory
@@ -38,5 +39,12 @@ def check_mappView(directory):
                     minor = int(match.group(2))
                     mappView_settings_result['found'] = True
                     mappView_settings_result['version'] = f"{major}.{minor}"
+    
+    # Walk through all directories
+    for root, dirs, files in os.walk(os.path.join(directory, "Physical")):
+        # Check if "mappView" folder exists in current directory and save its path
+        if "mappView" in dirs:
+            mappView_path = os.path.join(directory, "mappView")
+            mappView_settings_result['locations'].append(mappView_path)
             
     return mappView_settings_result   

@@ -572,9 +572,9 @@ def main():
                 log("  ClientServerConfiguration->Security->Authorization->Anonymous Access Add new user role and select \"everyone\"")
                                     
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
-                if args.verbose and vision_settings_results['locations']:
+                if args.verbose and mappView_settings_results['locations']:
                     print("\n[VERBOSE] mappView folders found at:")
-                    for location in vision_settings_results['locations']:
+                    for location in mappView_settings_results['locations']:
                         print(f"[VERBOSE] - {location}")
                 
                 found_any_invalid_functions = True                
