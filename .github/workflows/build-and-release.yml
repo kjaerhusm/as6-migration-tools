@@ -1,4 +1,4 @@
-name: Build and Release 
+name: Build and Release
 
 on:
   push:
@@ -16,6 +16,10 @@ jobs:
         name: Read and bump version
         run: |
           VERSION=$(cat version.txt)
+          if ! [[ "$VERSION" =~ ^[0-9]+$ ]]; then
+            echo "Invalid version number in version.txt"
+            exit 1
+          fi
           NEW_VERSION=$((VERSION + 1))
           echo $NEW_VERSION > version.txt
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -25,7 +29,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "github-actions@github.com"
           git add version.txt
-          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
+          git diff --quiet && echo "No changes to commit" || git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
           git push
 
   build:
@@ -39,16 +43,30 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest
+
       - name: Install PyInstaller
         run: pip install pyinstaller
 
       - name: Build executable
         run: pyinstaller --noconfirm gui_launcher.spec
 
-      - name: Zip EXE file
+      - name: Zip EXE and all contents of dist/
         shell: pwsh
         run: |
-          Compress-Archive -Path "dist/as6-migration-tools.exe" -DestinationPath "dist/as6-migration-tools.zip"
+          Compress-Archive -Path "dist\*" -DestinationPath "dist\as6-migration-tools.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
