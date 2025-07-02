@@ -60,32 +60,33 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Create source archive
-        uses: montudor/action-zip@v0.2.1
+        uses: montudor/action-zip@v1
         with:
-          args: . -x ".git/*" -o release/source-code.zip
+          args: zip -qq -r source-code.zip . -x ".git/*"
 
-      - name: Download GUI artifact
+      - name: Download built EXE zip
         uses: actions/download-artifact@v4
         with:
           name: release-artifacts
-          path: release
+          path: separate
 
-      - name: Delete previous release (if exists)
+      - name: Delete previous 'latest' release
         run: gh release delete latest --yes || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create GitHub Release (always one)
+      - name: Create or update GitHub Release 'latest'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: "AS6 Migration Tools"
           body: "Latest build of AS6 migration tool."
           files: |
-            release/as6-migration-tools.zip
-            release/source-code.zip
+            separate/as6-migration-tools.zip
+            source-code.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
