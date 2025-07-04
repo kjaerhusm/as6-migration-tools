@@ -29,7 +29,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "github-actions@github.com"
           git add version.txt
-          git diff --quiet && echo "No changes to commit" || git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
+          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
           git push
 
   build:
