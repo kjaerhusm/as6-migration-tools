@@ -35,6 +35,10 @@ class RedirectText:
 class MigrationGUI:
     def __init__(self, root):
         self.root = root
+        # Set application icon (for taskbar and window title)
+        icon_path = os.path.join(getattr(sys, '_MEIPASS', os.path.abspath(".")), 'gui_icon.ico')
+        self.root.iconbitmap(icon_path)
+        
         build = get_build_number()
         self.root.title(f"AS4 to AS6 Migration Tool (Build {build})")
         self.root.geometry("1500x700")
