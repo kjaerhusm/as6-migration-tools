@@ -405,9 +405,9 @@ def main():
                 os.path.join(args.project_path, "Logical"), [".c", ".cpp", ".hpp"], process_c_cpp_hpp_includes_file, obsolete_dict
             )
 
-            vision_settings_results = check_vision_settings(os.path.join(args.project_path, "Physical"))
+            vision_settings_results = check_vision_settings(args.project_path)
 
-            mappView_settings_results = check_mappView(os.path.join(args.project_path, "Physical"))
+            mappView_settings_results = check_mappView(args.project_path)
 
             mapp_version_results = check_mapp_version(args.project_path)
 
@@ -548,8 +548,8 @@ def main():
                 log("- None")
 
 
-            if vision_settings_results['total_files'] > 2:
-                log("\n\nFound vision configuration. After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!")
+            if vision_settings_results['found']:
+                log(f"\n\nFound usage of mapp Vision (Version: {vision_settings_results['version']}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!")
                 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
                 if args.verbose and vision_settings_results['locations']:
@@ -560,7 +560,7 @@ def main():
                 found_any_invalid_functions = True
 
             if mappView_settings_results['found']:
-                log("\n\nFound mappView configuration. Several security seetings will be enforced after the migration.")
+                log(f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security seetings will be enforced after the migration.")
                 log("\n- To allow access without a certificate")
                 log("  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):")
                 log("  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled")
@@ -572,9 +572,9 @@ def main():
                 log("  ClientServerConfiguration->Security->Authorization->Anonymous Access Add new user role and select \"everyone\"")
                                     
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
-                if args.verbose and vision_settings_results['locations']:
+                if args.verbose and mappView_settings_results['locations']:
                     print("\n[VERBOSE] mappView folders found at:")
-                    for location in vision_settings_results['locations']:
+                    for location in mappView_settings_results['locations']:
                         print(f"[VERBOSE] - {location}")
                 
                 found_any_invalid_functions = True                
