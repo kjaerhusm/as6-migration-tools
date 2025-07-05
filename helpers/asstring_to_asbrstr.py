@@ -160,8 +160,7 @@ def main():
     # Loop through the files in the "Logical" directory and process .st, .c, .cpp and .ab files
     for root, _, files in os.walk(logical_path):
         for file in files:
-            # Add ".c" and ".cpp" to the list of file extensions to process
-            if file.endswith((".st", ".c", ".cpp", ".ab")):
+            if file.endswith((".st", ".ab")):
                 file_path = os.path.join(root, file)
                 function_replacements, constant_replacements, changed = replace_functions_and_constants(
                     file_path, function_mapping, constant_mapping
