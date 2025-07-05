@@ -126,21 +126,25 @@ def main():
     library_names = ["AsOpcUac","AsOpcUas" ]
     found_libraries = check_for_library(project_path, library_names)
 
-    if not found_libraries:
-        print("Neither AsOpcUac nor AsOpcUas libraries found.\n")
-        proceed = input("Do you want to proceed with replacing functions and constants anyway? (y/n): ").strip().lower()
-        if proceed != 'y':
-            print("Operation cancelled. No changes were made.")
-            return
+    print(
+        "This script will search for usages of AsOpcUac and AsOpcUas function blocks, types and enumerators and update the naming.\n"
+        "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n"
+    )
 
-    else:
-        print(f"Libraries found: {', '.join(found_libraries)}.\n"
-              "This script will search for usages of AsOpcUac and AsOpcUas function blocks, types and enumarators and update the naming.\n"
-              "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n")
-        proceed = input("Do you want to continue? (y/n): ").strip().lower()
-        if proceed != 'y':
-            print("Operation cancelled. No changes were made.")
-            return
+    if __name__ == "__main__" and sys.stdin.isatty():
+
+        if not found_libraries:
+            print("Neither AsOpcUac nor AsOpcUas libraries found.\n")
+            proceed = input("Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ").strip().lower()
+            if proceed not in ('', 'y'):
+                print("Operation cancelled. No changes were made.")
+                return
+        else:
+            print(f"Libraries found: {', '.join(found_libraries)}.\n")
+            proceed = input("Do you want to continue? (y/n) [y]: ").strip().lower()
+            if proceed not in ('', 'y'):
+                print("Operation cancelled. No changes were made.")
+                return
 
     fb_mapping = {
         "UA_EventItemOperate": "UA_EventItemOperateList",
@@ -187,10 +191,10 @@ def main():
     total_type_replacements = 0
     total_files_changed = 0
 
-    # Loop through the files in the "Logical" directory and process .st, .c, and .cpp files
+    # Loop through the files in the "Logical" directory and process .st, .c, .cpp and .ab files
     for root, _, files in os.walk(logical_path):
         for file in files:
-            if file.endswith((".st")) or file.endswith((".c")) or file.endswith((".cpp")):
+            if file.endswith((".st", ".c", ".cpp", ".ab")):
                 file_path = os.path.join(root, file)
                 enum_replacements, changed = replace_enums(
                     file_path, enum_mapping
