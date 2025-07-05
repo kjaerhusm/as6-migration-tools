@@ -165,7 +165,7 @@ def main():
 
     for root, _, files in os.walk(logical_path):
         for file in files:
-            if file.endswith((".st", ".c", ".cpp", ".ab")):
+            if file.endswith((".st", ".ab")):
                 file_path = os.path.join(root, file)
                 function_replacements, constant_replacements, changed = replace_functions_and_constants(
                     file_path, function_mapping, constant_mapping
