@@ -5,4 +5,5 @@ from .mapp_vision import check_vision_settings
 from .mapp_view import check_mappView
 from .mapp_services import check_mapp_version
 from .file_compatibility import check_files_for_compatibility
+from .safety_check import check_safety
 

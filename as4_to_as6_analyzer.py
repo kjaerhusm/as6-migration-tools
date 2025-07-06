@@ -547,6 +547,13 @@ def main():
             if not found_any_invalid_functions:
                 log("- None")
 
+            log("\n\nChecking for safety...")
+            safety_results = check_safety(args.project_path)
+            if safety_results:
+                for entry in safety_results:
+                    log(f"- {entry}")
+            else:
+                log("- None")
 
             if vision_settings_results['found']:
                 log(f"\n\nFound usage of mapp Vision (Version: {vision_settings_results['version']}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!")
