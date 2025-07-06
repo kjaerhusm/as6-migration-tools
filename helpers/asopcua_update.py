@@ -19,6 +19,9 @@ def replace_enums(file_path, enum_mapping ):
     """
     Replace enumerators in a file based on the provided mappings.
     """
+    if "AsOpcUac" in file_path or "AsOpcUas" in file_path:
+        return 0, False
+
     original_hash = calculate_file_hash(file_path)
 
     with open(file_path, "r", encoding="iso-8859-1", errors="ignore") as f:
@@ -51,6 +54,9 @@ def replace_fbs_and_types(file_path, fb_mapping, type_mapping ):
     """
     Replace function block calls and types in a file based on the provided mappings.
     """
+    if "AsOpcUac" in file_path or "AsOpcUas" in file_path:
+        return 0, 0, False
+
     original_hash = calculate_file_hash(file_path)
 
     with open(file_path, "r", encoding="iso-8859-1", errors="ignore") as f:
