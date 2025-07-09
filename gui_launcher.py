@@ -51,7 +51,7 @@ class MigrationGUI:
             'AsMathToAsBrMath':     resource_path('helpers/asmath_to_asbrmath.py'),
             'AsStringToAsBrStr':    resource_path('helpers/asstring_to_asbrstr.py'),
             'OpcUa Update':         resource_path('helpers/asopcua_update.py'),
-        }
+            'Create mapp folders':  resource_path('helpers/create_mapp_folders.py'),}
 
         self.build_ui()
         #self.append_log(f"Running from: {os.getcwd()}\n")
