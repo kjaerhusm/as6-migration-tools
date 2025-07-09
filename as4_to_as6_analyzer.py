@@ -405,12 +405,6 @@ def main():
                 os.path.join(args.project_path, "Logical"), [".c", ".cpp", ".hpp"], process_c_cpp_hpp_includes_file, obsolete_dict
             )
 
-            vision_settings_results = check_vision_settings(args.project_path)
-
-            mappView_settings_results = check_mappView(args.project_path)
-
-            mapp_version_results = check_mapp_version(args.project_path)
-
             # Store the list of files containing deprecated string functions
             deprecated_string_files = check_deprecated_string_functions(
                 os.path.join(args.project_path, "Logical"), 
@@ -424,7 +418,6 @@ def main():
 
             # Boolean flag to indicate whether deprecated string functions were found
             found_deprecated_string = bool(deprecated_string_files)
-
 
             # Store the list of files containing deprecated math functions
             deprecated_math_files = check_deprecated_math_functions(
@@ -555,6 +548,7 @@ def main():
             else:
                 log("- None")
 
+            vision_settings_results = check_vision_settings(args.project_path)
             if vision_settings_results['found']:
                 log(f"\n\nFound usage of mapp Vision (Version: {vision_settings_results['version']}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!")
                 
@@ -566,6 +560,7 @@ def main():
                 
                 found_any_invalid_functions = True
 
+            mappView_settings_results = check_mappView(args.project_path)
             if mappView_settings_results['found']:
                 log(f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security seetings will be enforced after the migration.")
                 log("\n- To allow access without a certificate")
@@ -588,8 +583,8 @@ def main():
 
             log("\n\nChecking mapp version in project file...")
             mapp_results = check_mapp_version(args.project_path)
-            if mapp_version_results:
-                for msg in mapp_version_results:
+            if mapp_results:
+                for msg in mapp_results:
                     log(f"- {msg}")
             else:
                 log("- No mapp version information found.")
