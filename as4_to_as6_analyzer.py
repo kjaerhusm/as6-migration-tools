@@ -230,6 +230,27 @@ def process_hw_file(file_path, hardware_dict):
     return list(results)  # Convert back to a list for consistency
 
 
+def process_file_devices(file_path):
+    """
+    Args:
+        file_path: Path to the .hw file.
+
+    Returns:
+        list: Unique matches found in the file.
+    """
+    exclude = ["C:\\", "D:\\", "E:\\", "F:\\"]
+    results = set()  # Use a set to store unique matches
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        content = f.read()
+        # Regex to extract the value from the file device elements
+        matches = re.findall(r'<Group ID="FileDevice\d+" />\s*<Parameter ID="FileDeviceName\d+" Value="(.*?)" />\s*<Parameter ID="FileDevicePath\d+" Value="(.*?)" />', content)
+        for name, path in matches:
+            for exclusion in exclude:
+                if path.lower().startswith(exclusion.lower()):
+                    results.add((name, path, file_path))
+    return list(results)  # Convert back to a list for consistency
+
+
 def process_lby_file(file_path, patterns):
     """
     Processes a .lby file to find obsolete dependencies.
@@ -397,6 +418,10 @@ def main():
                 os.path.join(args.project_path, "Physical"), [".hw"], process_hw_file, unsupported_hardware
             )
 
+            file_devices = scan_files_parallel(
+                os.path.join(args.project_path, "Physical"), [".hw"], process_file_devices
+            )
+
             lby_dependency_results = scan_files_parallel(
                 os.path.join(args.project_path, "Logical"), [".lby"], process_lby_file, obsolete_dict
             )
@@ -472,6 +497,20 @@ def main():
                     log(f"\nHardware configuration: {config_name}")
                     for hardware_id, reason in sorted(entries):
                         log(f"- {hardware_id}: {reason}")
+            else:
+                log("- None")
+
+            log("\n\nThe following invalid file devices were found: (accessing system partitions)")
+            if file_devices:
+                grouped_results = {}
+                for name, path, file_path in file_devices:
+                    config_name = os.path.basename(os.path.dirname(file_path))
+                    grouped_results.setdefault(config_name, set()).add((name, path))
+
+                for config_name, entries in grouped_results.items():
+                    log(f"\nHardware configuration: {config_name}")
+                    for name, path in sorted(entries):
+                        log(f"- {name}: {path}")
             else:
                 log("- None")
 
