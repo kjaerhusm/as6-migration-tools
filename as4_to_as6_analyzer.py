@@ -500,7 +500,7 @@ def main():
             else:
                 log("- None")
 
-            log("\n\nThe following invalid file devices were found: (accessing system partitions)")
+            log("\n\nThe following invalid file devices were found: (accessing system partitions / using drive letters)")
             if file_devices:
                 grouped_results = {}
                 for name, path, file_path in file_devices:
@@ -508,11 +508,16 @@ def main():
                     grouped_results.setdefault(config_name, set()).add((name, path))
 
                 for config_name, entries in grouped_results.items():
-                    log(f"\nHardware configuration: {config_name}")
+                    results = []
                     for name, path in sorted(entries):
-                        log(f"- {name}: {path}")
+                        results.append(f"{name} ({path})")
+                    result_string = ", ".join(results)
+                    log(f"Hardware configuration '{config_name}': {result_string}")
 
-                log("\nOn ARsim, the drive letters now all point to the 'Temp\\Simulation' directory!")
+                log("\nWrite operations on a system partition (C:, D:, E:) are not allowed. In the event of error, "
+                    "a write operation could destroy the system partition so that the target system can no longer be booted.\n"
+                    "The User partition USER_PATH should be used instead!\n"
+                    "In ARsim, the directory corresponding to USER_PATH is found at \\<Project>\\Temp\\Simulation\\<Configuration>\\<CPU>\\USER\\.")
             else:
                 log("- None")
 
