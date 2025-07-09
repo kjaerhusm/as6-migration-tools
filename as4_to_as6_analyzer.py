@@ -512,7 +512,7 @@ def main():
                     for name, path in sorted(entries):
                         log(f"- {name}: {path}")
 
-                log("\nOn ARsim, the drive letters now all point to the 'Temp\Simulation' directory!")
+                log("\nOn ARsim, the drive letters now all point to the 'Temp\\Simulation' directory!")
             else:
                 log("- None")
 
