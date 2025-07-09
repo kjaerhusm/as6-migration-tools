@@ -511,6 +511,8 @@ def main():
                     log(f"\nHardware configuration: {config_name}")
                     for name, path in sorted(entries):
                         log(f"- {name}: {path}")
+
+                log("\nOn ARsim, the drive letters now all point to the 'Temp\Simulation' directory!")
             else:
                 log("- None")
 
