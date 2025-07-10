@@ -51,6 +51,7 @@ class MigrationGUI:
 
         self.selected_folder = tk.StringVar()
         self.selected_script = tk.StringVar(value="Evaluate AS4 project")
+        self.verbose_mode = tk.BooleanVar(value=False)
 
         self.scripts = {
             "Evaluate AS4 project": resource_path("as4_to_as6_analyzer.py"),
@@ -87,6 +88,12 @@ class MigrationGUI:
         )
         script_menu.pack(anchor="w")
         script_menu.config(width=20)
+
+        verbose_checkbox = ttk.Checkbutton(
+            script_frame, text="Verbose Mode", variable=self.verbose_mode
+        )
+        verbose_checkbox.pack(side="left", padx=5)
+
         run_button = ttk.Button(script_frame, text="Run", command=self.execute_script)
         run_button.pack(side="left", padx=5)
         run_button.config(state="disabled")
@@ -138,6 +145,7 @@ class MigrationGUI:
         self.clear_log()
         folder = self.selected_folder.get()
         script = self.scripts.get(self.selected_script.get())
+        verbose = self.verbose_mode.get()
         # self.append_log(f"[DEBUG] Selected script -> {script}\n")
 
         if not os.path.exists(folder):
@@ -169,6 +177,8 @@ class MigrationGUI:
 
         try:
             sys.argv = ["analyzer", folder]
+            if verbose:
+                sys.argv.append("--verbose")
             module.main()
         except Exception as e:
             import traceback
