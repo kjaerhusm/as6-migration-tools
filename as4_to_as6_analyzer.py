@@ -455,6 +455,17 @@ def get_project_file(args, parser):
     return apj_files[0]
 
 
+# Check the project name and path for invalid characters
+# As opposed to what's in the help, we need to allow : and \ and / as well since these are valid
+# path separators
+def check_project_path_and_name(path, name):
+    project_name_pattern = r"^(\w+)\.apj$"
+    project_path_pattern = r"^[\w :\\/!(){}+\-@\.\^=]+$"
+    return re.fullmatch(project_path_pattern, path) and re.fullmatch(
+        project_name_pattern, name
+    )
+
+
 # Update main function to handle project directory input and optional verbose flag
 def main():
     """
@@ -490,6 +501,12 @@ def main():
             )
 
             start_time = time.time()
+
+            if not check_project_path_and_name(args.project_path, apj_file):
+                log(
+                    "Invalid path or project name, see "
+                    "https://help.br-automation.com/#/en/6/revinfos/version-info/projekt_aus_automation_studio_4_ubernehmen/automation_studio/notwendige_anpassungen_im_automation_studio_4_projekt.html"
+                )
 
             # Use project_path as the root directory for scanning
             manual_libs_results = scan_files_parallel(
@@ -807,7 +824,7 @@ def main():
                     "\n  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled"
                     "\n"
                     "\n  Change the following settings in the User role system (Configuration View/AccessAndSecurity/UserRoleSystem/User.user)"
-                    "\n  Assign the role \"BR_Engineer\" to the user \"Anonymous\". Create that user if it doesn't already exist, assign no password."
+                    '\n  Assign the role "BR_Engineer" to the user "Anonymous". Create that user if it doesn\'t already exist, assign no password.'
                 )
 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
