@@ -2,6 +2,7 @@ import os
 import re
 import xml.etree.ElementTree as ET
 
+
 def check_safety_release(project_root):
     """
     Checks if the project uses MappSafety or SafetyRelease.
@@ -11,10 +12,7 @@ def check_safety_release(project_root):
             - 'mode': 'mappsafety', 'safetyrelease', or 'none'
             - 'details': list of file paths or descriptions
     """
-    result = {
-        "mode": "none",
-        "details": []
-    }
+    result = {"mode": "none", "details": []}
 
     # 1. Check .apj file in root for MappSafety
     apj_path = None
@@ -32,7 +30,8 @@ def check_safety_release(project_root):
                 result["mode"] = "mappsafety"
                 result["details"].append(
                     f"Migrating from mapp Safety 5.x to mapp Safety 6.x - "
-                    f"All conversion steps are carried out automatically by the system; no action by the user is necessary.")
+                    f"All conversion steps are carried out automatically by the system; no action by the user is necessary."
+                )
                 return result  # Valid project
         except Exception as e:
             result["details"].append(f"Failed to parse .apj file: {e}")
@@ -47,7 +46,9 @@ def check_safety_release(project_root):
                         content = f.read()
                         if 'SafetyRelease="' in content:
                             match = re.search(r'SafetyRelease="(\d+)\.(\d+)"', content)
-                            if match and (match.group(1) != "0" or match.group(2) != "0"):
+                            if match and (
+                                match.group(1) != "0" or match.group(2) != "0"
+                            ):
                                 result["mode"] = "safetyrelease"
                                 result["details"].append(
                                     f"Legacy safety is no longer supported with AS 6.x.\n"
@@ -70,6 +71,7 @@ def check_safety_release(project_root):
                 return result
 
     return result
+
 
 def check_safety(project_root):
     result = check_safety_release(project_root)
