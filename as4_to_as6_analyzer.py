@@ -7,6 +7,7 @@ import json
 import argparse
 from pathlib import Path
 from checks import *
+from classes.ConsoleColors import ConsoleColors
 
 # Path to the main package file
 root_pkg_path = r"Logical\Libraries\Package.pkg"
@@ -388,20 +389,7 @@ def process_manual_libraries(file_path, patterns):
     return results
 
 
-# Update main function to handle project directory input and optional verbose flag
-def main():
-    """
-    Main function to scan for obsolete libraries, function blocks, functions, and unsupported hardware.
-    Outputs the results to a file as well as the console.
-    """
-
-    build_number = get_build_number()
-    print(f"Script build number: {build_number}")
-
-    class CONSOLE_COLORS:
-        RESET = "\x1b[1;0m"  # reset all modes (styles and colors)
-        ERROR = "\x1b[1;31m"  # Set style to bold, red foreground.
-
+def parse_args():
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description="Scans Automation Studio project for transition from AS4 to AS6",
@@ -434,15 +422,17 @@ def main():
         # Optionally enable verbose mode by default from GUI
         # sys.argv += ["-v"]
 
-    args = parser.parse_args()
+    return parser.parse_args(), parser
 
+
+def get_project_file(args, parser):
     # Check if valid project path
     if not os.path.exists(args.project_path):
         print(
-            f"{CONSOLE_COLORS.ERROR}Error: The provided project path does not exist: '{args.project_path}'",
+            f"{ConsoleColors.ERROR}Error: The provided project path does not exist: '{args.project_path}'",
             file=sys.stderr,
         )
-        print(CONSOLE_COLORS.RESET + "\n", file=sys.stderr)
+        print(ConsoleColors.RESET + "\n", file=sys.stderr)
         parser.print_help()
         sys.exit(1)
 
@@ -452,18 +442,34 @@ def main():
     ]
     if not apj_files:
         print(
-            f"{CONSOLE_COLORS.ERROR}Error: No .apj file found in the provided path: '{args.project_path}'",
+            f"{ConsoleColors.ERROR}Error: No .apj file found in the provided path: '{args.project_path}'",
             file=sys.stderr,
         )
         print(
             "Please specify a valid Automation Studio 4 project path.", file=sys.stderr
         )
-        print(CONSOLE_COLORS.RESET + "\n", file=sys.stderr)
+        print(ConsoleColors.RESET + "\n", file=sys.stderr)
         parser.print_help()
         sys.exit(1)
 
+    return apj_files[0]
+
+
+# Update main function to handle project directory input and optional verbose flag
+def main():
+    """
+    Main function to scan for obsolete libraries, function blocks, functions, and unsupported hardware.
+    Outputs the results to a file as well as the console.
+    """
+
+    build_number = get_build_number()
+    print(f"Script build number: {build_number}")
+
+    args, parser = parse_args()
+    apj_file = get_project_file(args, parser)
+
     print(f"Project path validated: {args.project_path}")
-    print(f"Using project file: {apj_files[0]}")
+    print(f"Using project file: {apj_file}")
 
     output_file = os.path.join(args.project_path, "as4_to_as6_analyzer_result.txt")
     with open(output_file, "w", encoding="utf-8") as file:
