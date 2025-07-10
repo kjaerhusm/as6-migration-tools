@@ -480,6 +480,10 @@ def main():
                 log_file.write(message + "\n")  # Write to file
                 log_file.flush()  # Ensure data is written immediately
 
+            def log_v(message, log_file=file, prepend=""):
+                if args.verbose:
+                    log(f"{prepend}[VERBOSE] {message}", log_file)
+
             log(
                 "Scanning started... Please wait while the script analyzes your project files.\n",
                 file,
@@ -589,7 +593,7 @@ def main():
                     "\nPlease ensure these files are saved at least once with Automation Studio 4.12."
                 )
             else:
-                log("- All project and hardware files are valid.")
+                log_v("- All project and hardware files are valid.")
 
             log("\n\nChecking OPC configuration...")
             uad_misplaced_files, uad_old_version = check_uad_files(
@@ -605,7 +609,7 @@ def main():
                     "\nPlease create (via AS 4.12) and move these files to the required directory: Connectivity/OpcUA."
                 )
             else:
-                log("- All .uad files are in the correct location.")
+                log_v("- All .uad files are in the correct location.")
 
             if uad_old_version:
                 log(
@@ -617,7 +621,7 @@ def main():
                     "\nPlease edit the uad file, make a small change and save the file to trigger the file update."
                 )
             else:
-                log("- All .uad files have the correct minimum version.")
+                log_v("- All .uad files have the correct minimum version.")
 
             log("\n\nThe following unsupported hardware were found:")
             if hardware_results:
@@ -633,7 +637,7 @@ def main():
                     for hardware_id, reason in sorted(entries):
                         log(f"- {hardware_id}: {reason}")
             else:
-                log("- None")
+                log_v("- None")
 
             log(
                 "\n\nThe following invalid file devices were found: (accessing system partitions / using drive letters)"
@@ -658,7 +662,7 @@ def main():
                     "In ARsim, the directory corresponding to USER_PATH is found at \\<Project>\\Temp\\Simulation\\<Configuration>\\<CPU>\\USER\\."
                 )
             else:
-                log("- None")
+                log_v("- None")
 
             log(
                 "\n\nThe following potentially invalid ftp configurations were found: (accessing system instead of user partition)"
@@ -674,14 +678,14 @@ def main():
                     for name in sorted(entries):
                         log(f"- Accessing '{name}'")
             else:
-                log("- None")
+                log_v("- None")
 
             log("\n\nThe following invalid libraries were found in .pkg files:")
             if invalid_pkg_files:
                 for library, reason, file_path in invalid_pkg_files:
                     log(f"- {library}: {reason} (Found in: {file_path})")
             else:
-                log("- None")
+                log_v("- None")
 
             log(
                 "\n\nThe following libraries might require manual action after migrating the project to Automation Studio 6:"
@@ -690,7 +694,7 @@ def main():
                 for library, reason, file_path in manual_libs_results:
                     log(f"- {library}: {reason} (Found in: {file_path})")
             else:
-                log("- None")
+                log_v("- None")
 
             # Convert .lby results to match the (library_name, reason, file_path) format
             normalized_lby_results = [
@@ -710,7 +714,7 @@ def main():
                 for library_name, reason, file_path in all_dependency_results:
                     log(f"- {library_name}: {reason} (Found in: {file_path})")
             else:
-                log("- None")
+                log_v("- None")
 
             log(
                 "\n\nThe following invalid function blocks were found in .var and .typ files:"
@@ -719,7 +723,7 @@ def main():
                 for block, reason, file_path in invalid_var_typ_files:
                     log(f"- {block}: {reason} (Found in: {file_path})")
             else:
-                log("- None")
+                log_v("- None")
 
             log(
                 "\n\nThe following invalid functions were found in .st, .c and .cpp files:"
@@ -739,11 +743,12 @@ def main():
 
                 # Verbose: Print where the deprecated string functions were found only if --verbose is enabled
                 if args.verbose and deprecated_string_files:
-                    print(
-                        "\n[VERBOSE] Deprecated AsString functions detected in the following files:"
+                    log_v(
+                        "Deprecated AsString functions detected in the following files:",
+                        prepend="\n",
                     )
-                    for file in deprecated_string_files:
-                        print(f"[VERBOSE] - {file}")
+                    for f in deprecated_string_files:
+                        log_v(f"- {f}")
 
             if found_deprecated_math:
                 log(
@@ -752,15 +757,16 @@ def main():
                 found_any_invalid_functions = True
 
                 # Verbose: Print where the deprecated math functions were found only if --verbose is enabled
-                if args.verbose and found_deprecated_math:
-                    print(
-                        "\n[VERBOSE] Deprecated AsMath functions detected in the following files:"
+                if deprecated_math_files:
+                    log_v(
+                        "Deprecated AsMath functions detected in the following files:",
+                        prepend="\n",
                     )
-                    for file in deprecated_math_files:
-                        print(f"[VERBOSE] - {file}")
+                    for f in deprecated_math_files:
+                        log_v(f"- {f}")
 
             if not found_any_invalid_functions:
-                log("- None")
+                log_v("- None")
 
             log("\n\nChecking for safety...")
             safety_results = check_safety(args.project_path)
@@ -768,7 +774,7 @@ def main():
                 for entry in safety_results:
                     log(f"- {entry}")
             else:
-                log("- None")
+                log_v("- None")
 
             vision_settings_results = check_vision_settings(args.project_path)
             if vision_settings_results["found"]:
@@ -777,10 +783,10 @@ def main():
                 )
 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
-                if args.verbose and vision_settings_results["locations"]:
-                    print("\n[VERBOSE] mappVision folders found at:")
+                if vision_settings_results["locations"]:
+                    log_v("mappVision folders found at:", prepend="\n")
                     for location in vision_settings_results["locations"]:
-                        print(f"[VERBOSE] - {location}")
+                        log_v(f"- {location}")
 
                 found_any_invalid_functions = True
 
@@ -816,10 +822,10 @@ def main():
                 )
 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
-                if args.verbose and mappView_settings_results["locations"]:
-                    print("\n[VERBOSE] mappView folders found at:")
+                if mappView_settings_results["locations"]:
+                    log_v("mappView folders found at:", prepend="\n")
                     for location in mappView_settings_results["locations"]:
-                        print(f"[VERBOSE] - {location}")
+                        log_v(f"- {location}")
 
                 found_any_invalid_functions = True
 
@@ -829,7 +835,7 @@ def main():
                 for msg in mapp_results:
                     log(f"- {msg}")
             else:
-                log("- No mapp version information found.")
+                log_v("- No mapp version information found.")
 
             end_time = time.time()
             log(
