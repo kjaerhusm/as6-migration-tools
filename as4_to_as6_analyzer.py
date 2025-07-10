@@ -794,31 +794,18 @@ def main():
             if mappView_settings_results["found"]:
                 log(
                     f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security seetings will be enforced after the migration."
-                )
-                log("\n- To allow access without a certificate")
-                log(
-                    "  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
-                )
-                log(
-                    "  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled"
-                )
-                log(
-                    "\n- User login will be enabled by default. To allow anonymous access"
-                )
-                log(
-                    "  Change the following settings in mappView configuration (Physical View/mappView/Config.mappviewcfg):"
-                )
-                log(
-                    "  MappViewConfiguration->Server Configuration->Startup User: anonymous token"
-                )
-                log(
+                    "\n"
+                    "\n- To allow access without a certificate"
                     "\n  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
-                )
-                log(
-                    "  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled"
-                )
-                log(
-                    '  ClientServerConfiguration->Security->Authorization->Anonymous Access Add new user role and select "everyone"'
+                    "\n  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled"
+                    "\n"
+                    "\n- User login will be enabled by default. To allow anonymous access"
+                    "\n  Change the following settings in mappView configuration (Physical View/mappView/Config.mappviewcfg):"
+                    "\n  MappViewConfiguration->Server Configuration->Startup User: anonymous token"
+                    "\n"
+                    "\n  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
+                    "\n  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled"
+                    "\n  ClientServerConfiguration->Security->Authorization->Anonymous Access Add new user role and select \"Everyone\""
                 )
 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
