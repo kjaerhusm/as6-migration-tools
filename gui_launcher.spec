@@ -14,6 +14,7 @@ a = Analysis(
         ('as4_to_as6_analyzer.py', '.'),
         ('checks/*.py', 'checks'),
         ('checks/__init__.py', 'checks'),
+        ('classes/*.py', 'classes'),
     ],
     hiddenimports=[
         'json',
