@@ -1,21 +1,23 @@
-#The OPC UA client library in Automation Runtime 6 has been updated to OPC 30001 PLC client function blocks based on IEC 61131-3 1.2. 
-#To migrate a project from an older AR version to AR 6, modifications to the program are necessary.
+# The OPC UA client library in Automation Runtime 6 has been updated to OPC 30001 PLC client function blocks based on IEC 61131-3 1.2.
+# To migrate a project from an older AR version to AR 6, modifications to the program are necessary.
 import os
 import re
 import hashlib
 import sys
+
 
 def calculate_file_hash(file_path):
     """
     Calculates the hash (MD5) of a file for comparison purposes.
     """
     md5 = hashlib.md5()
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         while chunk := f.read(4096):
             md5.update(chunk)
     return md5.hexdigest()
 
-def replace_enums(file_path, enum_mapping ):
+
+def replace_enums(file_path, enum_mapping):
     """
     Replace enumerators in a file based on the provided mappings.
     """
@@ -34,7 +36,9 @@ def replace_enums(file_path, enum_mapping ):
     for old_const, new_const in enum_mapping.items():
         pattern = re.escape(old_const)
         replacement = new_const
-        modified_content, num_replacements = re.subn(pattern, replacement, modified_content)
+        modified_content, num_replacements = re.subn(
+            pattern, replacement, modified_content
+        )
         enum_replacements += num_replacements
 
     if modified_content != original_content:
@@ -50,7 +54,8 @@ def replace_enums(file_path, enum_mapping ):
 
     return enum_replacements, False
 
-def replace_fbs_and_types(file_path, fb_mapping, type_mapping ):
+
+def replace_fbs_and_types(file_path, fb_mapping, type_mapping):
     """
     Replace function block calls and types in a file based on the provided mappings.
     """
@@ -70,14 +75,18 @@ def replace_fbs_and_types(file_path, fb_mapping, type_mapping ):
     for old_fb, new_fb in fb_mapping.items():
         pattern = rf"\b{re.escape(old_fb)}\b"
         replacement = new_fb
-        modified_content, num_replacements = re.subn(pattern, replacement, modified_content)
+        modified_content, num_replacements = re.subn(
+            pattern, replacement, modified_content
+        )
         fb_replacements += num_replacements
 
     # Replace types
     for old_typ, new_typ in type_mapping.items():
         pattern = rf"\b{re.escape(old_typ)}\b"
         replacement = new_typ
-        modified_content, num_replacements = re.subn(pattern, replacement, modified_content)
+        modified_content, num_replacements = re.subn(
+            pattern, replacement, modified_content
+        )
         type_replacements += num_replacements
 
     if modified_content != original_content:
@@ -88,10 +97,13 @@ def replace_fbs_and_types(file_path, fb_mapping, type_mapping ):
         if original_hash == new_hash:
             return fb_replacements, type_replacements, False
 
-        print(f"{fb_replacements + type_replacements:4d} changes written to: {file_path}")
+        print(
+            f"{fb_replacements + type_replacements:4d} changes written to: {file_path}"
+        )
         return fb_replacements, type_replacements, True
 
     return fb_replacements, type_replacements, False
+
 
 def check_for_library(project_path, library_names):
     """
@@ -108,6 +120,7 @@ def check_for_library(project_path, library_names):
 
     return found_libraries
 
+
 def main():
     project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
@@ -115,7 +128,9 @@ def main():
     if not os.path.exists(project_path):
         print(f"Error: The provided project path does not exist: {project_path}")
         print("\nEnsure the path is correct and the project folder exists.")
-        print("\nIf the path contains spaces, make sure to wrap it in quotes, like this:")
+        print(
+            "\nIf the path contains spaces, make sure to wrap it in quotes, like this:"
+        )
         print('   python asopcua_update.py "C:\\path\\to\\your\\project"')
         sys.exit(1)
 
@@ -129,7 +144,7 @@ def main():
     print(f"Project path validated: {project_path}")
     print(f"Using project file: {apj_files[0]}\n")
 
-    library_names = ["AsOpcUac","AsOpcUas" ]
+    library_names = ["AsOpcUac", "AsOpcUas"]
     found_libraries = check_for_library(project_path, library_names)
 
     print(
@@ -141,14 +156,20 @@ def main():
 
         if not found_libraries:
             print("Neither AsOpcUac nor AsOpcUas libraries found.\n")
-            proceed = input("Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ").strip().lower()
-            if proceed not in ('', 'y'):
+            proceed = (
+                input(
+                    "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: "
+                )
+                .strip()
+                .lower()
+            )
+            if proceed not in ("", "y"):
                 print("Operation cancelled. No changes were made.")
                 return
         else:
             print(f"Libraries found: {', '.join(found_libraries)}.\n")
             proceed = input("Do you want to continue? (y/n) [y]: ").strip().lower()
-            if proceed not in ('', 'y'):
+            if proceed not in ("", "y"):
                 print("Operation cancelled. No changes were made.")
                 return
 
@@ -202,17 +223,19 @@ def main():
         for file in files:
             if file.endswith((".st", ".c", ".cpp", ".ab")):
                 file_path = os.path.join(root, file)
-                enum_replacements, changed = replace_enums(
-                    file_path, enum_mapping
-                )
+                enum_replacements, changed = replace_enums(file_path, enum_mapping)
                 if changed:
-                    
+
                     total_enums_replacements += enum_replacements
                     total_files_changed += 1
-            elif file.endswith((".typ")) or file.endswith((".var")) or file.endswith((".fun")):
+            elif (
+                file.endswith((".typ"))
+                or file.endswith((".var"))
+                or file.endswith((".fun"))
+            ):
                 file_path = os.path.join(root, file)
-                function_replacements, type_replacements, changed = replace_fbs_and_types(
-                    file_path, fb_mapping, type_mapping
+                function_replacements, type_replacements, changed = (
+                    replace_fbs_and_types(file_path, fb_mapping, type_mapping)
                 )
                 if changed:
                     total_type_replacements += type_replacements
@@ -225,10 +248,15 @@ def main():
     print(f"Total types replaced: {total_type_replacements}")
     print(f"Total files changed: {total_files_changed}")
 
-    if total_function_replacements == 0 and total_enums_replacements == 0 and total_type_replacements == 0:
+    if (
+        total_function_replacements == 0
+        and total_enums_replacements == 0
+        and total_type_replacements == 0
+    ):
         print("No functions or constants needed to be replaced.")
     else:
         print("Replacement completed successfully.")
+
 
 if __name__ == "__main__":
     main()

@@ -22,39 +22,54 @@ discontinuation_info = {
     "obsolete_fbks": {},
     "obsolete_funcs": {},
     "unsupported_hw": {},
-    "deprecated_string_functions" : {},
-    "deprecated_math_functions" : {},
+    "deprecated_string_functions": {},
+    "deprecated_math_functions": {},
 }
 
 try:
     for filename in discontinuation_info:
-        with open( f"{script_directory}/discontinuations/{filename}.json", "r") as json_file:
-            discontinuation_info[filename]  = json.load(json_file)
+        with open(
+            f"{script_directory}/discontinuations/{filename}.json", "r"
+        ) as json_file:
+            discontinuation_info[filename] = json.load(json_file)
 except Exception as e:
-    print(f"\033[1;31m[ERROR]\033[0m Error reading discontinuation lists: {e}", file=sys.stderr)
+    print(
+        f"\033[1;31m[ERROR]\033[0m Error reading discontinuation lists: {e}",
+        file=sys.stderr,
+    )
     sys.exit(1)
-    
-obsolete_dict = discontinuation_info["obsolete_libs"] # obsolete libraries with reasons
-manual_process_libraries = discontinuation_info["manual_process_libs"] # Libraries that must be handled manually
-obsolete_function_blocks = discontinuation_info["obsolete_fbks"] # list of obsolete function blocks with reasons
-obsolete_functions = discontinuation_info["obsolete_funcs"] # Hardcoded list of obsolete functions with reasons
-unsupported_hardware = discontinuation_info["unsupported_hw"] # hardware not supported by >= 6.0
-deprecated_string_functions = set(discontinuation_info["deprecated_string_functions"]) # deprecated string functions 8 bit and 16 bit   
-deprecated_math_functions = set(discontinuation_info["deprecated_math_functions"]) # deprecated math functions  
+
+# obsolete libraries with reasons
+obsolete_dict = discontinuation_info["obsolete_libs"]
+# Libraries that must be handled manually
+manual_process_libraries = discontinuation_info["manual_process_libs"]
+# list of obsolete function blocks with reasons
+obsolete_function_blocks = discontinuation_info["obsolete_fbks"]
+# Hardcoded list of obsolete functions with reasons
+obsolete_functions = discontinuation_info["obsolete_funcs"]
+# hardware not supported by >= 6.0
+unsupported_hardware = discontinuation_info["unsupported_hw"]
+# deprecated string functions 8 bit and 16 bit
+deprecated_string_functions = set(discontinuation_info["deprecated_string_functions"])
+# deprecated math functions
+deprecated_math_functions = set(discontinuation_info["deprecated_math_functions"])
 
 pass
+
+
 def display_progress(message):
     """
     Displays a progress message on the same line in the terminal.
     In GUI mode, stdout may be None, so we fall back to printing.
     """
     try:
-        sys.stdout.write('\r' + ' ' * 80)
-        sys.stdout.write('\r' + message)
+        sys.stdout.write("\r" + " " * 80)
+        sys.stdout.write("\r" + message)
         sys.stdout.flush()
     except Exception:
         # Fallback: simple print if stdout is unavailable
         print(message)
+
 
 def process_stub(file_path, *args):
     """
@@ -70,13 +85,17 @@ def process_stub(file_path, *args):
     """
     return []
 
+
 # Get build number from version.txt
 def get_build_number():
-    version_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.txt')
+    version_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "version.txt"
+    )
     if os.path.exists(version_file):
-        with open(version_file, 'r') as file:
+        with open(version_file, "r") as file:
             return file.read().strip()
     return "1"  # Default build number if version.txt doesn't exist
+
 
 def scan_files_parallel(root_dir, extensions, process_function, *args):
     """
@@ -101,16 +120,19 @@ def scan_files_parallel(root_dir, extensions, process_function, *args):
 
     total_files = len(file_paths)
     display_progress(f"Found {total_files} files to process...")
-    
+
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = {executor.submit(process_function, path, *args): path for path in file_paths}
+        futures = {
+            executor.submit(process_function, path, *args): path for path in file_paths
+        }
         for i, future in enumerate(concurrent.futures.as_completed(futures), 1):
             display_progress(f"Processing file {i}/{total_files}...")
             results.extend(future.result())
-    
+
     display_progress("Processing complete.".ljust(50))  # Clear line
     print()  # Move to next line
     return results
+
 
 def process_pkg_file(file_path, patterns):
     """
@@ -124,15 +146,16 @@ def process_pkg_file(file_path, patterns):
         list: Matches found in the file.
     """
     results = []
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
         # Regex for library names between > and <
-        matches = re.findall(r'>([^<]+)<', content, re.IGNORECASE)
+        matches = re.findall(r">([^<]+)<", content, re.IGNORECASE)
         for match in matches:
             for pattern, reason in patterns.items():
                 if match.lower() == pattern.lower():
                     results.append((pattern, reason, file_path))
     return results
+
 
 def process_var_file(file_path, patterns):
     """
@@ -146,15 +169,16 @@ def process_var_file(file_path, patterns):
         list: Matches found in the file.
     """
     results = []
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
         # Regex for function block declarations, e.g., : MpAlarmXConfigMapping;
-        matches = re.findall(r':\s*([A-Za-z0-9_]+)\s*;', content)
+        matches = re.findall(r":\s*([A-Za-z0-9_]+)\s*;", content)
         for match in matches:
             for pattern, reason in patterns.items():
                 if match.lower() == pattern.lower():
                     results.append((pattern, reason, file_path))
     return results
+
 
 def process_var_typ_file(file_path, patterns):
     """
@@ -169,10 +193,10 @@ def process_var_typ_file(file_path, patterns):
         list: Matches found in the file.
     """
     results = []
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
         # Regex to match the format: name : FunctionBlockName;
-        matches = re.findall(r':\s*([A-Za-z0-9_]+)\s*;', content)
+        matches = re.findall(r":\s*([A-Za-z0-9_]+)\s*;", content)
         for match in matches:
             for pattern, reason in patterns.items():
                 # Compare case-insensitively
@@ -195,15 +219,18 @@ def process_st_c_file(file_path, patterns):
     results = []
     matched_files = set()  # To store file paths and ensure uniqueness
 
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
         # Check for other patterns if necessary
         for pattern, reason in patterns.items():
-            if re.search(rf'\b{re.escape(pattern)}\b', content) and file_path not in matched_files:
+            if (
+                re.search(rf"\b{re.escape(pattern)}\b", content)
+                and file_path not in matched_files
+            ):
                 results.append((pattern, reason, file_path))
                 matched_files.add(file_path)  # Ensure file is added only once
-                
+
     return results
 
 
@@ -219,14 +246,16 @@ def process_hw_file(file_path, hardware_dict):
         list: Unique matches found in the file.
     """
     results = set()  # Use a set to store unique matches
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
         # Regex to extract the Type value from the <Module> elements
         matches = re.findall(r'<Module [^>]*Type="([^"]+)"', content)
         for hw_type in matches:
             for reason, items in hardware_dict.items():
                 if hw_type in items:
-                    results.add((hw_type, reason, file_path))  # Add as a tuple to ensure uniqueness
+                    results.add(
+                        (hw_type, reason, file_path)
+                    )  # Add as a tuple to ensure uniqueness
     return list(results)  # Convert back to a list for consistency
 
 
@@ -240,10 +269,13 @@ def process_file_devices(file_path):
     """
     exclude = ["C:\\", "D:\\", "E:\\", "F:\\"]
     results = set()  # Use a set to store unique matches
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
         # Regex to extract the value from the file device elements
-        matches = re.findall(r'<Group ID="FileDevice\d+" />\s*<Parameter ID="FileDeviceName\d+" Value="(.*?)" />\s*<Parameter ID="FileDevicePath\d+" Value="(.*?)" />', content)
+        matches = re.findall(
+            r'<Group ID="FileDevice\d+" />\s*<Parameter ID="FileDeviceName\d+" Value="(.*?)" />\s*<Parameter ID="FileDevicePath\d+" Value="(.*?)" />',
+            content,
+        )
         for name, path in matches:
             for exclusion in exclude:
                 if path.lower().startswith(exclusion.lower()):
@@ -289,18 +321,21 @@ def process_lby_file(file_path, patterns):
         list: Matches found in the file in the format (library_name, dependency, reason, file_path).
     """
     results = []
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
         # Extract library name (directory name as identifier)
         library_name = os.path.basename(os.path.dirname(file_path))
         # Extract dependencies from the XML content
-        dependencies = re.findall(r'<Dependency ObjectName="([^"]+)"', content, re.IGNORECASE)
+        dependencies = re.findall(
+            r'<Dependency ObjectName="([^"]+)"', content, re.IGNORECASE
+        )
         for dependency in dependencies:
             for pattern, reason in patterns.items():
                 # Compare case-insensitively
                 if dependency.lower() == pattern.lower():
                     results.append((library_name, dependency, reason, file_path))
     return results
+
 
 def process_c_cpp_hpp_includes_file(file_path, patterns):
     """
@@ -316,7 +351,7 @@ def process_c_cpp_hpp_includes_file(file_path, patterns):
     results = []
     include_pattern = re.compile(r'#include\s+[<"]([^">]+)[">]')
 
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.readlines()
 
         for line in content:
@@ -326,8 +361,9 @@ def process_c_cpp_hpp_includes_file(file_path, patterns):
                 for pattern, reason in patterns.items():
                     if included_library == f"{pattern.lower()}.h":
                         results.append((pattern, reason, file_path))
-    
+
     return results
+
 
 # Function to process libraries requiring manual process
 def process_manual_libraries(file_path, patterns):
@@ -342,15 +378,14 @@ def process_manual_libraries(file_path, patterns):
         list: Matches found in the file.
     """
     results = []
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
-        matches = re.findall(r'>([^<]+)<', content, re.IGNORECASE)
+        matches = re.findall(r">([^<]+)<", content, re.IGNORECASE)
         for match in matches:
             for library, action in patterns.items():
                 if match.lower() == library.lower():
                     results.append((library, action, file_path))
     return results
-
 
 
 # Update main function to handle project directory input and optional verbose flag
@@ -363,24 +398,33 @@ def main():
     build_number = get_build_number()
     print(f"Script build number: {build_number}")
 
-    
     class CONSOLE_COLORS:
-        RESET =  '\x1b[1;0m'   # reset all modes (styles and colors)
-        ERROR =  '\x1b[1;31m'  # Set style to bold, red foreground.
-    
-    
-    parser = argparse.ArgumentParser( prog= os.path.basename(__file__), 
-                        description="Scans Automation Studio project for transition from AS4 to AS6",
-                        usage='python %(prog)s project_path [options]',
-                        epilog = "Ensure the path is correct and the project folder exists.\n"\
-                            "A valid AS 4 project folder must contain an *.apj file.\n"\
-                            'If the path contains spaces, make sure to wrap it in quotes (e.g. like this: "C:\\My documents\\project")\n'\
-                            "If you enter a  '.' as project_path the current directory will be used.\n",
-                        formatter_class=argparse.RawDescriptionHelpFormatter                            
-                        )
-     # Add arguments
-    parser.add_argument('project_path', type=str, help='Automation Studio 4.x path containing *.apj file')
-    parser.add_argument('-v','--verbose', action='store_true', required=False, help='Outputs verbose information')
+        RESET = "\x1b[1;0m"  # reset all modes (styles and colors)
+        ERROR = "\x1b[1;31m"  # Set style to bold, red foreground.
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description="Scans Automation Studio project for transition from AS4 to AS6",
+        usage="python %(prog)s project_path [options]",
+        epilog="Ensure the path is correct and the project folder exists.\n"
+        "A valid AS 4 project folder must contain an *.apj file.\n"
+        'If the path contains spaces, make sure to wrap it in quotes (e.g. like this: "C:\\My documents\\project")\n'
+        "If you enter a  '.' as project_path the current directory will be used.\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    # Add arguments
+    parser.add_argument(
+        "project_path",
+        type=str,
+        help="Automation Studio 4.x path containing *.apj file",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        required=False,
+        help="Outputs verbose information",
+    )
     # Parse the arguments
 
     # Fallback if no arguments are provided (e.g. when run from GUI)
@@ -391,19 +435,29 @@ def main():
         # sys.argv += ["-v"]
 
     args = parser.parse_args()
-       
+
     # Check if valid project path
     if not os.path.exists(args.project_path):
-        print(f"{CONSOLE_COLORS.ERROR}Error: The provided project path does not exist: '{args.project_path}'", file=sys.stderr)
+        print(
+            f"{CONSOLE_COLORS.ERROR}Error: The provided project path does not exist: '{args.project_path}'",
+            file=sys.stderr,
+        )
         print(CONSOLE_COLORS.RESET + "\n", file=sys.stderr)
         parser.print_help()
         sys.exit(1)
 
     # Check if .apj file exists in the provided path
-    apj_files = [file for file in os.listdir(args.project_path) if file.endswith(".apj")]
+    apj_files = [
+        file for file in os.listdir(args.project_path) if file.endswith(".apj")
+    ]
     if not apj_files:
-        print(f"{CONSOLE_COLORS.ERROR}Error: No .apj file found in the provided path: '{args.project_path}'", file=sys.stderr)
-        print("Please specify a valid Automation Studio 4 project path.", file=sys.stderr)
+        print(
+            f"{CONSOLE_COLORS.ERROR}Error: No .apj file found in the provided path: '{args.project_path}'",
+            file=sys.stderr,
+        )
+        print(
+            "Please specify a valid Automation Studio 4 project path.", file=sys.stderr
+        )
         print(CONSOLE_COLORS.RESET + "\n", file=sys.stderr)
         parser.print_help()
         sys.exit(1)
@@ -414,57 +468,86 @@ def main():
     output_file = os.path.join(args.project_path, "as4_to_as6_analyzer_result.txt")
     with open(output_file, "w", encoding="utf-8") as file:
         try:
+
             def log(message, log_file=file):
                 print(message)  # Print to console
                 log_file.write(message + "\n")  # Write to file
                 log_file.flush()  # Ensure data is written immediately
 
-            log("Scanning started... Please wait while the script analyzes your project files.\n", file)
+            log(
+                "Scanning started... Please wait while the script analyzes your project files.\n",
+                file,
+            )
 
             start_time = time.time()
 
             # Use project_path as the root directory for scanning
             manual_libs_results = scan_files_parallel(
-                os.path.join(args.project_path, "Logical"), [".pkg"], process_manual_libraries, manual_process_libraries
+                os.path.join(args.project_path, "Logical"),
+                [".pkg"],
+                process_manual_libraries,
+                manual_process_libraries,
             )
-            
+
             invalid_pkg_files = scan_files_parallel(
-                os.path.join(args.project_path, "Logical"), [".pkg"], process_pkg_file, obsolete_dict
+                os.path.join(args.project_path, "Logical"),
+                [".pkg"],
+                process_pkg_file,
+                obsolete_dict,
             )
 
             invalid_var_typ_files = scan_files_parallel(
-                os.path.join(args.project_path, "Logical"), [".var", ".typ"], process_var_file, obsolete_function_blocks
+                os.path.join(args.project_path, "Logical"),
+                [".var", ".typ"],
+                process_var_file,
+                obsolete_function_blocks,
             )
 
             invalid_st_c_files = scan_files_parallel(
-                os.path.join(args.project_path, "Logical"), [".st", ".c", ".cpp"], process_st_c_file, obsolete_functions
+                os.path.join(args.project_path, "Logical"),
+                [".st", ".c", ".cpp"],
+                process_st_c_file,
+                obsolete_functions,
             )
 
             hardware_results = scan_files_parallel(
-                os.path.join(args.project_path, "Physical"), [".hw"], process_hw_file, unsupported_hardware
+                os.path.join(args.project_path, "Physical"),
+                [".hw"],
+                process_hw_file,
+                unsupported_hardware,
             )
 
             file_devices = scan_files_parallel(
-                os.path.join(args.project_path, "Physical"), [".hw"], process_file_devices
+                os.path.join(args.project_path, "Physical"),
+                [".hw"],
+                process_file_devices,
             )
 
             ftp_configs = scan_files_parallel(
-                os.path.join(args.project_path, "Physical"), [".hw"], process_ftp_configurations,
+                os.path.join(args.project_path, "Physical"),
+                [".hw"],
+                process_ftp_configurations,
             )
 
             lby_dependency_results = scan_files_parallel(
-                os.path.join(args.project_path, "Logical"), [".lby"], process_lby_file, obsolete_dict
+                os.path.join(args.project_path, "Logical"),
+                [".lby"],
+                process_lby_file,
+                obsolete_dict,
             )
 
             c_include_dependency_results = scan_files_parallel(
-                os.path.join(args.project_path, "Logical"), [".c", ".cpp", ".hpp"], process_c_cpp_hpp_includes_file, obsolete_dict
+                os.path.join(args.project_path, "Logical"),
+                [".c", ".cpp", ".hpp"],
+                process_c_cpp_hpp_includes_file,
+                obsolete_dict,
             )
 
             # Store the list of files containing deprecated string functions
             deprecated_string_files = check_deprecated_string_functions(
-                os.path.join(args.project_path, "Logical"), 
-                [".st"], 
-                deprecated_string_functions 
+                os.path.join(args.project_path, "Logical"),
+                [".st"],
+                deprecated_string_functions,
             )
 
             # Ensure we have a valid list, even if no deprecated functions are found
@@ -478,7 +561,7 @@ def main():
             deprecated_math_files = check_deprecated_math_functions(
                 os.path.join(args.project_path, "Logical"),
                 [".st"],
-                deprecated_math_functions
+                deprecated_math_functions,
             )
 
             # Ensure we have a valid list, even if no deprecated functions are found
@@ -490,29 +573,43 @@ def main():
 
             log("\n\nChecking project and hardware files for compatibility...")
             file_patterns = ["*.apj", "*.hw"]
-            compatibility_results = check_files_for_compatibility(args.project_path, file_patterns)
+            compatibility_results = check_files_for_compatibility(
+                args.project_path, file_patterns
+            )
             if compatibility_results:
                 for file_path, issue in compatibility_results:
                     log(f"- {file_path}: {issue}")
-                log("\nPlease ensure these files are saved at least once with Automation Studio 4.12.")
+                log(
+                    "\nPlease ensure these files are saved at least once with Automation Studio 4.12."
+                )
             else:
                 log("- All project and hardware files are valid.")
 
             log("\n\nChecking OPC configuration...")
-            uad_misplaced_files, uad_old_version = check_uad_files(os.path.join(args.project_path, "Physical"))
+            uad_misplaced_files, uad_old_version = check_uad_files(
+                os.path.join(args.project_path, "Physical")
+            )
             if uad_misplaced_files:
-                log("The following .uad files are not located in the required Connectivity/OpcUA directory:")
+                log(
+                    "The following .uad files are not located in the required Connectivity/OpcUA directory:"
+                )
                 for file_path in uad_misplaced_files:
                     log(f"- {file_path}")
-                log("\nPlease create (via AS 4.12) and move these files to the required directory: Connectivity/OpcUA.")
+                log(
+                    "\nPlease create (via AS 4.12) and move these files to the required directory: Connectivity/OpcUA."
+                )
             else:
                 log("- All .uad files are in the correct location.")
 
             if uad_old_version:
-                log("\nThe following .uad files do not have the minimum file version 9:")
+                log(
+                    "\nThe following .uad files do not have the minimum file version 9:"
+                )
                 for file_path in uad_old_version:
                     log(f"- {file_path}")
-                log("\nPlease edit the uad file, make a small change and save the file to trigger the file update.")
+                log(
+                    "\nPlease edit the uad file, make a small change and save the file to trigger the file update."
+                )
             else:
                 log("- All .uad files have the correct minimum version.")
 
@@ -521,7 +618,9 @@ def main():
                 grouped_results = {}
                 for hardware_id, reason, file_path in hardware_results:
                     config_name = os.path.basename(os.path.dirname(file_path))
-                    grouped_results.setdefault(config_name, set()).add((hardware_id, reason))
+                    grouped_results.setdefault(config_name, set()).add(
+                        (hardware_id, reason)
+                    )
 
                 for config_name, entries in grouped_results.items():
                     log(f"\nHardware configuration: {config_name}")
@@ -530,7 +629,9 @@ def main():
             else:
                 log("- None")
 
-            log("\n\nThe following invalid file devices were found: (accessing system partitions / using drive letters)")
+            log(
+                "\n\nThe following invalid file devices were found: (accessing system partitions / using drive letters)"
+            )
             if file_devices:
                 grouped_results = {}
                 for name, path, file_path in file_devices:
@@ -544,14 +645,18 @@ def main():
                     result_string = ", ".join(results)
                     log(f"Hardware configuration '{config_name}': {result_string}")
 
-                log("\nWrite operations on a system partition (C:, D:, E:) are not allowed. In the event of error, "
+                log(
+                    "\nWrite operations on a system partition (C:, D:, E:) are not allowed. In the event of error, "
                     "a write operation could destroy the system partition so that the target system can no longer be booted.\n"
                     "The User partition USER_PATH should be used instead!\n"
-                    "In ARsim, the directory corresponding to USER_PATH is found at \\<Project>\\Temp\\Simulation\\<Configuration>\\<CPU>\\USER\\.")
+                    "In ARsim, the directory corresponding to USER_PATH is found at \\<Project>\\Temp\\Simulation\\<Configuration>\\<CPU>\\USER\\."
+                )
             else:
                 log("- None")
 
-            log("\n\nThe following potentially invalid ftp configurations were found: (accessing system instead of user partition)")
+            log(
+                "\n\nThe following potentially invalid ftp configurations were found: (accessing system instead of user partition)"
+            )
             if ftp_configs:
                 grouped_results = {}
                 for name, file_path in ftp_configs:
@@ -572,7 +677,9 @@ def main():
             else:
                 log("- None")
 
-            log("\n\nThe following libraries might require manual action after migrating the project to Automation Studio 6:")
+            log(
+                "\n\nThe following libraries might require manual action after migrating the project to Automation Studio 6:"
+            )
             if manual_libs_results:
                 for library, reason, file_path in manual_libs_results:
                     log(f"- {library}: {reason} (Found in: {file_path})")
@@ -580,26 +687,37 @@ def main():
                 log("- None")
 
             # Convert .lby results to match the (library_name, reason, file_path) format
-            normalized_lby_results = [(lib, f"Dependency on {dep}: {reason}", path) for lib, dep, reason, path in lby_dependency_results]
+            normalized_lby_results = [
+                (lib, f"Dependency on {dep}: {reason}", path)
+                for lib, dep, reason, path in lby_dependency_results
+            ]
 
             # Merge results from .lby and C/C++/HPP include dependencies
-            all_dependency_results = normalized_lby_results + c_include_dependency_results
+            all_dependency_results = (
+                normalized_lby_results + c_include_dependency_results
+            )
 
-            log("\n\nThe following obsolete dependencies were found in .lby, .c, .cpp, and .hpp files:")
+            log(
+                "\n\nThe following obsolete dependencies were found in .lby, .c, .cpp, and .hpp files:"
+            )
             if all_dependency_results:
                 for library_name, reason, file_path in all_dependency_results:
                     log(f"- {library_name}: {reason} (Found in: {file_path})")
             else:
                 log("- None")
 
-            log("\n\nThe following invalid function blocks were found in .var and .typ files:")
+            log(
+                "\n\nThe following invalid function blocks were found in .var and .typ files:"
+            )
             if invalid_var_typ_files:
                 for block, reason, file_path in invalid_var_typ_files:
                     log(f"- {block}: {reason} (Found in: {file_path})")
             else:
                 log("- None")
 
-            log("\n\nThe following invalid functions were found in .st, .c and .cpp files:")
+            log(
+                "\n\nThe following invalid functions were found in .st, .c and .cpp files:"
+            )
             found_any_invalid_functions = False
 
             if invalid_st_c_files:
@@ -608,25 +726,33 @@ def main():
                 found_any_invalid_functions = True
 
             if found_deprecated_string:
-                log("- Deprecated AsString functions detected in the project: Consider using the helper asstring_to_asbrstr.py to replace them.")
+                log(
+                    "- Deprecated AsString functions detected in the project: Consider using the helper asstring_to_asbrstr.py to replace them."
+                )
                 found_any_invalid_functions = True
 
                 # Verbose: Print where the deprecated string functions were found only if --verbose is enabled
-                if  args.verbose and deprecated_string_files:
-                    print("\n[VERBOSE] Deprecated AsString functions detected in the following files:")
+                if args.verbose and deprecated_string_files:
+                    print(
+                        "\n[VERBOSE] Deprecated AsString functions detected in the following files:"
+                    )
                     for file in deprecated_string_files:
                         print(f"[VERBOSE] - {file}")
 
             if found_deprecated_math:
-                log("- Deprecated AsMath functions detected in the project: Consider using the helper asmath_to_asbrmath.py to replace them.")
+                log(
+                    "- Deprecated AsMath functions detected in the project: Consider using the helper asmath_to_asbrmath.py to replace them."
+                )
                 found_any_invalid_functions = True
 
                 # Verbose: Print where the deprecated math functions were found only if --verbose is enabled
                 if args.verbose and found_deprecated_math:
-                    print("\n[VERBOSE] Deprecated AsMath functions detected in the following files:")
+                    print(
+                        "\n[VERBOSE] Deprecated AsMath functions detected in the following files:"
+                    )
                     for file in deprecated_math_files:
                         print(f"[VERBOSE] - {file}")
-            
+
             if not found_any_invalid_functions:
                 log("- None")
 
@@ -639,37 +765,57 @@ def main():
                 log("- None")
 
             vision_settings_results = check_vision_settings(args.project_path)
-            if vision_settings_results['found']:
-                log(f"\n\nFound usage of mapp Vision (Version: {vision_settings_results['version']}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!")
-                
+            if vision_settings_results["found"]:
+                log(
+                    f"\n\nFound usage of mapp Vision (Version: {vision_settings_results['version']}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!"
+                )
+
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
-                if args.verbose and vision_settings_results['locations']:
+                if args.verbose and vision_settings_results["locations"]:
                     print("\n[VERBOSE] mappVision folders found at:")
-                    for location in vision_settings_results['locations']:
+                    for location in vision_settings_results["locations"]:
                         print(f"[VERBOSE] - {location}")
-                
+
                 found_any_invalid_functions = True
 
             mappView_settings_results = check_mappView(args.project_path)
-            if mappView_settings_results['found']:
-                log(f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security seetings will be enforced after the migration.")
+            if mappView_settings_results["found"]:
+                log(
+                    f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security seetings will be enforced after the migration."
+                )
                 log("\n- To allow access without a certificate")
-                log("  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):")
-                log("  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled")
-                log("\n- User login will be enabled by default. To allow anonymous access")
-                log("  Change the following settings in mappView configuration (Physical View/mappView/Config.mappviewcfg):")
-                log("  MappViewConfiguration->Server Configuration->Startup User: anonymous token")
-                log("\n  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):")
-                log("  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled")
-                log("  ClientServerConfiguration->Security->Authorization->Anonymous Access Add new user role and select \"everyone\"")
-                                    
+                log(
+                    "  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
+                )
+                log(
+                    "  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled"
+                )
+                log(
+                    "\n- User login will be enabled by default. To allow anonymous access"
+                )
+                log(
+                    "  Change the following settings in mappView configuration (Physical View/mappView/Config.mappviewcfg):"
+                )
+                log(
+                    "  MappViewConfiguration->Server Configuration->Startup User: anonymous token"
+                )
+                log(
+                    "\n  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
+                )
+                log(
+                    "  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled"
+                )
+                log(
+                    '  ClientServerConfiguration->Security->Authorization->Anonymous Access Add new user role and select "everyone"'
+                )
+
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
-                if args.verbose and mappView_settings_results['locations']:
+                if args.verbose and mappView_settings_results["locations"]:
                     print("\n[VERBOSE] mappView folders found at:")
-                    for location in mappView_settings_results['locations']:
+                    for location in mappView_settings_results["locations"]:
                         print(f"[VERBOSE] - {location}")
-                
-                found_any_invalid_functions = True                
+
+                found_any_invalid_functions = True
 
             log("\n\nChecking mapp version in project file...")
             mapp_results = check_mapp_version(args.project_path)
@@ -680,7 +826,9 @@ def main():
                 log("- No mapp version information found.")
 
             end_time = time.time()
-            log(f"\n\nScanning completed successfully in {end_time - start_time:.2f} seconds.")
+            log(
+                f"\n\nScanning completed successfully in {end_time - start_time:.2f} seconds."
+            )
 
         except Exception as e:
             error_message = f"\n[ERROR] An unexpected error occurred: {str(e)}"
@@ -695,9 +843,8 @@ def main():
             except Exception as log_error:
                 print(f"[ERROR] Failed to write error to log file: {log_error}")
 
-
-
     print(f"\nResults have been saved to {output_file}\n")
+
 
 if __name__ == "__main__":
     main()

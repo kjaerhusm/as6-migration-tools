@@ -3,15 +3,17 @@ import re
 import hashlib
 import sys
 
+
 def calculate_file_hash(file_path):
     """
     Calculates the hash (MD5) of a file for comparison purposes.
     """
     md5 = hashlib.md5()
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         while chunk := f.read(4096):
             md5.update(chunk)
     return md5.hexdigest()
+
 
 def replace_functions_and_constants(file_path, function_mapping, constant_mapping):
     """
@@ -29,13 +31,17 @@ def replace_functions_and_constants(file_path, function_mapping, constant_mappin
     for old_func, new_func in function_mapping.items():
         pattern = rf"\b{re.escape(old_func)}\s*\("
         replacement = f"{new_func}("
-        modified_content, num_replacements = re.subn(pattern, replacement, modified_content)
+        modified_content, num_replacements = re.subn(
+            pattern, replacement, modified_content
+        )
         function_replacements += num_replacements
 
     for old_const, new_const in constant_mapping.items():
         pattern = rf"\b{re.escape(old_const)}\b"
         replacement = new_const
-        modified_content, num_replacements = re.subn(pattern, replacement, modified_content)
+        modified_content, num_replacements = re.subn(
+            pattern, replacement, modified_content
+        )
         constant_replacements += num_replacements
 
     if modified_content != original_content:
@@ -46,10 +52,13 @@ def replace_functions_and_constants(file_path, function_mapping, constant_mappin
         if original_hash == new_hash:
             return function_replacements, constant_replacements, False
 
-        print(f"{function_replacements + constant_replacements:4d} changes written to: {file_path}")
+        print(
+            f"{function_replacements + constant_replacements:4d} changes written to: {file_path}"
+        )
         return function_replacements, constant_replacements, True
 
     return function_replacements, constant_replacements, False
+
 
 def check_for_asmath_library(project_path):
     """
@@ -57,20 +66,21 @@ def check_for_asmath_library(project_path):
     """
     pkg_file = os.path.join(project_path, "Logical", "Libraries", "Package.pkg")
     if not os.path.isfile(pkg_file):
-        #print(f"Debug: Could not find Package.pkg file in: {pkg_file}")
+        # print(f"Debug: Could not find Package.pkg file in: {pkg_file}")
         return False
 
     with open(pkg_file, "r", encoding="iso-8859-1", errors="ignore") as f:
         content = f.read()
-        #print("Debug: Reading Package.pkg content...")
-        #print(content)  # Show the content of Package.pkg for debugging
+        # print("Debug: Reading Package.pkg content...")
+        # print(content)  # Show the content of Package.pkg for debugging
 
         if "AsMath" in content:
             print("AsMath library found in Package.pkg!\n")
             return True
-        #else:
-            #print("Debug: AsMath library not found in Package.pkg.")
+        # else:
+        # print("Debug: AsMath library not found in Package.pkg.")
     return False
+
 
 def main():
     """
@@ -82,7 +92,9 @@ def main():
     if not os.path.exists(project_path):
         print(f"Error: The provided project path does not exist: {project_path}")
         print("\nEnsure the path is correct and the project folder exists.")
-        print("\nIf the path contains spaces, make sure to wrap it in quotes, like this:")
+        print(
+            "\nIf the path contains spaces, make sure to wrap it in quotes, like this:"
+        )
         print('   python asmath_to_asbrmath.py "C:\\path\\to\\your\\project"')
         sys.exit(1)
 
@@ -110,13 +122,19 @@ def main():
 
         if not library_found:
             print("AsMath library not found.")
-            proceed = input("Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ").strip().lower()
-            if proceed not in ('', 'y'):
+            proceed = (
+                input(
+                    "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: "
+                )
+                .strip()
+                .lower()
+            )
+            if proceed not in ("", "y"):
                 print("Operation cancelled. No changes were made.")
                 return
         else:
             proceed = input("Do you want to continue? (y/n) [y]: ").strip().lower()
-            if proceed not in ('', 'y'):
+            if proceed not in ("", "y"):
                 print("Operation cancelled. No changes were made.")
                 return
 
@@ -167,8 +185,10 @@ def main():
         for file in files:
             if file.endswith((".st", ".ab")):
                 file_path = os.path.join(root, file)
-                function_replacements, constant_replacements, changed = replace_functions_and_constants(
-                    file_path, function_mapping, constant_mapping
+                function_replacements, constant_replacements, changed = (
+                    replace_functions_and_constants(
+                        file_path, function_mapping, constant_mapping
+                    )
                 )
                 if changed:
                     total_function_replacements += function_replacements
@@ -184,6 +204,7 @@ def main():
         print("\nNo functions or constants needed to be replaced.")
     else:
         print("\nReplacement completed successfully.")
+
 
 if __name__ == "__main__":
     main()
