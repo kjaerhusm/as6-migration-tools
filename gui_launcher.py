@@ -7,18 +7,12 @@ from tkinter import filedialog, ttk
 from tkinter import messagebox
 from pathlib import Path
 
+from utils import utils
+
 
 def resource_path(rel_path):
     base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
     return os.path.normpath(os.path.join(base, rel_path))
-
-
-def get_build_number():
-    try:
-        version_file = Path(__file__).resolve().parent / "version.txt"
-        return version_file.read_text(encoding="utf-8").strip()
-    except Exception:
-        return "?"
 
 
 class RedirectText:
@@ -45,7 +39,7 @@ class MigrationGUI:
         )
         self.root.iconbitmap(icon_path)
 
-        build = get_build_number()
+        build = utils.get_build_number()
         self.root.title(f"AS4 to AS6 Migration Tool (Build {build})")
         self.root.geometry("1500x700")
 

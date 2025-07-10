@@ -15,6 +15,7 @@ a = Analysis(
         ('checks/*.py', 'checks'),
         ('checks/__init__.py', 'checks'),
         ('classes/*.py', 'classes'),
+        ('utils/*.py', 'utils'),
     ],
     hiddenimports=[
         'json',

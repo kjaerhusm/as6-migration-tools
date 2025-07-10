@@ -8,6 +8,7 @@ import argparse
 from pathlib import Path
 from checks import *
 from classes.ConsoleColors import ConsoleColors
+from utils import utils
 
 # Path to the main package file
 root_pkg_path = r"Logical\Libraries\Package.pkg"
@@ -85,17 +86,6 @@ def process_stub(file_path, *args):
         list: An empty list for this stub function.
     """
     return []
-
-
-# Get build number from version.txt
-def get_build_number():
-    version_file = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "version.txt"
-    )
-    if os.path.exists(version_file):
-        with open(version_file, "r") as file:
-            return file.read().strip()
-    return "1"  # Default build number if version.txt doesn't exist
 
 
 def scan_files_parallel(root_dir, extensions, process_function, *args):
@@ -473,7 +463,7 @@ def main():
     Outputs the results to a file as well as the console.
     """
 
-    build_number = get_build_number()
+    build_number = utils.get_build_number()
     print(f"Script build number: {build_number}")
 
     args, parser = parse_args()
