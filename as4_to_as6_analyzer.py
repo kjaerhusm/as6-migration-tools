@@ -800,12 +800,14 @@ def main():
                     "\n  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled"
                     "\n"
                     "\n- User login will be enabled by default. To allow anonymous access"
-                    "\n  Change the following settings in mappView configuration (Physical View/mappView/Config.mappviewcfg):"
+                    "\n  Change the following settings in mappView configuration (Configuration View/mappView/Config.mappviewcfg):"
                     "\n  MappViewConfiguration->Server Configuration->Startup User: anonymous token"
                     "\n"
-                    "\n  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
+                    "\n  Change the following settings in the OPC Client/Server configuration (Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
                     "\n  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled"
-                    "\n  ClientServerConfiguration->Security->Authorization->Anonymous Access Add new user role and select \"Everyone\""
+                    "\n"
+                    "\n  Change the following settings in the User role system (Configuration View/AccessAndSecurity/UserRoleSystem/User.user)"
+                    "\n  Assign the role \"BR_Engineer\" to the user \"Anonymous\". Create that user if it doesn't already exist, assign no password."
                 )
 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
