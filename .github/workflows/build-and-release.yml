@@ -47,7 +47,7 @@ jobs:
         run: pip install pyinstaller
 
       - name: Build executable
-        run: pyinstaller --noconfirm gui_launcher.spec
+        run: pyinstaller --noconfirm --clean --strip gui_launcher.spec
 
       - name: Zip EXE and all contents of dist/
         shell: pwsh

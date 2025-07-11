@@ -31,6 +31,8 @@ a = Analysis(
         'xml.etree',
         'xml.etree.ElementTree',
         'fnmatch',
+		'ttkbootstrap',
+		'ttkbootstrap.constants',
     ],
     hookspath=[],
     runtime_hooks=[],
