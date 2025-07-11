@@ -102,15 +102,18 @@ def check_mapp_version(directory):
 
                     if not mappServices_path:
                         messages.append(
-                            f"No mappServices folder found in the configuration {config_folder_path}. You can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
+                            f"No mappServices folder found in the configuration {config_folder_path}. "
+                            "You can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
                         )
                     if not mappMotion_path:
                         messages.append(
-                            f"No mappMotion folder found in the configuration {config_folder_path}. You can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
+                            f"No mappMotion folder found in the configuration {config_folder_path}. "
+                            "You can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
                         )
                     if not mappView_path:
                         messages.append(
-                            f"No mappView folder found in the configuration {config_folder_path}. You can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
+                            f"No mappView folder found in the configuration {config_folder_path}. "
+                            "You can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
                         )
 
     return messages

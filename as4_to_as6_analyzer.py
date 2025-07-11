@@ -786,7 +786,8 @@ def main():
             vision_settings_results = check_vision_settings(args.project_path)
             if vision_settings_results["found"]:
                 log(
-                    f"\n\nFound usage of mapp Vision (Version: {vision_settings_results['version']}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!"
+                    f"\n\nFound usage of mapp Vision (Version: {vision_settings_results['version']}). "
+                    "After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!"
                 )
 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled

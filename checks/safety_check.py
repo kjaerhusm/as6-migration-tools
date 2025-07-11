@@ -29,8 +29,8 @@ def check_safety_release(project_root):
             if root.find(".//{*}mappSafety") is not None:
                 result["mode"] = "mappsafety"
                 result["details"].append(
-                    f"Migrating from mapp Safety 5.x to mapp Safety 6.x - "
-                    f"All conversion steps are carried out automatically by the system; no action by the user is necessary."
+                    "Migrating from mapp Safety 5.x to mapp Safety 6.x - "
+                    "All conversion steps are carried out automatically by the system; no action by the user is necessary."
                 )
                 return result  # Valid project
         except Exception as e:
@@ -51,9 +51,10 @@ def check_safety_release(project_root):
                             ):
                                 result["mode"] = "safetyrelease"
                                 result["details"].append(
-                                    f"Legacy safety is no longer supported with AS 6.x.\n"
-                                    f"When upgrading from a Safety Release to mapp Safety 6.x, all conversion steps from the Safety Release to mapp Safety 5.x must be performed in AS 4.x first.\n"
-                                    f"More info: https://help.br-automation.com/#/en/4/safety/mapp_safety/getting-started/proj-conversion/umstieg_auf_mapp_safety_5.x.html"
+                                    "Legacy safety is no longer supported with AS 6.x.\n"
+                                    "When upgrading from a Safety Release to mapp Safety 6.x, all conversion steps from the Safety Release "
+                                    "to mapp Safety 5.x must be performed in AS 4.x first.\n"
+                                    "More info: https://help.br-automation.com/#/en/4/safety/mapp_safety/getting-started/proj-conversion/umstieg_auf_mapp_safety_5.x.html"
                                 )
                                 return result
                 except Exception as e:
