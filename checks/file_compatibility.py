@@ -2,6 +2,7 @@ import os
 import re
 import fnmatch
 
+
 def check_files_for_compatibility(directory, file_patterns):
     """
     Checks the compatibility of .apj and .hw files within a directory.
@@ -22,11 +23,13 @@ def check_files_for_compatibility(directory, file_patterns):
             if any(fnmatch.fnmatch(file, pattern) for pattern in file_patterns):
                 file_path = os.path.join(root, file)
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, "r", encoding="utf-8") as f:
                         content = f.read()
 
                     # Extract version info from the file header
-                    version_match = re.search(r'AutomationStudio Version="?([\d.]+)', content)
+                    version_match = re.search(
+                        r'AutomationStudio Version="?([\d.]+)', content
+                    )
                     if version_match:
                         version = version_match.group(1)
                         if not version.startswith(required_version_prefix):

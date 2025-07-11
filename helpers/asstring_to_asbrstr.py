@@ -3,22 +3,23 @@ import re
 import hashlib
 import sys
 
+
 def calculate_file_hash(file_path):
     """
     Calculates the hash (MD5) of a file for comparison purposes.
     """
     md5 = hashlib.md5()
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         while chunk := f.read(4096):
             md5.update(chunk)
     return md5.hexdigest()
 
-def replace_functions_and_constants(file_path : str, function_mapping, constant_mapping):
+
+def replace_functions_and_constants(file_path: str, function_mapping, constant_mapping):
     """
     Replace function calls and constants in a file based on the provided mappings.
     """
     original_hash = calculate_file_hash(file_path)
-
 
     with open(file_path, "r", encoding="iso-8859-1", errors="ignore") as f:
         original_content = f.read()
@@ -27,25 +28,27 @@ def replace_functions_and_constants(file_path : str, function_mapping, constant_
     function_replacements = 0
     constant_replacements = 0
 
-    # if file_path.endswith('ncsdcctrlInit.st'): 
+    # if file_path.endswith('ncsdcctrlInit.st'):
     #     modified_content, num_replacements = re.subn(r'(\s*)((?:strcpy)|(?:strcat))', r'\1brs\2', original_content)
     #     pass
 
-
-
     # Replace function calls
     for old_func, new_func in function_mapping.items():
- 
+
         pattern = rf"\b{re.escape(old_func)}\s*\("
         replacement = f"{new_func}("
-        modified_content, num_replacements = re.subn(pattern, replacement, modified_content)
+        modified_content, num_replacements = re.subn(
+            pattern, replacement, modified_content
+        )
         function_replacements += num_replacements
 
     # Replace constants
     for old_const, new_const in constant_mapping.items():
         pattern = rf"\b{re.escape(old_const)}\b"
         replacement = new_const
-        modified_content, num_replacements = re.subn(pattern, replacement, modified_content)
+        modified_content, num_replacements = re.subn(
+            pattern, replacement, modified_content
+        )
         constant_replacements += num_replacements
 
     if modified_content != original_content:
@@ -56,10 +59,13 @@ def replace_functions_and_constants(file_path : str, function_mapping, constant_
         if original_hash == new_hash:
             return function_replacements, constant_replacements, False
 
-        print(f"{function_replacements + constant_replacements:4d} changes written to: {file_path}")
+        print(
+            f"{function_replacements + constant_replacements:4d} changes written to: {file_path}"
+        )
         return function_replacements, constant_replacements, True
 
     return function_replacements, constant_replacements, False
+
 
 def check_for_library(project_path, library_names):
     """
@@ -76,6 +82,7 @@ def check_for_library(project_path, library_names):
 
     return found_libraries
 
+
 def main():
     project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
@@ -83,7 +90,9 @@ def main():
     if not os.path.exists(project_path):
         print(f"Error: The provided project path does not exist: {project_path}")
         print("\nEnsure the path is correct and the project folder exists.")
-        print("\nIf the path contains spaces, make sure to wrap it in quotes, like this:")
+        print(
+            "\nIf the path contains spaces, make sure to wrap it in quotes, like this:"
+        )
         print('   python asstring_to_asbrstr.py "C:\\path\\to\\your\\project"')
         sys.exit(1)
 
@@ -100,21 +109,32 @@ def main():
     library_names = ["AsString", "AsWStr"]
     found_libraries = check_for_library(project_path, library_names)
 
-    if not found_libraries:
-        print("Neither AsString nor AsWStr libraries found.\n")
-        proceed = input("Do you want to proceed with replacing functions and constants anyway? (y/n): ").strip().lower()
-        if proceed != 'y':
-            print("Operation cancelled. No changes were made.")
-            return
+    print(
+        "This script will search for usages of AsString and AsWStr functions and constants and replace them with the AsBr equivalents.\n"
+        "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n"
+    )
 
-    else:
-        print(f"Libraries found: {', '.join(found_libraries)}.\n"
-              "This script will search for usages of AsString and AsWStr functions and constants and replace them with their AsBr equivalents.\n"
-              "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n")
-        proceed = input("Do you want to continue? (y/n): ").strip().lower()
-        if proceed != 'y':
-            print("Operation cancelled. No changes were made.")
-            return
+    if __name__ == "__main__" and sys.stdin.isatty():
+
+        if not found_libraries:
+            print("Neither AsString nor AsWStr libraries found.\n")
+            proceed = (
+                input(
+                    "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: "
+                )
+                .strip()
+                .lower()
+            )
+            if proceed not in ("", "y"):
+                print("Operation cancelled. No changes were made.")
+                return
+
+        else:
+            print(f"Libraries found: {', '.join(found_libraries)}.\n")
+            proceed = input("Do you want to continue? (y/n) [y]: ").strip().lower()
+            if proceed not in ("", "y"):
+                print("Operation cancelled. No changes were made.")
+                return
 
     function_mapping = {
         "ftoa": "brsftoa",
@@ -152,14 +172,15 @@ def main():
     total_constant_replacements = 0
     total_files_changed = 0
 
-    # Loop through the files in the "Logical" directory and process .st, .c, and .cpp files
+    # Loop through the files in the "Logical" directory and process .st, .c, .cpp and .ab files
     for root, _, files in os.walk(logical_path):
         for file in files:
-            # Add ".c" and ".cpp" to the list of file extensions to process
-            if file.endswith((".st")):
+            if file.endswith((".st", ".ab")):
                 file_path = os.path.join(root, file)
-                function_replacements, constant_replacements, changed = replace_functions_and_constants(
-                    file_path, function_mapping, constant_mapping
+                function_replacements, constant_replacements, changed = (
+                    replace_functions_and_constants(
+                        file_path, function_mapping, constant_mapping
+                    )
                 )
                 if changed:
                     total_function_replacements += function_replacements
@@ -175,6 +196,7 @@ def main():
         print("No functions or constants needed to be replaced.")
     else:
         print("Replacement completed successfully.")
+
 
 if __name__ == "__main__":
     main()

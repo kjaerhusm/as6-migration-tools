@@ -9,11 +9,13 @@ a = Analysis(
     datas=[
         ('discontinuations/*.json', 'discontinuations'),
         ('version.txt', '.'),
-        ('br_icon.ico', '.'),
+        ('gui_icon.ico', '.'),
         ('helpers/*.py', 'helpers'),
         ('as4_to_as6_analyzer.py', '.'),
         ('checks/*.py', 'checks'),
         ('checks/__init__.py', 'checks'),
+        ('classes/*.py', 'classes'),
+        ('utils/*.py', 'utils'),
     ],
     hiddenimports=[
         'json',
@@ -51,6 +53,6 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
-    icon='br_icon.ico',
+    icon='gui_icon.ico',
     bootloader_ignore_signals=False,
 )

@@ -108,6 +108,8 @@ Additional helper scripts may be added in future versions — pull requests welc
 - Found an issue? Please open a GitHub issue.
 - Have ideas or improvements?  
   Fork the repo and submit a pull request - contributions are very welcome!
+  - Please run the [black](https://black.readthedocs.io/en/stable/) formatter prior to committing any changes to ensure a consistent style. \
+    Hint: PyCharm allows to do so automatically via Settings->Tools->Black
 
 ---
 

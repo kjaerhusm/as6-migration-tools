@@ -2,21 +2,31 @@ import os
 import sys
 import threading
 import importlib.util
-import tkinter as tk
-from tkinter import filedialog, ttk
-from tkinter import messagebox
+import json
 from pathlib import Path
+import customtkinter as ctk
+from tkinter import filedialog, messagebox
 
-def resource_path(rel_path):
-    base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.normpath(os.path.join(base, rel_path))
+from utils import utils
 
-def get_build_number():
-    try:
-        version_file = Path(__file__).resolve().parent.parent / "version.txt"
-        return version_file.read_text(encoding="utf-8").strip()
-    except Exception:
-        return "?"
+B_R_BLUE = "#3B82F6"
+HOVER_BLUE = "#2563EB"
+SETTINGS_PATH = os.path.join(os.path.expanduser("~"), ".as6_migration_settings.json")
+
+LABEL_FONT = ("Segoe UI", 14)
+FIELD_FONT = ("Segoe UI", 13)
+LOG_FONT = ("Consolas", 12)
+
+SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+
+if os.path.exists(SETTINGS_PATH):
+    with open(SETTINGS_PATH, "r") as f:
+        settings = json.load(f)
+    ctk.set_appearance_mode(settings.get("appearance_mode", "Dark"))
+else:
+    ctk.set_appearance_mode("Dark")
+
+ctk.set_default_color_theme("blue")
 
 class RedirectText:
     def __init__(self, append_func, status_func):
@@ -24,7 +34,7 @@ class RedirectText:
         self.status_func = status_func
 
     def write(self, string):
-        if '\r' in string:
+        if "\r" in string:
             self.status_func(string.strip())
         else:
             self.append_func(string)
@@ -32,84 +42,180 @@ class RedirectText:
     def flush(self):
         pass
 
-class MigrationGUI:
-    def __init__(self, root):
-        self.root = root
-        build = get_build_number()
+class ModernMigrationGUI:
+    def __init__(self):
+        self.root = ctk.CTk()
+        build = utils.get_build_number()
         self.root.title(f"AS4 to AS6 Migration Tool (Build {build})")
-        self.root.geometry("1500x700")
+        self.root.geometry("1500x900")
 
-        self.selected_folder = tk.StringVar()
-        self.selected_script = tk.StringVar(value='Evaluate AS4 project')
+        icon_path = os.path.join(getattr(sys, "_MEIPASS", os.path.abspath(".")), "gui_icon.ico")
+        try:
+            self.root.iconbitmap(icon_path)
+        except Exception:
+            pass
+
+        self.selected_folder = ctk.StringVar()
+        self.selected_script = ctk.StringVar(value="Evaluate AS4 project")
+        self.verbose_mode = ctk.BooleanVar(value=False)
+        self.script_ran = ctk.BooleanVar(value=False)
+        self.spinner_running = False
+        self.spinner_index = 0
 
         self.scripts = {
-            'Evaluate AS4 project': resource_path('as4_to_as6_analyzer.py'),
-            'AsMathToAsBrMath':     resource_path('helpers/asmath_to_asbrmath.py'),
-            'AsStringToAsBrStr':    resource_path('helpers/asstring_to_asbrstr.py'),
-            'OpcUa Update':         resource_path('helpers/asopcua_update.py'),
+            "Evaluate AS4 project": self.resource_path("as4_to_as6_analyzer.py"),
+            "AsMathToAsBrMath": self.resource_path("helpers/asmath_to_asbrmath.py"),
+            "AsStringToAsBrStr": self.resource_path("helpers/asstring_to_asbrstr.py"),
+            "OpcUa Update": self.resource_path("helpers/asopcua_update.py"),
+            "Create mapp folders": self.resource_path("helpers/create_mapp_folders.py"),
         }
 
+        self.load_last_folder()
         self.build_ui()
-        #self.append_log(f"Running from: {os.getcwd()}\n")
+        self.selected_folder.trace_add("write", self.toggle_run_button)
+        self.toggle_run_button()
+
+    def resource_path(self, rel_path):
+        base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+        return os.path.normpath(os.path.join(base, rel_path))
 
     def build_ui(self):
-        frame = ttk.Frame(self.root, padding=10)
-        frame.pack(fill='x')
+        self.build_header_ui()
+        self.build_folder_ui()
+        self.build_options_ui()
+        self.build_status_ui()
+        self.build_log_ui()
+        self.build_save_ui()
 
-        ttk.Label(frame, text="Project folder:").pack(anchor='w')
-        folder_entry = ttk.Entry(frame, textvariable=self.selected_folder, width=80)
-        folder_entry.pack(side='left', fill='x', expand=True)
-        ttk.Button(frame, text="Browse", command=self.browse_folder).pack(side='left', padx=5)
+    def build_header_ui(self):
+        header_frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        header_frame.pack(fill="x", padx=20, pady=(10, 0))
+        self.theme_button = ctk.CTkButton(header_frame, text=self.get_theme_icon(), width=60, command=self.toggle_theme,
+                                          fg_color=B_R_BLUE, hover_color=HOVER_BLUE, font=FIELD_FONT)
+        self.theme_button.pack(side="right")
 
-        script_frame = ttk.Frame(self.root, padding=10)
-        script_frame.pack(fill='x')
-        ttk.Label(script_frame, text="Select script:").pack(side='left', anchor='w')
-        script_menu_frame = ttk.Frame(script_frame, borderwidth=2, relief="groove")
-        script_menu_frame.pack(side='left', padx=5, pady=5)
-        script_menu = ttk.OptionMenu(script_menu_frame, self.selected_script, self.selected_script.get(), *self.scripts.keys())
-        script_menu.pack(anchor='w')
-        script_menu.config(width=20)
-        run_button = ttk.Button(script_frame, text="Run", command=self.execute_script)
-        run_button.pack(side='left', padx=5)
-        run_button.config(state='disabled')
-        self.selected_folder.trace_add('write', lambda *args: run_button.config(state='normal' if self.selected_folder.get() else 'disabled'))
+    def get_theme_icon(self):
+        return "☀️" if ctk.get_appearance_mode() == "Dark" else "🌙"
 
-        save_log_button = ttk.Button(script_frame, text="Save Log As...", command=self.save_log)
-        save_log_button.pack(side='left', padx=5)
-        save_log_button.config(state='disabled')
-        self.script_ran = tk.BooleanVar(value=False)
-        self.script_ran.trace_add('write', lambda *args: save_log_button.config(state='normal' if self.script_ran.get() else 'disabled'))
+    def build_folder_ui(self):
+        folder_frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        folder_frame.pack(fill="x", padx=20, pady=5)
+        folder_frame.grid_columnconfigure(0, weight=1)
 
-        self.status_label = ttk.Label(self.root, text="", font=("Courier", 12), background="black", foreground="yellow", anchor="w")
-        self.status_label.pack(fill='x', padx=10)
+        ctk.CTkLabel(folder_frame, text="📂  Project folder:", font=LABEL_FONT).grid(row=0, column=0, sticky="w")
+        folder_entry = ctk.CTkEntry(folder_frame, textvariable=self.selected_folder, font=FIELD_FONT, width=1000)
+        folder_entry.grid(row=1, column=0, sticky="ew", padx=(0, 10), pady=(0, 5))
+        self.browse_button = ctk.CTkButton(folder_frame, text="📂      Browse", command=self.browse_folder,
+                                           fg_color=B_R_BLUE, hover_color=HOVER_BLUE, width=100, font=FIELD_FONT)
+        self.browse_button.grid(row=1, column=1, pady=(0, 5))
 
-        self.log_text = tk.Text(self.root, wrap='word', height=25, bg='black', fg='lime')
-        self.log_text.pack(fill='both', expand=True, padx=10, pady=10)
-        self.log_text.config(state='disabled')
+    def build_options_ui(self):
+        options_frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        options_frame.pack(fill="x", padx=20, pady=10)
+
+        ctk.CTkLabel(options_frame, text="🧾  Select script:", font=LABEL_FONT).pack(side="left")
+        ctk.CTkComboBox(options_frame, variable=self.selected_script, values=list(self.scripts.keys()), width=250,
+                        font=FIELD_FONT).pack(side="left", padx=10)
+        ctk.CTkCheckBox(options_frame, text="Verbose Mode", variable=self.verbose_mode, font=FIELD_FONT).pack(side="left", padx=10)
+        self.run_button = ctk.CTkButton(options_frame, text="🚀      Run", command=self.execute_script, state="disabled",
+                                        fg_color=B_R_BLUE, hover_color=HOVER_BLUE, font=FIELD_FONT)
+        self.run_button.pack(side="left", padx=10)
+
+    def build_status_ui(self):
+        self.status_label = ctk.CTkLabel(self.root, text="", height=25, anchor="w", font=FIELD_FONT)
+        self.status_label.pack(fill="x", padx=20, pady=(0, 5))
+
+    def build_log_ui(self):
+        self.log_text = ctk.CTkTextbox(self.root, wrap="word", font=LOG_FONT)
+        self.log_text.pack(fill="both", expand=True, padx=20, pady=10)
+        self.log_text.configure(state="disabled")
+
+    def build_save_ui(self):
+        save_frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        save_frame.pack(fill="x", padx=20, pady=(0, 10))
+        self.save_button = ctk.CTkButton(save_frame, text="📥      Save Log", command=self.save_log, state="disabled",
+                                         fg_color=B_R_BLUE, hover_color=HOVER_BLUE, font=FIELD_FONT)
+        self.save_button.pack(anchor="e")
+        self.script_ran.trace_add("write", self.toggle_save_button)
+
+    def toggle_theme(self):
+        current = ctk.get_appearance_mode()
+        new_mode = "Light" if current == "Dark" else "Dark"
+        ctk.set_appearance_mode(new_mode)
+        self.theme_button.configure(text=self.get_theme_icon())
+        self.save_settings()
+
+    def toggle_run_button(self, *args):
+        self.run_button.configure(state="normal" if self.selected_folder.get() else "disabled")
+
+    def toggle_save_button(self, *args):
+        self.save_button.configure(state="normal" if self.script_ran.get() else "disabled")
 
     def browse_folder(self):
         folder = filedialog.askdirectory()
         if folder:
             self.selected_folder.set(folder)
+            self.save_settings()
+
+    def load_last_folder(self):
+        if os.path.exists(SETTINGS_PATH):
+            with open(SETTINGS_PATH, "r") as f:
+                settings = json.load(f)
+            last_folder = settings.get("last_folder")
+            if last_folder and os.path.exists(last_folder):
+                self.selected_folder.set(last_folder)
+
+    def save_settings(self):
+        settings = {"appearance_mode": ctk.get_appearance_mode(), "last_folder": self.selected_folder.get()}
+        with open(SETTINGS_PATH, "w") as f:
+            json.dump(settings, f)
+
+    def is_valid_as4_project(self, folder):
+        required_dirs = ["Physical", "Logical"]
+        has_apj_file = any(f.endswith(".apj") for f in os.listdir(folder))
+        has_dirs = all(os.path.isdir(os.path.join(folder, d)) for d in required_dirs)
+        return has_apj_file and has_dirs
 
     def execute_script(self):
+        self.spinner_running = True
+        self.spinner_index = 0
+        self.animate_spinner()
         threading.Thread(target=self._worker_execute_script, daemon=True).start()
+
+    def animate_spinner(self):
+        if not self.spinner_running:
+            return
+        frame = SPINNER_FRAMES[self.spinner_index % len(SPINNER_FRAMES)]
+        self.status_label.configure(text=f"{frame} Running")
+        self.spinner_index += 1
+        self.status_label.after(100, self.animate_spinner)
 
     def _worker_execute_script(self):
         self.clear_log()
         folder = self.selected_folder.get()
         script = self.scripts.get(self.selected_script.get())
-        #self.append_log(f"[DEBUG] Selected script -> {script}\n")
+        verbose = self.verbose_mode.get()
 
         if not os.path.exists(folder):
-            self.append_log(f"Error: Folder does not exist:\n{folder}")
-            return
-        if not os.path.exists(script):
-            self.append_log(f"Error: Script not found:\n{script}")
+            self.append_log(f"[ERROR] Folder does not exist:\n{folder}")
+            self.update_status("❌ Invalid folder")
+            self.spinner_running = False
             return
 
-        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-            stdlib_path = Path(sys._MEIPASS) / 'lib'
+        if not self.is_valid_as4_project(folder):
+            self.append_log(f"[ERROR] Folder is not a valid AS4 project:\n{folder}")
+            self.update_status("❌ Not a valid AS4 project")
+            self.spinner_running = False
+            return
+
+        if not os.path.exists(script):
+            self.append_log(f"[ERROR] Script not found:\n{script}")
+            self.update_status("❌ Script missing")
+            self.spinner_running = False
+            return
+
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            stdlib_path = Path(sys._MEIPASS) / "lib"
             if stdlib_path.exists():
                 sys.path.insert(0, str(stdlib_path.resolve()))
 
@@ -117,19 +223,16 @@ class MigrationGUI:
         module = importlib.util.module_from_spec(spec)
         sys.modules["selected_script"] = module
 
-        try:
-            spec.loader.exec_module(module)
-        except Exception as e:
-            self.append_log(f"Error loading script: {e}\n")
-            return
-
         original_stdout, original_stderr = sys.stdout, sys.stderr
         redirector = RedirectText(self.append_log, self.update_status)
         sys.stdout = redirector
         sys.stderr = redirector
 
         try:
-            sys.argv = ['analyzer', folder]
+            spec.loader.exec_module(module)
+            sys.argv = ["analyzer", folder]
+            if verbose:
+                sys.argv.append("--verbose")
             module.main()
         except Exception as e:
             import traceback
@@ -138,30 +241,26 @@ class MigrationGUI:
         finally:
             sys.stdout = original_stdout
             sys.stderr = original_stderr
+            self.spinner_running = False
 
-        self.status_label.config(text="--- Script Finished ---")
+        self.update_status("✔ Script finished successfully")
         self.script_ran.set(True)
 
     def append_log(self, message):
-        self.log_text.config(state='normal')
-        try:
-            self.log_text.insert(tk.END, message)
-        except UnicodeEncodeError:
-            self.log_text.insert(tk.END, message.encode('utf-8', errors='replace').decode('utf-8'))
-        self.log_text.see(tk.END)
-        self.log_text.config(state='disabled')
+        self.log_text.configure(state="normal")
+        self.log_text.insert("end", message)
+        self.log_text.see("end")
+        self.log_text.configure(state="disabled")
 
     def update_status(self, message):
-        self.status_label.after(0, lambda: self.status_label.config(text=message))
+        self.status_label.after(0, lambda: self.status_label.configure(text=message))
 
     def save_log(self):
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".txt",
-            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
-        )
+        file_path = filedialog.asksaveasfilename(defaultextension=".txt",
+                                                 filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
         if file_path:
             try:
-                log_content = self.log_text.get("1.0", tk.END)
+                log_content = self.log_text.get("1.0", "end")
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(log_content)
                 messagebox.showinfo("Success", f"Log saved to:\n{file_path}")
@@ -169,11 +268,14 @@ class MigrationGUI:
                 messagebox.showerror("Error", f"Failed to save file:\n{e}")
 
     def clear_log(self):
-        self.log_text.config(state='normal')
-        self.log_text.delete("1.0", tk.END)
-        self.log_text.config(state='disabled')
+        self.log_text.configure(state="normal")
+        self.log_text.delete("1.0", "end")
+        self.log_text.configure(state="disabled")
 
-if __name__ == '__main__':
-    root = tk.Tk()
-    app = MigrationGUI(root)
-    root.mainloop()
+    def run(self):
+        self.root.mainloop()
+
+
+if __name__ == "__main__":
+    app = ModernMigrationGUI()
+    app.run()

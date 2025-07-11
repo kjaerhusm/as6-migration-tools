@@ -15,9 +15,12 @@ def check_deprecated_string_functions(root_dir, extensions, deprecated_functions
         for file in files:
             if any(file.endswith(ext) for ext in extensions):
                 file_path = os.path.join(root, file)
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read()
-                    if any(re.search(rf'\b{func}\b', content) for func in deprecated_functions):
+                    if any(
+                        re.search(rf"\b{func}\b", content)
+                        for func in deprecated_functions
+                    ):
                         deprecated_files.append(file_path)
 
     return deprecated_files
@@ -26,7 +29,7 @@ def check_deprecated_string_functions(root_dir, extensions, deprecated_functions
 def check_deprecated_math_functions(root_dir, extensions, deprecated_functions):
     """
     Scans files for deprecated math function calls.
-    
+
     Args:
         root_dir (str): The root directory to search in.
         extensions (list): List of file extensions to check.
@@ -36,7 +39,8 @@ def check_deprecated_math_functions(root_dir, extensions, deprecated_functions):
         list: A list of file paths where deprecated math functions were found.
     """
     deprecated_files = []
-    function_pattern = re.compile(r'\b(' + '|'.join(deprecated_functions) + r')\s*\(')  # Match function names only when followed by '('
+    # Match function names only when followed by '('
+    function_pattern = re.compile(r"\b(" + "|".join(deprecated_functions) + r")\s*\(")
 
     for root, _, files in os.walk(root_dir):
         for file in files:
@@ -48,4 +52,3 @@ def check_deprecated_math_functions(root_dir, extensions, deprecated_functions):
                         deprecated_files.append(file_path)
 
     return deprecated_files
-
