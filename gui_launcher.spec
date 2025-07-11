@@ -52,7 +52,7 @@ exe = EXE(
     a.datas,
     name='as6-migration-tools',
     debug=False,
-    strip=False,
+    strip=True,
     upx=False,
     console=False,
     icon='gui_icon.ico',
