@@ -2,7 +2,6 @@ import os
 import sys
 import threading
 import importlib.util
-import json
 from pathlib import Path
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
@@ -11,7 +10,6 @@ from utils import utils
 
 B_R_BLUE = "#3B82F6"
 HOVER_BLUE = "#2563EB"
-SETTINGS_PATH = os.path.join(os.path.expanduser("~"), ".as6_migration_settings.json")
 
 LABEL_FONT = ("Segoe UI", 14)
 FIELD_FONT = ("Segoe UI", 13)
@@ -19,13 +17,7 @@ LOG_FONT = ("Consolas", 12)
 
 SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 
-if os.path.exists(SETTINGS_PATH):
-    with open(SETTINGS_PATH, "r") as f:
-        settings = json.load(f)
-    ctk.set_appearance_mode(settings.get("appearance_mode", "Dark"))
-else:
-    ctk.set_appearance_mode("Dark")
-
+ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
 class RedirectText:
@@ -70,7 +62,6 @@ class ModernMigrationGUI:
             "Create mapp folders": self.resource_path("helpers/create_mapp_folders.py"),
         }
 
-        self.load_last_folder()
         self.build_ui()
         self.selected_folder.trace_add("write", self.toggle_run_button)
         self.toggle_run_button()
@@ -90,22 +81,22 @@ class ModernMigrationGUI:
     def build_header_ui(self):
         header_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         header_frame.pack(fill="x", padx=20, pady=(10, 0))
-        self.theme_button = ctk.CTkButton(header_frame, text=self.get_theme_icon(), width=60, command=self.toggle_theme,
+        self.theme_button = ctk.CTkButton(header_frame, text="Theme", width=60, command=self.toggle_theme,
                                           fg_color=B_R_BLUE, hover_color=HOVER_BLUE, font=FIELD_FONT)
         self.theme_button.pack(side="right")
 
     def get_theme_icon(self):
-        return "☀️" if ctk.get_appearance_mode() == "Dark" else "🌙"
+        return "Light" if ctk.get_appearance_mode() == "Dark" else "Dark"
 
     def build_folder_ui(self):
         folder_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         folder_frame.pack(fill="x", padx=20, pady=5)
         folder_frame.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(folder_frame, text="📂  Project folder:", font=LABEL_FONT).grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(folder_frame, text="Project folder:", font=LABEL_FONT).grid(row=0, column=0, sticky="w")
         folder_entry = ctk.CTkEntry(folder_frame, textvariable=self.selected_folder, font=FIELD_FONT, width=1000)
         folder_entry.grid(row=1, column=0, sticky="ew", padx=(0, 10), pady=(0, 5))
-        self.browse_button = ctk.CTkButton(folder_frame, text="📂      Browse", command=self.browse_folder,
+        self.browse_button = ctk.CTkButton(folder_frame, text="Browse", command=self.browse_folder,
                                            fg_color=B_R_BLUE, hover_color=HOVER_BLUE, width=100, font=FIELD_FONT)
         self.browse_button.grid(row=1, column=1, pady=(0, 5))
 
@@ -113,11 +104,11 @@ class ModernMigrationGUI:
         options_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         options_frame.pack(fill="x", padx=20, pady=10)
 
-        ctk.CTkLabel(options_frame, text="🧾  Select script:", font=LABEL_FONT).pack(side="left")
+        ctk.CTkLabel(options_frame, text="Select script:", font=LABEL_FONT).pack(side="left")
         ctk.CTkComboBox(options_frame, variable=self.selected_script, values=list(self.scripts.keys()), width=250,
                         font=FIELD_FONT).pack(side="left", padx=10)
         ctk.CTkCheckBox(options_frame, text="Verbose Mode", variable=self.verbose_mode, font=FIELD_FONT).pack(side="left", padx=10)
-        self.run_button = ctk.CTkButton(options_frame, text="🚀      Run", command=self.execute_script, state="disabled",
+        self.run_button = ctk.CTkButton(options_frame, text="Run", command=self.execute_script, state="disabled",
                                         fg_color=B_R_BLUE, hover_color=HOVER_BLUE, font=FIELD_FONT)
         self.run_button.pack(side="left", padx=10)
 
@@ -133,7 +124,7 @@ class ModernMigrationGUI:
     def build_save_ui(self):
         save_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         save_frame.pack(fill="x", padx=20, pady=(0, 10))
-        self.save_button = ctk.CTkButton(save_frame, text="📥      Save Log", command=self.save_log, state="disabled",
+        self.save_button = ctk.CTkButton(save_frame, text="Save Log", command=self.save_log, state="disabled",
                                          fg_color=B_R_BLUE, hover_color=HOVER_BLUE, font=FIELD_FONT)
         self.save_button.pack(anchor="e")
         self.script_ran.trace_add("write", self.toggle_save_button)
@@ -143,7 +134,6 @@ class ModernMigrationGUI:
         new_mode = "Light" if current == "Dark" else "Dark"
         ctk.set_appearance_mode(new_mode)
         self.theme_button.configure(text=self.get_theme_icon())
-        self.save_settings()
 
     def toggle_run_button(self, *args):
         self.run_button.configure(state="normal" if self.selected_folder.get() else "disabled")
@@ -155,20 +145,6 @@ class ModernMigrationGUI:
         folder = filedialog.askdirectory()
         if folder:
             self.selected_folder.set(folder)
-            self.save_settings()
-
-    def load_last_folder(self):
-        if os.path.exists(SETTINGS_PATH):
-            with open(SETTINGS_PATH, "r") as f:
-                settings = json.load(f)
-            last_folder = settings.get("last_folder")
-            if last_folder and os.path.exists(last_folder):
-                self.selected_folder.set(last_folder)
-
-    def save_settings(self):
-        settings = {"appearance_mode": ctk.get_appearance_mode(), "last_folder": self.selected_folder.get()}
-        with open(SETTINGS_PATH, "w") as f:
-            json.dump(settings, f)
 
     def is_valid_as4_project(self, folder):
         required_dirs = ["Physical", "Logical"]
@@ -198,19 +174,19 @@ class ModernMigrationGUI:
 
         if not os.path.exists(folder):
             self.append_log(f"[ERROR] Folder does not exist:\n{folder}")
-            self.update_status("❌ Invalid folder")
+            self.update_status("Invalid folder")
             self.spinner_running = False
             return
 
         if not self.is_valid_as4_project(folder):
             self.append_log(f"[ERROR] Folder is not a valid AS4 project:\n{folder}")
-            self.update_status("❌ Not a valid AS4 project")
+            self.update_status("Not a valid AS4 project")
             self.spinner_running = False
             return
 
         if not os.path.exists(script):
             self.append_log(f"[ERROR] Script not found:\n{script}")
-            self.update_status("❌ Script missing")
+            self.update_status("Script missing")
             self.spinner_running = False
             return
 
@@ -243,7 +219,7 @@ class ModernMigrationGUI:
             sys.stderr = original_stderr
             self.spinner_running = False
 
-        self.update_status("✔ Script finished successfully")
+        self.update_status("Script finished successfully")
         self.script_ran.set(True)
 
     def append_log(self, message):
