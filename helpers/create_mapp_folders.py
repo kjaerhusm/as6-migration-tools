@@ -1,6 +1,9 @@
+import argparse
 import os
 import sys
 from lxml import etree
+
+from utils import utils
 
 
 def add_mapp_package(
@@ -16,7 +19,7 @@ def add_mapp_package(
         package_name (str): Name of the mapp package (e.g., 'mappServices', 'mappMotion', 'mappView')
         package_type (str):The package type to use for the attribute "PackageType" in Package.pkg
     """
-    print(f"\nStart fixing {package_name}")
+    utils.log(f"\nStart fixing {package_name}")
 
     # Try to open and parse cpu.pkg as XML
     cpu_pkg_path = os.path.join(config_folder_path, subfolders[0], "cpu.pkg")
@@ -49,7 +52,7 @@ def add_mapp_package(
                         break
 
             if objects_node is not None:
-                print(f"Found Objects node in cpu.pkg in {folder}")
+                utils.log_v(f"Found Objects node in cpu.pkg in {folder}")
 
                 # Check if package object already exists
                 existing_package = None
@@ -70,7 +73,7 @@ def add_mapp_package(
                 for obj in object_elements:
                     if obj.text == package_name and obj.get("Type") == "Package":
                         existing_package = obj
-                        print(
+                        utils.log_v(
                             f"{package_name} entry already exists in cpu.pkg in {folder}"
                         )
                         break
@@ -88,30 +91,30 @@ def add_mapp_package(
                         xml_declaration=True,
                         pretty_print=True,
                     )
-                    print(f"Added {package_name} object to cpu.pkg in {folder}")
+                    utils.log_v(f"Added {package_name} object to cpu.pkg in {folder}")
                 else:
-                    print(
+                    utils.log_v(
                         f"{package_name} object already exists in cpu.pkg in {folder}"
                     )
             else:
-                print("Objects node not found in cpu.pkg")
+                utils.log("Objects node not found in cpu.pkg")
         except etree.ParseError as e:
-            print(f"Error parsing cpu.pkg XML in {folder}: {e}")
+            utils.log(f"Error parsing cpu.pkg XML in {folder}: {e}")
         except Exception as e:
-            print(f"Error opening cpu.pkg in {folder}: {e}")
+            utils.log(f"Error opening cpu.pkg in {folder}: {e}")
     else:
-        print(f"cpu.pkg file not found in {config_folder_path}")
+        utils.log(f"cpu.pkg file not found in {config_folder_path}")
 
     # Check if package folder exists in the subfolders
     plc_folder_path = os.path.join(config_folder_path, subfolders[0], package_name)
     if os.path.exists(plc_folder_path):
-        print(f"Found {package_name} folder in {folder}")
+        utils.log_v(f"Found {package_name} folder in {folder}")
         return True
     else:
         # Create package folder structure
         os.makedirs(plc_folder_path, exist_ok=True)
-        print(f"No {package_name} folder found")
-        print(f"Created {package_name} directory: {plc_folder_path}")
+        utils.log_v(f"No {package_name} folder found")
+        utils.log_v(f"Created {package_name} directory: {plc_folder_path}")
 
         # Create Package.pkg file with specified content
         package_content = f"""<?xml version="1.0" encoding="utf-8"?><?AutomationStudio FileVersion="4.9"?><Package SubType="{package_type}" PackageType="{package_type}" xmlns="http://br-automation.co.at/AS/Package"><Objects /></Package>"""
@@ -119,16 +122,33 @@ def add_mapp_package(
         with open(package_file_path, "w", encoding="utf-8") as f:
             f.write(package_content)
 
-        print(f"Created Package.pkg file in {package_file_path}")
-        print(f"{package_name} folder structure created successfully!")
+        utils.log_v(f"Created Package.pkg file in {package_file_path}")
+        utils.log(f"{package_name} folder structure created successfully!")
         return False
+
+
+def parse_args(argv):
+    parser = argparse.ArgumentParser(description="Creates non existing mapp folders")
+    parser.add_argument(
+        "project_path",
+        nargs="?",
+        type=str,
+        default=os.getcwd(),
+        help="Automation Studio 4.x path containing *.apj file",
+    )
+    parser.add_argument("-v", "--verbose", action="store_true", required=False)
+
+    return parser.parse_args()
 
 
 def main():
     """
     Main function to add mapp folder structure to an Automation Studio project.
     """
-    project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    args = parse_args(sys.argv)
+    project_path = args.project_path
+
+    utils.set_verbose(args.verbose)
 
     # Check if valid project path
     if not os.path.exists(project_path):
@@ -138,12 +158,12 @@ def main():
     # Check if .apj file exists in the provided path
     apj_files = [file for file in os.listdir(project_path) if file.endswith(".apj")]
     if not apj_files:
-        print(f"Error: No .apj file found in the provided path: {project_path}")
-        print("\nPlease specify a valid Automation Studio project path.")
+        utils.log(f"Error: No .apj file found in the provided path: {project_path}")
+        utils.log("\nPlease specify a valid Automation Studio project path.")
         sys.exit(1)
 
-    print(f"Project path validated: {project_path}")
-    print(f"Using project file: {apj_files[0]}\n")
+    utils.log(f"Project path validated: {project_path}")
+    utils.log(f"Using project file: {apj_files[0]}\n")
 
     # Get all folders in the Physical directory
     physical_path = os.path.join(project_path, "Physical")
@@ -159,7 +179,7 @@ def main():
 
             # Check if mappServices folder exists in the config folder directory
             if os.path.exists(config_folder_path):
-                print(f"\nFound configuration folder: {config_folder_path}")
+                utils.log(f"\nFound configuration folder: {config_folder_path}")
 
                 # Check for sub folders in the config folder
                 subfolders = [
@@ -196,8 +216,8 @@ def main():
                         "mappViewControl",
                     )
 
-        print(
-            f"Please close and reopen the project in Automation Studio to see the changes."
+        utils.log(
+            f"\nPlease close and reopen the project in Automation Studio to see the changes."
         )
 
 

@@ -469,6 +469,8 @@ def main():
     args, parser = parse_args()
     apj_file = get_project_file(args, parser)
 
+    utils.set_verbose(args.verbose)
+
     print(f"Project path validated: {args.project_path}")
     print(f"Using project file: {apj_file}")
 
@@ -477,13 +479,10 @@ def main():
         try:
 
             def log(message, log_file=file):
-                print(message)  # Print to console
-                log_file.write(message + "\n")  # Write to file
-                log_file.flush()  # Ensure data is written immediately
+                utils.log(message, file)
 
             def log_v(message, log_file=file, prepend=""):
-                if args.verbose:
-                    log(f"{prepend}[VERBOSE] {message}", log_file)
+                utils.log_v(message, log_file, prepend)
 
             log(
                 "Scanning started... Please wait while the script analyzes your project files.\n",
