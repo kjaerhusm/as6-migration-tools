@@ -73,6 +73,7 @@ def check_mapp_version(directory):
             if os.path.isdir(os.path.join(physical_path, f))
         ]
 
+        grouped_results = {}
         for folder in physical_folders:
             config_folder_path = os.path.join(physical_path, folder)
 
@@ -85,35 +86,28 @@ def check_mapp_version(directory):
                     if os.path.isdir(os.path.join(config_folder_path, f))
                 ]
 
+                mapp_folders_to_check = ["mappServices", "mappMotion", "mappView"]
+                found_mapp_folders = {folder: False for folder in mapp_folders_to_check}
+
                 if subfolders:
                     # Walk through all directories
-                    mappServices_path = False
-                    mappMotion_path = False
-                    mappView_path = False
                     for root, dirs, files in os.walk(
                         os.path.join(config_folder_path, subfolders[0])
                     ):
-                        if "mappServices" in dirs:
-                            mappServices_path = True
-                        if "mappMotion" in dirs:
-                            mappMotion_path = True
-                        if "mappView" in dirs:
-                            mappView_path = True
+                        for mapp_folder in mapp_folders_to_check:
+                            if mapp_folder in dirs:
+                                found_mapp_folders[mapp_folder] = True
 
-                    if not mappServices_path:
-                        messages.append(
-                            f"No mappServices folder found in the configuration {config_folder_path}. "
-                            "You can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
-                        )
-                    if not mappMotion_path:
-                        messages.append(
-                            f"No mappMotion folder found in the configuration {config_folder_path}. "
-                            "You can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
-                        )
-                    if not mappView_path:
-                        messages.append(
-                            f"No mappView folder found in the configuration {config_folder_path}. "
-                            "You can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
-                        )
+                    for mapp_folder, found in found_mapp_folders.items():
+                        if not found:
+                            grouped_results.setdefault(folder, set()).add(mapp_folder)
+
+        if grouped_results:
+            result = "Some configurations are missing one or more of the mapp folders"
+            for config_name, missing_mapp_folders in grouped_results.items():
+                missing_folders = ", ".join(sorted(missing_mapp_folders))
+                result += f"\n  - '{config_name}': {missing_folders}"
+            result += "\nYou can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
+            messages.append(result)
 
     return messages
