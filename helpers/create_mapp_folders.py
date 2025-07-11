@@ -14,6 +14,7 @@ def add_mapp_package(
         subfolders (list): List of subfolders in the config folder
         folder (str): Name of the current folder being processed
         package_name (str): Name of the mapp package (e.g., 'mappServices', 'mappMotion', 'mappView')
+        package_type (str):The package type to use for the attribute "PackageType" in Package.pkg
     """
     print(f"\nStart fixing {package_name}")
 
