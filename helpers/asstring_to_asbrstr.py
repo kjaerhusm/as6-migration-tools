@@ -172,7 +172,7 @@ def main():
     total_constant_replacements = 0
     total_files_changed = 0
 
-    # Loop through the files in the "Logical" directory and process .st, .c, .cpp and .ab files
+    # Loop through the files in the "Logical" directory and process .st and .ab files
     for root, _, files in os.walk(logical_path):
         for file in files:
             if file.endswith((".st", ".ab")):
