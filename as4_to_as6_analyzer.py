@@ -437,7 +437,7 @@ def main():
     print(f"Script build number: {build_number}")
 
     args = parse_args()
-    apj_file = utils.get_and_check_project_file("C")
+    apj_file = utils.get_and_check_project_file(args.project_path)
 
     utils.set_verbose(args.verbose)
 
