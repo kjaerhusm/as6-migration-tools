@@ -479,7 +479,7 @@ def main():
         try:
 
             def log(message, log_file=file):
-                utils.log(message, file)
+                utils.log(message, log_file)
 
             def log_v(message, log_file=file, prepend=""):
                 utils.log_v(message, log_file, prepend)
