@@ -2,21 +2,9 @@
 # To migrate a project from an older AR version to AR 6, modifications to the program are necessary.
 import os
 import re
-import hashlib
 import sys
 
 from utils import utils
-
-
-def calculate_file_hash(file_path):
-    """
-    Calculates the hash (MD5) of a file for comparison purposes.
-    """
-    md5 = hashlib.md5()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(4096):
-            md5.update(chunk)
-    return md5.hexdigest()
 
 
 def replace_enums(file_path, enum_mapping):
@@ -26,7 +14,7 @@ def replace_enums(file_path, enum_mapping):
     if "AsOpcUac" in file_path or "AsOpcUas" in file_path:
         return 0, False
 
-    original_hash = calculate_file_hash(file_path)
+    original_hash = utils.calculate_file_hash(file_path)
 
     with open(file_path, "r", encoding="iso-8859-1", errors="ignore") as f:
         original_content = f.read()
@@ -47,7 +35,7 @@ def replace_enums(file_path, enum_mapping):
         with open(file_path, "w", encoding="iso-8859-1") as f:
             f.write(modified_content)
 
-        new_hash = calculate_file_hash(file_path)
+        new_hash = utils.calculate_file_hash(file_path)
         if original_hash == new_hash:
             return enum_replacements, False
 
@@ -64,7 +52,7 @@ def replace_fbs_and_types(file_path, fb_mapping, type_mapping):
     if "AsOpcUac" in file_path or "AsOpcUas" in file_path:
         return 0, 0, False
 
-    original_hash = calculate_file_hash(file_path)
+    original_hash = utils.calculate_file_hash(file_path)
 
     with open(file_path, "r", encoding="iso-8859-1", errors="ignore") as f:
         original_content = f.read()
@@ -95,7 +83,7 @@ def replace_fbs_and_types(file_path, fb_mapping, type_mapping):
         with open(file_path, "w", encoding="iso-8859-1") as f:
             f.write(modified_content)
 
-        new_hash = calculate_file_hash(file_path)
+        new_hash = utils.calculate_file_hash(file_path)
         if original_hash == new_hash:
             return fb_replacements, type_replacements, False
 

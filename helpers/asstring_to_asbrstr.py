@@ -1,27 +1,15 @@
 import os
 import re
-import hashlib
 import sys
 
 from utils import utils
-
-
-def calculate_file_hash(file_path):
-    """
-    Calculates the hash (MD5) of a file for comparison purposes.
-    """
-    md5 = hashlib.md5()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(4096):
-            md5.update(chunk)
-    return md5.hexdigest()
 
 
 def replace_functions_and_constants(file_path: str, function_mapping, constant_mapping):
     """
     Replace function calls and constants in a file based on the provided mappings.
     """
-    original_hash = calculate_file_hash(file_path)
+    original_hash = utils.calculate_file_hash(file_path)
 
     with open(file_path, "r", encoding="iso-8859-1", errors="ignore") as f:
         original_content = f.read()

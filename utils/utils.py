@@ -1,4 +1,5 @@
 # Utilities to call in multiple files
+import hashlib
 import os
 import sys
 from pathlib import Path
@@ -58,3 +59,14 @@ def get_and_check_project_file(project_path):
         sys.exit(1)
 
     return apj_files[0]
+
+
+def calculate_file_hash(file_path):
+    """
+    Calculates the hash (MD5) of a file for comparison purposes.
+    """
+    md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        while chunk := f.read(4096):
+            md5.update(chunk)
+    return md5.hexdigest()
