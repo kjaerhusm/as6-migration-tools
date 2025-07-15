@@ -70,3 +70,10 @@ def calculate_file_hash(file_path):
         while chunk := f.read(4096):
             md5.update(chunk)
     return md5.hexdigest()
+
+
+def ask_user(message, default=""):
+    if sys.stdin.isatty():
+        return input(message).strip().lower()
+    else:
+        return default
