@@ -3,6 +3,8 @@ import re
 import hashlib
 import sys
 
+from utils import utils
+
 
 def calculate_file_hash(file_path):
     """
@@ -86,27 +88,13 @@ def main():
     """
     Main function to replace AsMath functions and constants with their AsBrMath equivalents.
     """
+
     project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
-    # Check if valid project path
-    if not os.path.exists(project_path):
-        print(f"Error: The provided project path does not exist: {project_path}")
-        print("\nEnsure the path is correct and the project folder exists.")
-        print(
-            "\nIf the path contains spaces, make sure to wrap it in quotes, like this:"
-        )
-        print('   python asmath_to_asbrmath.py "C:\\path\\to\\your\\project"')
-        sys.exit(1)
-
-    # Check if .apj file exists in the provided path
-    apj_files = [file for file in os.listdir(project_path) if file.endswith(".apj")]
-    if not apj_files:
-        print(f"Error: No .apj file found in the provided path: {project_path}")
-        print("\nPlease specify a valid Automation Studio project path.")
-        sys.exit(1)
+    apj_file = utils.get_and_check_project_file(project_path)
 
     print(f"Project path validated: {project_path}")
-    print(f"Using project file: {apj_files[0]}\n")
+    print(f"Using project file: {apj_file}\n")
 
     logical_path = os.path.join(project_path, "Logical")
 

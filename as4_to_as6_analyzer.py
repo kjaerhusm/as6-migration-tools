@@ -412,37 +412,7 @@ def parse_args():
         # Optionally enable verbose mode by default from GUI
         # sys.argv += ["-v"]
 
-    return parser.parse_args(), parser
-
-
-def get_project_file(args, parser):
-    # Check if valid project path
-    if not os.path.exists(args.project_path):
-        print(
-            f"{ConsoleColors.ERROR}Error: The provided project path does not exist: '{args.project_path}'",
-            file=sys.stderr,
-        )
-        print(ConsoleColors.RESET + "\n", file=sys.stderr)
-        parser.print_help()
-        sys.exit(1)
-
-    # Check if .apj file exists in the provided path
-    apj_files = [
-        file for file in os.listdir(args.project_path) if file.endswith(".apj")
-    ]
-    if not apj_files:
-        print(
-            f"{ConsoleColors.ERROR}Error: No .apj file found in the provided path: '{args.project_path}'",
-            file=sys.stderr,
-        )
-        print(
-            "Please specify a valid Automation Studio 4 project path.", file=sys.stderr
-        )
-        print(ConsoleColors.RESET + "\n", file=sys.stderr)
-        parser.print_help()
-        sys.exit(1)
-
-    return apj_files[0]
+    return parser.parse_args()
 
 
 # Check the project name and path for invalid characters
@@ -466,8 +436,8 @@ def main():
     build_number = utils.get_build_number()
     print(f"Script build number: {build_number}")
 
-    args, parser = parse_args()
-    apj_file = get_project_file(args, parser)
+    args = parse_args()
+    apj_file = utils.get_and_check_project_file("C")
 
     utils.set_verbose(args.verbose)
 
