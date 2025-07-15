@@ -46,6 +46,9 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
+      - name: Install CustomTkinter
+        run: pip install customtkinter
+
       - name: Build executable
         run: pyinstaller --noconfirm gui_launcher.spec
 
