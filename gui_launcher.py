@@ -20,6 +20,7 @@ SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇",
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
+
 class RedirectText:
     def __init__(self, append_func, status_func):
         self.append_func = append_func
@@ -34,6 +35,7 @@ class RedirectText:
     def flush(self):
         pass
 
+
 class ModernMigrationGUI:
     def __init__(self):
         self.root = ctk.CTk()
@@ -41,7 +43,9 @@ class ModernMigrationGUI:
         self.root.title(f"AS4 to AS6 Migration Tool (Build {build})")
         self.root.geometry("1500x900")
 
-        icon_path = os.path.join(getattr(sys, "_MEIPASS", os.path.abspath(".")), "gui_icon.ico")
+        icon_path = os.path.join(
+            getattr(sys, "_MEIPASS", os.path.abspath(".")), "gui_icon.ico"
+        )
         try:
             self.root.iconbitmap(icon_path)
         except Exception:
@@ -81,8 +85,15 @@ class ModernMigrationGUI:
     def build_header_ui(self):
         header_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         header_frame.pack(fill="x", padx=20, pady=(10, 0))
-        self.theme_button = ctk.CTkButton(header_frame, text="Theme", width=60, command=self.toggle_theme,
-                                          fg_color=B_R_BLUE, hover_color=HOVER_BLUE, font=FIELD_FONT)
+        self.theme_button = ctk.CTkButton(
+            header_frame,
+            text="Theme",
+            width=60,
+            command=self.toggle_theme,
+            fg_color=B_R_BLUE,
+            hover_color=HOVER_BLUE,
+            font=FIELD_FONT,
+        )
         self.theme_button.pack(side="right")
 
     def get_theme_icon(self):
@@ -93,27 +104,59 @@ class ModernMigrationGUI:
         folder_frame.pack(fill="x", padx=20, pady=5)
         folder_frame.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(folder_frame, text="Project folder:", font=LABEL_FONT).grid(row=0, column=0, sticky="w")
-        folder_entry = ctk.CTkEntry(folder_frame, textvariable=self.selected_folder, font=FIELD_FONT, width=1000)
+        ctk.CTkLabel(folder_frame, text="Project folder:", font=LABEL_FONT).grid(
+            row=0, column=0, sticky="w"
+        )
+        folder_entry = ctk.CTkEntry(
+            folder_frame, textvariable=self.selected_folder, font=FIELD_FONT, width=1000
+        )
         folder_entry.grid(row=1, column=0, sticky="ew", padx=(0, 10), pady=(0, 5))
-        self.browse_button = ctk.CTkButton(folder_frame, text="Browse", command=self.browse_folder,
-                                           fg_color=B_R_BLUE, hover_color=HOVER_BLUE, width=100, font=FIELD_FONT)
+        self.browse_button = ctk.CTkButton(
+            folder_frame,
+            text="Browse",
+            command=self.browse_folder,
+            fg_color=B_R_BLUE,
+            hover_color=HOVER_BLUE,
+            width=100,
+            font=FIELD_FONT,
+        )
         self.browse_button.grid(row=1, column=1, pady=(0, 5))
 
     def build_options_ui(self):
         options_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         options_frame.pack(fill="x", padx=20, pady=10)
 
-        ctk.CTkLabel(options_frame, text="Select script:", font=LABEL_FONT).pack(side="left")
-        ctk.CTkComboBox(options_frame, variable=self.selected_script, values=list(self.scripts.keys()), width=250,
-                        font=FIELD_FONT).pack(side="left", padx=10)
-        ctk.CTkCheckBox(options_frame, text="Verbose Mode", variable=self.verbose_mode, font=FIELD_FONT).pack(side="left", padx=10)
-        self.run_button = ctk.CTkButton(options_frame, text="Run", command=self.execute_script, state="disabled",
-                                        fg_color=B_R_BLUE, hover_color=HOVER_BLUE, font=FIELD_FONT)
+        ctk.CTkLabel(options_frame, text="Select script:", font=LABEL_FONT).pack(
+            side="left"
+        )
+        ctk.CTkComboBox(
+            options_frame,
+            variable=self.selected_script,
+            values=list(self.scripts.keys()),
+            width=250,
+            font=FIELD_FONT,
+        ).pack(side="left", padx=10)
+        ctk.CTkCheckBox(
+            options_frame,
+            text="Verbose Mode",
+            variable=self.verbose_mode,
+            font=FIELD_FONT,
+        ).pack(side="left", padx=10)
+        self.run_button = ctk.CTkButton(
+            options_frame,
+            text="Run",
+            command=self.execute_script,
+            state="disabled",
+            fg_color=B_R_BLUE,
+            hover_color=HOVER_BLUE,
+            font=FIELD_FONT,
+        )
         self.run_button.pack(side="left", padx=10)
 
     def build_status_ui(self):
-        self.status_label = ctk.CTkLabel(self.root, text="", height=25, anchor="w", font=FIELD_FONT)
+        self.status_label = ctk.CTkLabel(
+            self.root, text="", height=25, anchor="w", font=FIELD_FONT
+        )
         self.status_label.pack(fill="x", padx=20, pady=(0, 5))
 
     def build_log_ui(self):
@@ -124,8 +167,15 @@ class ModernMigrationGUI:
     def build_save_ui(self):
         save_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         save_frame.pack(fill="x", padx=20, pady=(0, 10))
-        self.save_button = ctk.CTkButton(save_frame, text="Save Log", command=self.save_log, state="disabled",
-                                         fg_color=B_R_BLUE, hover_color=HOVER_BLUE, font=FIELD_FONT)
+        self.save_button = ctk.CTkButton(
+            save_frame,
+            text="Save Log",
+            command=self.save_log,
+            state="disabled",
+            fg_color=B_R_BLUE,
+            hover_color=HOVER_BLUE,
+            font=FIELD_FONT,
+        )
         self.save_button.pack(anchor="e")
         self.script_ran.trace_add("write", self.toggle_save_button)
 
@@ -136,10 +186,14 @@ class ModernMigrationGUI:
         self.theme_button.configure(text=self.get_theme_icon())
 
     def toggle_run_button(self, *args):
-        self.run_button.configure(state="normal" if self.selected_folder.get() else "disabled")
+        self.run_button.configure(
+            state="normal" if self.selected_folder.get() else "disabled"
+        )
 
     def toggle_save_button(self, *args):
-        self.save_button.configure(state="normal" if self.script_ran.get() else "disabled")
+        self.save_button.configure(
+            state="normal" if self.script_ran.get() else "disabled"
+        )
 
     def browse_folder(self):
         folder = filedialog.askdirectory()
@@ -212,6 +266,7 @@ class ModernMigrationGUI:
             module.main()
         except Exception as e:
             import traceback
+
             print(f"[ERROR] Execution failed: {e}")
             print(traceback.format_exc())
         finally:
@@ -232,8 +287,10 @@ class ModernMigrationGUI:
         self.status_label.after(0, lambda: self.status_label.configure(text=message))
 
     def save_log(self):
-        file_path = filedialog.asksaveasfilename(defaultextension=".txt",
-                                                 filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+        )
         if file_path:
             try:
                 log_content = self.log_text.get("1.0", "end")
