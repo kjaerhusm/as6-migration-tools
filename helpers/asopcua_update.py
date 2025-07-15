@@ -228,11 +228,7 @@ def main():
 
                     total_enums_replacements += enum_replacements
                     total_files_changed += 1
-            elif (
-                file.endswith((".typ"))
-                or file.endswith((".var"))
-                or file.endswith((".fun"))
-            ):
+            elif file.endswith((".typ", ".var", ".fun")):
                 file_path = os.path.join(root, file)
                 function_replacements, type_replacements, changed = (
                     replace_fbs_and_types(file_path, fb_mapping, type_mapping)

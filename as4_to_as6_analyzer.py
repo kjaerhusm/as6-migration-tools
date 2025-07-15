@@ -800,7 +800,7 @@ def main():
             mappView_settings_results = check_mappView(args.project_path)
             if mappView_settings_results["found"]:
                 log(
-                    f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security seetings will be enforced after the migration."
+                    f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security settings will be enforced after the migration."
                     "\n"
                     "\n- To allow access without a certificate"
                     "\n  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
