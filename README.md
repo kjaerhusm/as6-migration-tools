@@ -74,13 +74,15 @@ Example (partial output):
 
 ## Included Scripts
 
-| Script                          | Purpose |
-|---------------------------------|---------|
-| `gui_launcher.py`           | GUI for running the scripts |
-| `as4_to_as6_analyzer.py`           | Main analysis and migration report generator |
-| `helpers/asmath_to_asbrmath.py`    | Replaces deprecated AsMath functions |
-| `helpers/asstring_to_asbrstr.py`   | Replaces deprecated AsString functions |
-| `helpers/asopcua_update.py`        | Updates OPC UA client code for AR 6 compatibility |
+| Script                           | Purpose                                                |
+|----------------------------------|--------------------------------------------------------|
+| `gui_launcher.py`                | GUI for running the scripts                            |
+| `as4_to_as6_analyzer.py`         | Main analysis and migration report generator           |
+| `helpers/asmath_to_asbrmath.py`  | Replaces deprecated AsMath functions                   |
+| `helpers/asstring_to_asbrstr.py` | Replaces deprecated AsString functions                 |
+| `helpers/asopcua_update.py`      | Updates OPC UA client code for AR 6 compatibility      |
+| `helpers/create_mapp_folders.py` | Creates the newer folders for the mapp components      |
+| `helpers/mappmotion_update.py`   | Updates mappMotion code for mappMotion 6 compatibility |
 
 Additional helper scripts may be added in future versions — pull requests welcome.
 
