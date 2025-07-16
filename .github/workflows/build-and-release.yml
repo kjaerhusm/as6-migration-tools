@@ -48,6 +48,9 @@ jobs:
 
       - name: Install CustomTkinter
         run: pip install customtkinter
+        
+      - name: Install CTkMenuBar
+        run: pip install CTkMenuBar
 
       - name: Build executable
         run: pyinstaller --noconfirm gui_launcher.spec
