@@ -7,7 +7,6 @@ import json
 import argparse
 from pathlib import Path
 from checks import *
-from classes.ConsoleColors import ConsoleColors
 from utils import utils
 
 # Path to the main package file
