@@ -45,7 +45,7 @@ def replace_functions_and_constants(file_path: str, function_mapping, constant_m
         with open(file_path, "w", encoding="iso-8859-1") as f:
             f.write(modified_content)
 
-        new_hash = calculate_file_hash(file_path)
+        new_hash = utils.calculate_file_hash(file_path)
         if original_hash == new_hash:
             return function_replacements, constant_replacements, False
 
