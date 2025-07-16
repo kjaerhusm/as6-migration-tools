@@ -22,6 +22,12 @@ Detects obsolete libraries, unsupported hardware, deprecated functions - and inc
 
 ---
 
+## Installation
+
+- If you are using the generated release, simply double-click the exe file
+- If you are using the python scripts, run this once:
+  `pip install -r requirements.txt`
+
 ## Usage
 
 Double click the `gui_launcher.py` script to open the GUI. Select the project folder you want to analyze. Select the script you want to run from the dropdown menu, then click "Run".
