@@ -1,25 +1,15 @@
 import os
 import re
-import hashlib
 import sys
 
-
-def calculate_file_hash(file_path):
-    """
-    Calculates the hash (MD5) of a file for comparison purposes.
-    """
-    md5 = hashlib.md5()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(4096):
-            md5.update(chunk)
-    return md5.hexdigest()
+from utils import utils
 
 
 def replace_functions_and_constants(file_path, function_mapping, constant_mapping):
     """
     Replace function calls and constants in a file based on the provided mappings.
     """
-    original_hash = calculate_file_hash(file_path)
+    original_hash = utils.calculate_file_hash(file_path)
 
     with open(file_path, "r", encoding="iso-8859-1", errors="ignore") as f:
         original_content = f.read()
@@ -48,7 +38,7 @@ def replace_functions_and_constants(file_path, function_mapping, constant_mappin
         with open(file_path, "w", encoding="iso-8859-1") as f:
             f.write(modified_content)
 
-        new_hash = calculate_file_hash(file_path)
+        new_hash = utils.calculate_file_hash(file_path)
         if original_hash == new_hash:
             return function_replacements, constant_replacements, False
 
@@ -86,27 +76,13 @@ def main():
     """
     Main function to replace AsMath functions and constants with their AsBrMath equivalents.
     """
+
     project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
-    # Check if valid project path
-    if not os.path.exists(project_path):
-        print(f"Error: The provided project path does not exist: {project_path}")
-        print("\nEnsure the path is correct and the project folder exists.")
-        print(
-            "\nIf the path contains spaces, make sure to wrap it in quotes, like this:"
-        )
-        print('   python asmath_to_asbrmath.py "C:\\path\\to\\your\\project"')
-        sys.exit(1)
-
-    # Check if .apj file exists in the provided path
-    apj_files = [file for file in os.listdir(project_path) if file.endswith(".apj")]
-    if not apj_files:
-        print(f"Error: No .apj file found in the provided path: {project_path}")
-        print("\nPlease specify a valid Automation Studio project path.")
-        sys.exit(1)
+    apj_file = utils.get_and_check_project_file(project_path)
 
     print(f"Project path validated: {project_path}")
-    print(f"Using project file: {apj_files[0]}\n")
+    print(f"Using project file: {apj_file}\n")
 
     logical_path = os.path.join(project_path, "Logical")
 

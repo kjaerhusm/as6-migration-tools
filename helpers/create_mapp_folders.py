@@ -147,23 +147,12 @@ def main():
     """
     args = parse_args(sys.argv)
     project_path = args.project_path
+    apj_file = utils.get_and_check_project_file(project_path)
 
     utils.set_verbose(args.verbose)
 
-    # Check if valid project path
-    if not os.path.exists(project_path):
-        print(f"Error: The provided project path does not exist: {project_path}")
-        sys.exit(1)
-
-    # Check if .apj file exists in the provided path
-    apj_files = [file for file in os.listdir(project_path) if file.endswith(".apj")]
-    if not apj_files:
-        utils.log(f"Error: No .apj file found in the provided path: {project_path}")
-        utils.log("\nPlease specify a valid Automation Studio project path.")
-        sys.exit(1)
-
     utils.log(f"Project path validated: {project_path}")
-    utils.log(f"Using project file: {apj_files[0]}\n")
+    utils.log(f"Using project file: {apj_file}\n")
 
     # Get all folders in the Physical directory
     physical_path = os.path.join(project_path, "Physical")

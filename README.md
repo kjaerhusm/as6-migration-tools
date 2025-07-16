@@ -120,4 +120,3 @@ MIT License - free to use for personal or commercial purposes.
 ---
 
 This project aims to help the B&R developer community prepare and streamline the migration from AS4 to AS6. It can be used to analyze projects, plan necessary updates, and identify elements that can be addressed already in AS4 — making the migration process smoother and more predictable. We hope it saves you time — and we welcome all feedback and contributions 🚀.
-
