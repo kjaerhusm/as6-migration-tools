@@ -1,18 +1,23 @@
+import importlib.util
 import os
 import sys
 import threading
-import importlib.util
 from pathlib import Path
-import customtkinter as ctk
 from tkinter import filedialog, messagebox
+import tkinter as tk
+import webbrowser
+
+import customtkinter as ctk
+from CTkMenuBar import CTkMenuBar, CustomDropdownMenu
 
 from utils import utils
 
 B_R_BLUE = "#3B82F6"
 HOVER_BLUE = "#2563EB"
 
-LABEL_FONT = ("Segoe UI", 14)
+LABEL_FONT = ("Segoe UI", 14, "bold")
 FIELD_FONT = ("Segoe UI", 13)
+BUTTON_FONT = ("Segoe UI", 14, "bold")
 LOG_FONT = ("Consolas", 12)
 
 SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
@@ -67,6 +72,8 @@ class ModernMigrationGUI:
         }
 
         self.build_ui()
+        self.script_ran.trace_add("write", self.toggle_save_buttons)
+        self.update_menubar_theme()
         self.selected_folder.trace_add("write", self.toggle_run_button)
         self.toggle_run_button()
 
@@ -82,108 +89,185 @@ class ModernMigrationGUI:
         self.build_log_ui()
         self.build_save_ui()
 
+    def update_menubar_theme(self):
+        appearance = ctk.get_appearance_mode()
+        color = "#f5f5f5" if appearance == "Light" else "#000000"
+        self.menubar.configure(bg_color=color)
+
     def build_header_ui(self):
-        header_frame = ctk.CTkFrame(self.root, fg_color="transparent")
-        header_frame.pack(fill="x", padx=20, pady=(10, 0))
-        self.theme_button = ctk.CTkButton(
-            header_frame,
-            text="Theme",
-            width=60,
-            command=self.toggle_theme,
+        self.menubar = CTkMenuBar(master=self.root)
+
+        file_btn = self.menubar.add_cascade("File")
+        file_dropdown = CustomDropdownMenu(widget=file_btn)
+        file_dropdown.add_option("Browse AS4 project", self.browse_folder)
+        self.save_log_option = file_dropdown.add_option("Save Log", self.save_log)
+        file_dropdown.add_separator()
+        file_dropdown.add_option("Exit", self.root.quit)
+
+        theme_btn = self.menubar.add_cascade("Theme")
+        theme_dropdown = CustomDropdownMenu(widget=theme_btn)
+        theme_dropdown.add_option("Light Mode", lambda: self.set_theme("Light"))
+        theme_dropdown.add_option("Dark Mode", lambda: self.set_theme("Dark"))
+
+        self.menubar.add_cascade("About", command=self.show_about)
+
+        self.menubar.pack(fill="x")
+
+    def set_theme(self, mode):
+        self.update_menubar_theme()
+        ctk.set_appearance_mode(mode)
+        self.menubar.configure(bg_color="#ffffff" if mode == "Light" else "#000000")
+
+    def toggle_save_buttons(self, *args):
+        state = "normal" if self.script_ran.get() else "disabled"
+        self.save_button.configure(state=state)
+        self.save_log_option.configure(state=state)
+
+    def show_about(self):
+        about_text = (
+            "Open-source tools for analyzing and migrating B&R Automation Studio 4 (AS4) projects to Automation Studio 6 (AS6).\n\n"
+            "Detects obsolete libraries, unsupported hardware, deprecated functions – and includes helper scripts for automatic code conversion.\n\n"
+            "🔶 Disclaimer: This project is unofficial and not provided or endorsed by B&R Industrial Automation.\n"
+            "It is offered as an open-source tool, with no warranty or guarantees.\n"
+            "Use at your own risk — contributions and improvements are very welcome!"
+        )
+
+        appearance = ctk.get_appearance_mode()
+        bg = "#f0f0f0" if appearance == "Light" else "#2a2d2e"
+        fg = "#000000" if appearance == "Light" else "#ffffff"
+
+        msg_win = tk.Toplevel(self.root)
+        msg_win.title("About")
+        msg_win.configure(bg=bg)
+        msg_win.geometry("720x360")
+        msg_win.resizable(False, False)
+
+        try:
+            icon_path = os.path.join(
+                getattr(sys, "_MEIPASS", os.path.abspath(".")), "gui_icon.ico"
+            )
+            msg_win.iconbitmap(icon_path)
+        except Exception:
+            pass
+
+        msg_win.update_idletasks()
+        x = self.root.winfo_rootx() + (self.root.winfo_width() // 2) - (720 // 2)
+        y = self.root.winfo_rooty() + (self.root.winfo_height() // 2) - (360 // 2)
+        msg_win.geometry(f"+{x}+{y}")
+
+        tk.Label(
+            msg_win,
+            text=about_text,
+            justify="left",
+            bg=bg,
+            fg=fg,
+            font=FIELD_FONT,
+            padx=20,
+            pady=20,
+            wraplength=680,
+        ).pack(anchor="w")
+
+        ctk.CTkButton(
+            master=msg_win,
+            text="Open GitHub",
+            command=lambda: webbrowser.open_new(
+                "https://github.com/br-automation-community/as6-migration-tools"
+            ),
             fg_color=B_R_BLUE,
             hover_color=HOVER_BLUE,
-            font=FIELD_FONT,
-        )
-        self.theme_button.pack(side="right")
+            font=BUTTON_FONT,
+            width=160,
+            height=36,
+            corner_radius=8,
+        ).pack(pady=(0, 20))
 
-    def get_theme_icon(self):
-        return "Light" if ctk.get_appearance_mode() == "Dark" else "Dark"
+        msg_win.transient(self.root)
+        msg_win.grab_set()
+        msg_win.focus_set()
+        msg_win.bind("<Escape>", lambda e: msg_win.destroy())
 
     def build_folder_ui(self):
-        folder_frame = ctk.CTkFrame(self.root, fg_color="transparent")
-        folder_frame.pack(fill="x", padx=20, pady=5)
-        folder_frame.grid_columnconfigure(0, weight=1)
+        frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        frame.pack(fill="x", padx=20, pady=10)
+        frame.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(folder_frame, text="Project folder:", font=LABEL_FONT).grid(
+        ctk.CTkLabel(frame, text="Project folder:", font=LABEL_FONT).grid(
             row=0, column=0, sticky="w"
         )
-        folder_entry = ctk.CTkEntry(
-            folder_frame, textvariable=self.selected_folder, font=FIELD_FONT, width=1000
+        entry = ctk.CTkEntry(
+            frame, textvariable=self.selected_folder, font=FIELD_FONT, width=1000
         )
-        folder_entry.grid(row=1, column=0, sticky="ew", padx=(0, 10), pady=(0, 5))
+        entry.grid(row=1, column=0, sticky="ew", padx=(0, 10), pady=(0, 5))
         self.browse_button = ctk.CTkButton(
-            folder_frame,
+            frame,
             text="Browse",
             command=self.browse_folder,
             fg_color=B_R_BLUE,
             hover_color=HOVER_BLUE,
             width=100,
-            font=FIELD_FONT,
+            height=36,
+            corner_radius=8,
+            font=BUTTON_FONT,
         )
         self.browse_button.grid(row=1, column=1, pady=(0, 5))
 
     def build_options_ui(self):
-        options_frame = ctk.CTkFrame(self.root, fg_color="transparent")
-        options_frame.pack(fill="x", padx=20, pady=10)
+        frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        frame.pack(fill="x", padx=20, pady=15)
 
-        ctk.CTkLabel(options_frame, text="Select script:", font=LABEL_FONT).pack(
-            side="left"
-        )
+        ctk.CTkLabel(frame, text="Select script:", font=LABEL_FONT).pack(side="left")
         ctk.CTkComboBox(
-            options_frame,
+            frame,
             variable=self.selected_script,
             values=list(self.scripts.keys()),
             width=250,
             font=FIELD_FONT,
         ).pack(side="left", padx=10)
         ctk.CTkCheckBox(
-            options_frame,
-            text="Verbose Mode",
-            variable=self.verbose_mode,
-            font=FIELD_FONT,
+            frame, text="Verbose Mode", variable=self.verbose_mode, font=FIELD_FONT
         ).pack(side="left", padx=10)
         self.run_button = ctk.CTkButton(
-            options_frame,
+            frame,
             text="Run",
             command=self.execute_script,
             state="disabled",
             fg_color=B_R_BLUE,
             hover_color=HOVER_BLUE,
-            font=FIELD_FONT,
+            font=BUTTON_FONT,
+            height=36,
+            corner_radius=8,
         )
-        self.run_button.pack(side="left", padx=10)
+        self.run_button.pack(side="left", padx=15)
 
     def build_status_ui(self):
         self.status_label = ctk.CTkLabel(
-            self.root, text="", height=25, anchor="w", font=FIELD_FONT
+            self.root, text="", height=25, anchor="w", font=FIELD_FONT, wraplength=1400
         )
         self.status_label.pack(fill="x", padx=20, pady=(0, 5))
 
     def build_log_ui(self):
-        self.log_text = ctk.CTkTextbox(self.root, wrap="word", font=LOG_FONT)
+        self.log_text = ctk.CTkTextbox(
+            self.root, wrap="word", font=LOG_FONT, border_width=1, corner_radius=6
+        )
         self.log_text.pack(fill="both", expand=True, padx=20, pady=10)
         self.log_text.configure(state="disabled")
 
     def build_save_ui(self):
-        save_frame = ctk.CTkFrame(self.root, fg_color="transparent")
-        save_frame.pack(fill="x", padx=20, pady=(0, 10))
+        frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        frame.pack(fill="x", padx=20, pady=(0, 20))
         self.save_button = ctk.CTkButton(
-            save_frame,
+            frame,
             text="Save Log",
             command=self.save_log,
             state="disabled",
             fg_color=B_R_BLUE,
             hover_color=HOVER_BLUE,
-            font=FIELD_FONT,
+            font=BUTTON_FONT,
+            height=36,
+            corner_radius=8,
         )
         self.save_button.pack(anchor="e")
         self.script_ran.trace_add("write", self.toggle_save_button)
-
-    def toggle_theme(self):
-        current = ctk.get_appearance_mode()
-        new_mode = "Light" if current == "Dark" else "Dark"
-        ctk.set_appearance_mode(new_mode)
-        self.theme_button.configure(text=self.get_theme_icon())
 
     def toggle_run_button(self, *args):
         self.run_button.configure(
