@@ -153,6 +153,7 @@ class ModernMigrationGUI:
         fg = "#000000" if appearance == "Light" else "#ffffff"
 
         msg_win = tk.Toplevel(self.root)
+        msg_win.withdraw() # Hide initially
         msg_win.title("About")
         msg_win.configure(bg=bg)
         msg_win.geometry("720x360")
@@ -201,6 +202,7 @@ class ModernMigrationGUI:
         msg_win.grab_set()
         msg_win.focus_set()
         msg_win.bind("<Escape>", lambda e: msg_win.destroy())
+        msg_win.deiconify()
 
     def build_folder_ui(self):
         frame = ctk.CTkFrame(self.root, fg_color="transparent")
