@@ -184,6 +184,8 @@ def ask_user_gui(message: str, parent=None, extra_note: str = "") -> bool:
 
     dialog.protocol("WM_DELETE_WINDOW", on_no)
     dialog.bind("<Escape>", lambda e: on_no())
+    dialog.bind("y", lambda e: on_yes())
+    dialog.bind("n", lambda e: on_no())
 
     button_frame = ctk.CTkFrame(container, fg_color="transparent")
     button_frame.pack(pady=(0, 5))
