@@ -126,26 +126,24 @@ def main():
         "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n"
     )
 
-    if __name__ == "__main__" and sys.stdin.isatty():
-
-        if not found_libraries:
-            print("Neither AsOpcUac nor AsOpcUas libraries found.\n")
-            proceed = (
-                input(
-                    "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: "
-                )
-                .strip()
-                .lower()
-            )
-            if proceed not in ("", "y"):
-                print("Operation cancelled. No changes were made.")
-                return
-        else:
-            print(f"Libraries found: {', '.join(found_libraries)}.\n")
-            proceed = input("Do you want to continue? (y/n) [y]: ").strip().lower()
-            if proceed not in ("", "y"):
-                print("Operation cancelled. No changes were made.")
-                return
+    if not found_libraries:
+        print("Neither AsOpcUac nor AsOpcUas libraries found.\n")
+        proceed = utils.ask_user(
+            "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
+            extra_note="After conversion, the project will no longer compile in Automation Studio 4."
+        )
+        if proceed != "y":
+            print("Operation cancelled. No changes were made.")
+            sys.exit(0)
+    else:
+        print(f"Libraries found: {', '.join(found_libraries)}.\n")
+        proceed = utils.ask_user(
+            "Do you want to continue? (y/n) [y]: ",
+            extra_note="After conversion, the project will no longer compile in Automation Studio 4."
+        )
+        if proceed != "y":
+            print("Operation cancelled. No changes were made.")
+            sys.exit(0)
 
     fb_mapping = {
         "UA_EventItemOperate": "UA_EventItemOperateList",

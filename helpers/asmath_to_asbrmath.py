@@ -94,25 +94,21 @@ def main():
         "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n"
     )
 
-    if __name__ == "__main__" and sys.stdin.isatty():
+    if not library_found:
+        print("AsMath library not found.")
+        proceed = utils.ask_user(
+            "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
+            extra_note="Note: This script only updates code. You must manually remove 'AsMath' and add 'AsBrMath' in the library manager. Compatible with both AS4 and AS6 after that."
+        )
+    else:
+        proceed = utils.ask_user(
+            "Do you want to continue? (y/n) [y]: ",
+            extra_note="Note: After replacing the code, remember to swap the library from 'AsMath' to 'AsBrMath' manually."
+        )
 
-        if not library_found:
-            print("AsMath library not found.")
-            proceed = (
-                input(
-                    "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: "
-                )
-                .strip()
-                .lower()
-            )
-            if proceed not in ("", "y"):
-                print("Operation cancelled. No changes were made.")
-                return
-        else:
-            proceed = input("Do you want to continue? (y/n) [y]: ").strip().lower()
-            if proceed not in ("", "y"):
-                print("Operation cancelled. No changes were made.")
-                return
+    if proceed != "y":
+        print("Operation cancelled. No changes were made.")
+        return
 
     function_mapping = {
         "atan2": "brmatan2",

@@ -232,14 +232,18 @@ def main():
     if not found_libraries:
         print("None of the libraries supported by the script were found.\n")
         proceed = utils.ask_user(
-            "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: "
+            "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
+            extra_note="After conversion, the project will no longer compile in Automation Studio 4."
         )
         if proceed not in ("", "y"):
             print("Operation cancelled. No changes were made.")
             return
     else:
         print(f"Libraries found: {', '.join(found_libraries)}.\n")
-        proceed = utils.ask_user("Do you want to continue? (y/n) [y]: ")
+        proceed = utils.ask_user(
+            "Do you want to continue? (y/n) [y]: ",
+            extra_note="After conversion, the project will no longer compile in Automation Studio 4."
+        )
         if proceed not in ("", "y"):
             print("Operation cancelled. No changes were made.")
             return

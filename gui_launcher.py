@@ -5,12 +5,13 @@ import threading
 from pathlib import Path
 from tkinter import filedialog, messagebox
 import tkinter as tk
+import types
 import webbrowser
 
 import customtkinter as ctk
 from CTkMenuBar import CTkMenuBar, CustomDropdownMenu
 
-from utils import utils
+import utils.utils as utils
 
 B_R_BLUE = "#3B82F6"
 HOVER_BLUE = "#2563EB"
@@ -44,6 +45,19 @@ class RedirectText:
 class ModernMigrationGUI:
     def __init__(self):
         self.root = ctk.CTk()
+
+        import utils.utils as shared_utils
+        original_ask_user = shared_utils.ask_user
+
+        def ask_user_gui_wrapper(*args, **kwargs):
+            if "parent" not in kwargs or kwargs["parent"] is None:
+                kwargs["parent"] = self.root
+            return original_ask_user(*args, **kwargs)
+
+        shared_utils.ask_user = ask_user_gui_wrapper
+        sys.modules["utils.utils"] = shared_utils
+        self.utils = shared_utils
+
         build = utils.get_build_number()
         self.root.title(f"AS4 to AS6 Migration Tool (Build {build})")
         self.root.geometry("1500x900")
@@ -53,6 +67,7 @@ class ModernMigrationGUI:
         )
         try:
             self.root.iconbitmap(icon_path)
+            utils.set_gui_icon(icon_path)
         except Exception:
             pass
 
@@ -397,3 +412,4 @@ class ModernMigrationGUI:
 if __name__ == "__main__":
     app = ModernMigrationGUI()
     app.run()
+
