@@ -130,7 +130,7 @@ def main():
         print("Neither AsOpcUac nor AsOpcUas libraries found.\n")
         proceed = utils.ask_user(
             "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
-            extra_note="After conversion, the project will no longer compile in Automation Studio 4."
+            extra_note="After conversion, the project will no longer compile in Automation Studio 4.",
         )
         if proceed != "y":
             print("Operation cancelled. No changes were made.")
@@ -139,7 +139,7 @@ def main():
         print(f"Libraries found: {', '.join(found_libraries)}.\n")
         proceed = utils.ask_user(
             "Do you want to continue? (y/n) [y]: ",
-            extra_note="After conversion, the project will no longer compile in Automation Studio 4."
+            extra_note="After conversion, the project will no longer compile in Automation Studio 4.",
         )
         if proceed != "y":
             print("Operation cancelled. No changes were made.")

@@ -98,12 +98,12 @@ def main():
         print("AsMath library not found.")
         proceed = utils.ask_user(
             "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
-            extra_note="Note: This script only updates code. You must manually remove 'AsMath' and add 'AsBrMath' in the library manager. Compatible with both AS4 and AS6 after that."
+            extra_note="Note: This script only updates code. You must manually remove 'AsMath' and add 'AsBrMath' in the library manager. Compatible with both AS4 and AS6 after that.",
         )
     else:
         proceed = utils.ask_user(
             "Do you want to continue? (y/n) [y]: ",
-            extra_note="Note: After replacing the code, remember to swap the library from 'AsMath' to 'AsBrMath' manually."
+            extra_note="Note: After replacing the code, remember to swap the library from 'AsMath' to 'AsBrMath' manually.",
         )
 
     if proceed != "y":

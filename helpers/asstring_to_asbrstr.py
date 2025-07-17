@@ -88,18 +88,17 @@ def main():
         "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n"
     )
 
-
     if not found_libraries:
         print("Neither AsString nor AsWStr libraries found.\n")
         proceed = utils.ask_user(
             "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
-            extra_note="Note: This script updates code to use AsBrStr. You must manually remove AsString/AsWStr and add AsBrStr/AsBrWStr in the library manager. Compatible with AS4 and AS6 after that."
+            extra_note="Note: This script updates code to use AsBrStr. You must manually remove AsString/AsWStr and add AsBrStr/AsBrWStr in the library manager. Compatible with AS4 and AS6 after that.",
         )
     else:
         print(f"Libraries found: {', '.join(found_libraries)}.\n")
         proceed = utils.ask_user(
             "Do you want to continue? (y/n) [y]: ",
-            extra_note="Note: After conversion, manually remove AsString/AsWStr and add AsBrStr/AsBrWStr in the library manager."
+            extra_note="Note: After conversion, manually remove AsString/AsWStr and add AsBrStr/AsBrWStr in the library manager.",
         )
 
     if proceed != "y":

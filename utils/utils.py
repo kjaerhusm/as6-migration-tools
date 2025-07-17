@@ -8,6 +8,7 @@ from classes.ConsoleColors import ConsoleColors
 
 _is_verbose = False
 
+
 def get_build_number():
     try:
         version_file = Path(__file__).resolve().parent.parent / "version.txt"
@@ -37,11 +38,13 @@ def get_and_check_project_file(project_path):
     if not os.path.exists(project_path):
         if sys.stdin.isatty():
             print(ConsoleColors.ERROR)
-        print(f"Error: The provided project path does not exist: '{project_path}'"
-              "\nEnsure the path is correct and the project folder exists."
-              "\nIf the path contains spaces, make sure to wrap it in quotes, like this:"
-              f"\n   python {os.path.basename(sys.argv[0])} \"C:\\path\\to\\your\\project\"",
-              file=sys.stderr)
+        print(
+            f"Error: The provided project path does not exist: '{project_path}'"
+            "\nEnsure the path is correct and the project folder exists."
+            "\nIf the path contains spaces, make sure to wrap it in quotes, like this:"
+            f'\n   python {os.path.basename(sys.argv[0])} "C:\\path\\to\\your\\project"',
+            file=sys.stderr,
+        )
         if sys.stdin.isatty():
             print(f"{ConsoleColors.RESET}\n")
         sys.exit(1)
@@ -51,9 +54,11 @@ def get_and_check_project_file(project_path):
     if not apj_files:
         if sys.stdin.isatty():
             print(ConsoleColors.ERROR)
-        print(f"Error: No .apj file found in the provided path: {project_path}"
-              "\nPlease specify a valid Automation Studio project path.",
-              file=sys.stderr)
+        print(
+            f"Error: No .apj file found in the provided path: {project_path}"
+            "\nPlease specify a valid Automation Studio project path.",
+            file=sys.stderr,
+        )
         if sys.stdin.isatty():
             print(f"{ConsoleColors.RESET}\n")
         sys.exit(1)
@@ -78,6 +83,7 @@ def ask_user(message, default="y", parent=None, extra_note=""):
     """
     if parent is not None:
         from utils.utils import ask_user_gui
+
         cleaned_msg = (
             message.replace("(y/n)", "")
             .replace("[y]", "")
@@ -101,9 +107,12 @@ def ask_user(message, default="y", parent=None, extra_note=""):
 
 
 _icon_path = None
+
+
 def set_gui_icon(path):
     global _icon_path
     _icon_path = path
+
 
 def ask_user_gui(message: str, parent=None, extra_note: str = "") -> bool:
     """
@@ -147,7 +156,7 @@ def ask_user_gui(message: str, parent=None, extra_note: str = "") -> bool:
         text=message,
         font=("Segoe UI", 16, "bold"),
         wraplength=420,
-        justify="center"
+        justify="center",
     ).pack(pady=(0, 20))
 
     # Recommendation
@@ -157,7 +166,7 @@ def ask_user_gui(message: str, parent=None, extra_note: str = "") -> bool:
         font=("Segoe UI", 13),
         wraplength=420,
         justify="center",
-        text_color="#f59e0b"
+        text_color="#f59e0b",
     ).pack(pady=(0, 10))
 
     # Extra note if provided
@@ -168,7 +177,7 @@ def ask_user_gui(message: str, parent=None, extra_note: str = "") -> bool:
             font=("Segoe UI", 13),
             wraplength=420,
             justify="center",
-            text_color="gray"
+            text_color="gray",
         ).pack(pady=(0, 25))
 
     # Button row
@@ -189,8 +198,12 @@ def ask_user_gui(message: str, parent=None, extra_note: str = "") -> bool:
 
     button_frame = ctk.CTkFrame(container, fg_color="transparent")
     button_frame.pack(pady=(0, 5))
-    ctk.CTkButton(button_frame, text="Yes", command=on_yes, width=100).pack(side="left", padx=15)
-    ctk.CTkButton(button_frame, text="No", command=on_no, width=100).pack(side="left", padx=15)
+    ctk.CTkButton(button_frame, text="Yes", command=on_yes, width=100).pack(
+        side="left", padx=15
+    )
+    ctk.CTkButton(button_frame, text="No", command=on_no, width=100).pack(
+        side="left", padx=15
+    )
 
     dialog.transient(parent)
     dialog.grab_set()
@@ -202,4 +215,3 @@ def ask_user_gui(message: str, parent=None, extra_note: str = "") -> bool:
         root.destroy()
 
     return result["value"]
-

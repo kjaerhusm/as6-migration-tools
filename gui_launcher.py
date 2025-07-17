@@ -47,6 +47,7 @@ class ModernMigrationGUI:
         self.root = ctk.CTk()
 
         import utils.utils as shared_utils
+
         original_ask_user = shared_utils.ask_user
 
         def ask_user_gui_wrapper(*args, **kwargs):
@@ -153,7 +154,7 @@ class ModernMigrationGUI:
         fg = "#000000" if appearance == "Light" else "#ffffff"
 
         msg_win = tk.Toplevel(self.root)
-        msg_win.withdraw() # Hide initially
+        msg_win.withdraw()  # Hide initially
         msg_win.title("About")
         msg_win.configure(bg=bg)
         msg_win.geometry("720x360")
@@ -414,4 +415,3 @@ class ModernMigrationGUI:
 if __name__ == "__main__":
     app = ModernMigrationGUI()
     app.run()
-
