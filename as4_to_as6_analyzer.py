@@ -120,7 +120,6 @@ def scan_files_parallel(root_dir, extensions, process_function, *args):
             results.extend(future.result())
 
     display_progress("Processing complete.".ljust(50))  # Clear line
-    print()  # Move to next line
     return results
 
 
