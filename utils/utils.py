@@ -73,7 +73,10 @@ def calculate_file_hash(file_path):
 
 
 def ask_user(message, default=""):
-    if sys.stdin.isatty():
-        return input(message).strip().lower()
-    else:
-        return default
+    try:
+        if sys.stdin and sys.stdin.isatty():
+            return input(message).strip().lower()
+    except Exception as e:
+        print(f"[DEBUG] ask_user fallback triggered due to: {e}")
+    print(f"[INFO] {message} (Automatically proceeding with default)")
+    return default
