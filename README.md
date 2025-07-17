@@ -93,6 +93,11 @@ Example (partial output):
 
 Additional helper scripts may be added in future versions - pull requests welcome.
 
+### Calling a helper script directly
+
+Due to the structure of the project, calling `python helpers/<anyscript>.py` will result in an error.
+To prevent this, either use the GUI or change the call to `python -m helpers.<anyscript>` (omit the `.py` extension)
+
 ---
 
 ## Requirements
