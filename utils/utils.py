@@ -112,7 +112,6 @@ def ask_user_gui(message: str, parent=None, extra_note: str = "") -> bool:
     An optional extra_note can be provided for additional info.
     """
     import customtkinter as ctk
-    import os
 
     if parent is None:
         root = ctk.CTk()
