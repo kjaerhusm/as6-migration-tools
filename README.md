@@ -5,7 +5,7 @@ Detects obsolete libraries, unsupported hardware, deprecated functions - and inc
 
 > ⚠️ **Disclaimer:** This project is **unofficial** and not provided or endorsed by B&R Industrial Automation.  
 > It is offered as an open-source tool, with no warranty or guarantees.  
-> Use at your own risk — contributions and improvements are very welcome!
+> Use at your own risk - contributions and improvements are very welcome!
 
 ---
 
@@ -24,13 +24,16 @@ Detects obsolete libraries, unsupported hardware, deprecated functions - and inc
 
 ## Installation
 
-- If you are using the generated release, simply double-click the exe file
-- If you are using the python scripts, run this once:
-  `pip install -r requirements.txt`
+- ✅ **Recommended:** Download the latest release from [GitHub Releases](https://github.com/kjaerhusm/as6-migration-tools/releases/tag/latest)  
+  Unzip and run `as6-migration-tools.exe`.
+
+- 🐍 **Alternative (Python source):**  
+  Run `pip install -r requirements.txt`
 
 ## Usage
 
-Double click the `gui_launcher.py` script to open the GUI. Select the project folder you want to analyze. Select the script you want to run from the dropdown menu, then click "Run".
+Launch `gui_launcher.py` to open the GUI.  
+Choose the target script, browse to your AS4 project, and click **Run**.
 
 ![Example Analysis Output](docs/gui1.png)
 
@@ -52,17 +55,15 @@ options:
 
 Example:
 
-Run the main script to analyze an Automation Studio 4 project:
+Run the main script to analyze an Automation Studio 4.12.x project:
 
 ```bash
 python as4_to_as6_analyzer.py "C:\path\to\AutomationStudio4Project"
 ```
 
-Run the script from WSL on a project that is on the Windows partition (replace "C:/" with "/mnt/c/"):  
+> 💡 **Tip:** If you're using WSL, convert Windows paths like this:  
+> `C:\Projects\MyProject` → `/mnt/c/Projects/MyProject`
 
-```bash
-python as4_to_as6_analyzer.py "/mnt/c/path/to/AutomationStudio4Project"
-```  
 
 ---
 
@@ -90,7 +91,7 @@ Example (partial output):
 | `helpers/create_mapp_folders.py` | Creates the newer folders for the mapp components      |
 | `helpers/mappmotion_update.py`   | Updates mappMotion code for mappMotion 6 compatibility |
 
-Additional helper scripts may be added in future versions — pull requests welcome.
+Additional helper scripts may be added in future versions - pull requests welcome.
 
 ---
 
@@ -106,7 +107,7 @@ Additional helper scripts may be added in future versions — pull requests welc
 
 - This tool does not perform full automatic migration of projects.
 - It provides analysis and recommendations to assist developers during migration.
-- Some helper scripts provide basic automated conversions for known deprecated elements.
+- Helper scripts make best-effort changes based on known patterns, but may not cover all edge cases.
 - Manual review and validation is always required after running the tool.
 
 ---
@@ -127,4 +128,7 @@ MIT License - free to use for personal or commercial purposes.
 
 ---
 
-This project aims to help the B&R developer community prepare and streamline the migration from AS4 to AS6. It can be used to analyze projects, plan necessary updates, and identify elements that can be addressed already in AS4 — making the migration process smoother and more predictable. We hope it saves you time — and we welcome all feedback and contributions 🚀.
+This project is built by and for the B&R developer community.  
+It helps analyze existing AS4 projects, detect potential upgrade issues, and simplify the transition to AS6.
+
+We hope it saves you time and gives you a head start - feedback and pull requests are always welcome 🚀

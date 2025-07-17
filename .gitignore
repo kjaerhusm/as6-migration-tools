@@ -173,4 +173,14 @@ cython_debug/
 # VS Code settings
 .vscode
 
+# PyCharm / JetBrains IDE settings
+# Share only relevant config for team collaboration
+.idea/
+!.idea/codeStyles/
+!.idea/runConfigurations/
+!.idea/inspectionProfiles/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/shelf
 
