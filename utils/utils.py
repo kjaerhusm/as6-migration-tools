@@ -4,6 +4,8 @@ import os
 import sys
 from pathlib import Path
 
+from CTkMessagebox import CTkMessagebox
+
 from classes.ConsoleColors import ConsoleColors
 
 _is_verbose = False
@@ -82,8 +84,6 @@ def ask_user(message, default="y", parent=None, extra_note=""):
     Ask the user a yes/no question. Uses terminal input if no GUI context.
     """
     if parent is not None:
-        from utils.utils import ask_user_gui
-
         cleaned_msg = (
             message.replace("(y/n)", "")
             .replace("[y]", "")
@@ -91,7 +91,7 @@ def ask_user(message, default="y", parent=None, extra_note=""):
             .strip(": ")
             .strip()
         )
-        result = ask_user_gui(cleaned_msg, parent, extra_note=extra_note)
+        result = ask_user_gui(cleaned_msg, extra_note=extra_note)
         choice = "y" if result else "n"
         print(f"[INFO] {message} (User selected: '{choice}')")
         return choice
@@ -106,112 +106,21 @@ def ask_user(message, default="y", parent=None, extra_note=""):
     return default
 
 
-_icon_path = None
-
-
-def set_gui_icon(path):
-    global _icon_path
-    _icon_path = path
-
-
-def ask_user_gui(message: str, parent=None, extra_note: str = "") -> bool:
+def ask_user_gui(message: str, extra_note: str = "") -> bool:
     """
     Display a Yes/No confirmation popup using customtkinter.
-    If parent window is provided, center popup on it and use same icon.
     An optional extra_note can be provided for additional info.
     """
-    import customtkinter as ctk
-
-    if parent is None:
-        root = ctk.CTk()
-        root.withdraw()
-    else:
-        root = parent
-
-    dialog = ctk.CTkToplevel(root)
-    dialog.title("Confirmation")
-    dialog.geometry("460x250")
-    dialog.resizable(False, False)
-
-    # Try using icon (only works some places with CTkToplevel)
-    if _icon_path:
-        try:
-            dialog.iconbitmap(_icon_path)
-        except Exception:
-            pass
-
-    if parent:
-        parent.update_idletasks()
-        x = parent.winfo_rootx() + (parent.winfo_width() // 2) - 230
-        y = parent.winfo_rooty() + (parent.winfo_height() // 2) - 110
-        dialog.geometry(f"+{x}+{y}")
-
-    # Main container
-    container = ctk.CTkFrame(dialog, fg_color="transparent")
-    container.pack(padx=20, pady=(20, 10), fill="x")
-
-    # Main message
-    ctk.CTkLabel(
-        container,
-        text=message,
-        font=("Segoe UI", 16, "bold"),
-        wraplength=420,
-        justify="center",
-    ).pack(pady=(0, 20))
-
-    # Recommendation
-    ctk.CTkLabel(
-        container,
-        text="It is recommended to create a backup or use version control (e.g., Git) before continuing.",
-        font=("Segoe UI", 13),
-        wraplength=420,
-        justify="center",
-        text_color="#f59e0b",
-    ).pack(pady=(0, 10))
-
-    # Extra note if provided
-    if extra_note:
-        ctk.CTkLabel(
-            container,
-            text=extra_note,
-            font=("Segoe UI", 13),
-            wraplength=420,
-            justify="center",
-            text_color="gray",
-        ).pack(pady=(0, 25))
-
-    # Button row
-    result = {"value": False}
-
-    def on_yes():
-        result["value"] = True
-        dialog.destroy()
-
-    def on_no():
-        result["value"] = False
-        dialog.destroy()
-
-    dialog.protocol("WM_DELETE_WINDOW", on_no)
-    dialog.bind("<Escape>", lambda e: on_no())
-    dialog.bind("y", lambda e: on_yes())
-    dialog.bind("n", lambda e: on_no())
-
-    button_frame = ctk.CTkFrame(container, fg_color="transparent")
-    button_frame.pack(pady=(0, 5))
-    ctk.CTkButton(button_frame, text="Yes", command=on_yes, width=100).pack(
-        side="left", padx=15
+    final_message = f"{extra_note}\n\n" if extra_note else ""
+    final_message += message
+    msg = CTkMessagebox(
+        title="Question",
+        message=final_message,
+        icon="question",
+        option_1="Yes",
+        option_2="No",
+        width=460,
+        wraplength=390
     )
-    ctk.CTkButton(button_frame, text="No", command=on_no, width=100).pack(
-        side="left", padx=15
-    )
-
-    dialog.transient(parent)
-    dialog.grab_set()
-    dialog.lift()
-    dialog.focus_force()
-    root.wait_window(dialog)
-
-    if parent is None:
-        root.destroy()
-
-    return result["value"]
+    response = msg.get()
+    return response == "Yes"

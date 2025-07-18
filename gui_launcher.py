@@ -68,7 +68,6 @@ class ModernMigrationGUI:
         )
         try:
             self.root.iconbitmap(icon_path)
-            utils.set_gui_icon(icon_path)
         except Exception:
             pass
 
