@@ -2,11 +2,10 @@ import importlib.util
 import os
 import sys
 import threading
+import tkinter as tk
+import webbrowser
 from pathlib import Path
 from tkinter import filedialog, messagebox
-import tkinter as tk
-import types
-import webbrowser
 
 import customtkinter as ctk
 from CTkMenuBar import CTkMenuBar, CustomDropdownMenu
