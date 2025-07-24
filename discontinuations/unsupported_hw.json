@@ -186,8 +186,7 @@
         "8AC110.60-2", "8AC110.60-3", "8AC112.60-1", "8AC122.60-2", "8BVIxxxxxxxS.000-1"
     ],
     "ACOPOSinverter - No longer supported with AS 6.x": [
-        "8I44xxxxxxx.xxx-1", "8I64xxxxxxx.00x-1", "8I74xxxxxxx.01P-1",
-        "8I84xxxxxxx.01P-1"
+        "8I44xxxxxxx.xxx-1", "8I64xxxxxxx.00x-1", "8I84xxxxxxx.01P-1"
     ],
     "8LS motors - No longer supported with AS 6.x": [
         "8LSA25.E8060D000-0", "8LSA25.E8060D200-0", "8LSA25.E9060D000-0",
