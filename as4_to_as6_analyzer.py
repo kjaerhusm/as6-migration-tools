@@ -771,18 +771,23 @@ def main():
                     f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security settings will be enforced after the migration."
                     "\n"
                     "\n- To allow access without a certificate"
-                    "\n  Change the following settings in the OPC Client/Server configuration (Physical View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
+                    "\n  Change the following settings in the OPC Client/Server configuration (Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
                     "\n  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled"
                     "\n"
                     "\n- User login will be enabled by default. To allow anonymous access"
                     "\n  Change the following settings in mappView configuration (Configuration View/mappView/Config.mappviewcfg):"
                     "\n  MappViewConfiguration->Server Configuration->Startup User: anonymous token"
                     "\n"
-                    "\n  Change the following settings in the OPC Client/Server configuration (Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
+                    "\n- Change the following settings in the OPC Client/Server configuration (Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
                     "\n  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled"
                     "\n"
-                    "\n  Change the following settings in the User role system (Configuration View/AccessAndSecurity/UserRoleSystem/User.user)"
+                    "\n- Change the following settings in the User role system (Configuration View/AccessAndSecurity/UserRoleSystem/User.user):"
                     '\n  Assign the role "BR_Engineer" to the user "Anonymous". Create that user if it doesn\'t already exist, assign no password.'
+                    "\n"
+                    "\n- To allow access to a File device from a running mappView application, it is now required to explicitly whitelist it for reading:"
+                    "\n  - Open the mappView server configuration file Configuration View/mappView/Config.mappviewcfg)"
+                    '\n  - Check "Change Advanced Parameter Visibility" button in the editor toolbar'
+                    '\n  - Enter your accessed File device "Name" under "MappViewConfiguration->Server configuration->File device whitelist"'
                 )
 
                 # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
