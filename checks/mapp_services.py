@@ -32,36 +32,28 @@ def check_mapp_version(directory):
                 match = re.search(r'Version="(\d+)\.(\d+)', line)
                 if match:
                     # Extract major and minor version numbers
-                    major = int(match.group(1))
-                    minor = int(match.group(2))
+                    major, minor = int(match.group(1)), int(match.group(2))
                     version_str = f"{major}.{minor}"
                     messages.append(f"Detected Mapp Services version: {version_str}")
+
                     if major == 5 and minor < 20:
-                        messages.append(
-                            "It is recommended to use a mapp Services version 5.20 or later for the conversion."
-                        )
-                        messages.append(
-                            "If a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed."
-                        )
-                        messages.append(
+                        messages.extend([
+                            "It is recommended to use a mapp Services version 5.20 or later for the conversion.",
+                            "If a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed.",
                             "Please update the mapp Services version in AS4 to 5.20 or later before migrating to AS6."
-                        )
-                    messages.append(
-                        "The automatic mapp Services configuration upgrade is only available with mapp Services 6.0."
-                    )
-                    messages.append(
+                        ])
+                    messages.extend([
+                        "The automatic mapp Services configuration upgrade is only available with mapp Services 6.0.",
                         "Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions."
-                    )
+                    ])
 
             # Check for mappMotion version 5.x
             if "<mappMotion " in line and 'Version="5.' in line:
-                messages.append("Detected Mapp Motion version: 5.x")
-                messages.append(
-                    "You must first upgrade mappMotion to version 6.0 using 'Change runtime versions' in AS6."
-                )
-                messages.append(
+                messages.extend([
+                    "Detected Mapp Motion version: 5.x",
+                    "You must first upgrade mappMotion to version 6.0 using 'Change runtime versions' in AS6.",
                     "Once mappMotion 6.0 is set, a dialog will assist with converting all project configurations."
-                )
+                ])
 
     # Make sure all mapp folders are present in the Physical directory
     # Get all folders in the Physical directory
