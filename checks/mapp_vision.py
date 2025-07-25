@@ -1,5 +1,5 @@
-import os
 import re
+from pathlib import Path
 
 
 def check_vision_settings(directory, log, verbose=False):
@@ -9,17 +9,12 @@ def check_vision_settings(directory, log, verbose=False):
     found = False
 
     # Find the .apj file in the directory
-    apj_file = None
-    for file in os.listdir(directory):
-        if file.endswith(".apj"):
-            apj_file = os.path.join(directory, file)
-            break
-
+    apj_file = next(Path(directory).glob("*.apj"), None)
     if not apj_file:
         return found
 
     # If .apj file is found, check for mappVision line in the .apj file
-    with open(apj_file, "r", encoding="utf-8", errors="ignore") as f:
+    with Path(apj_file).open(encoding="utf-8", errors="ignore") as f:
         for line in f:
             if "<mappVision " in line and "Version=" in line:
                 match = re.search(r'Version="(\d+)\.(\d+)', line)
@@ -37,10 +32,8 @@ def check_vision_settings(directory, log, verbose=False):
 
     if verbose:
         # Walk through all directories
-        for root, dirs, files in os.walk(os.path.join(directory, "Physical")):
-            # Check if "mappVision" folder exists in current directory
-            if "mappVision" in dirs:
-                vision_path = os.path.join(root, "mappVision")
+        for vision_path in Path(directory, "Physical").rglob("mappVision"):
+            if vision_path.is_dir():
                 log(f"mappVision folders found at: {vision_path}", severity="INFO")
 
     return found
