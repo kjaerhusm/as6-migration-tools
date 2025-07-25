@@ -233,13 +233,22 @@ class ModernMigrationGUI:
         frame.pack(fill="x", padx=20, pady=15)
 
         ctk.CTkLabel(frame, text="Select script:", font=LABEL_FONT).pack(side="left")
-        ctk.CTkComboBox(
+        combobox = ctk.CTkComboBox(
             frame,
             variable=self.selected_script,
             values=list(self.scripts.keys()),
             width=250,
             font=FIELD_FONT,
-        ).pack(side="left", padx=10)
+        )
+        combobox.pack(side="left", padx=10)
+
+        # noinspection PyProtectedMember
+        def open_dropdown():
+            if hasattr(combobox, "_open_dropdown_menu"):
+                combobox._open_dropdown_menu()
+
+        combobox.bind("<Button-1>", lambda e: open_dropdown())
+
         ctk.CTkCheckBox(
             frame, text="Verbose Mode", variable=self.verbose_mode, font=FIELD_FONT
         ).pack(side="left", padx=10)
