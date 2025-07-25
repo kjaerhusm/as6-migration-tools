@@ -43,6 +43,13 @@ class RedirectText:
 
 class ModernMigrationGUI:
     def __init__(self):
+        self.browse_button = None
+        self.log_text = None
+        self.menubar = None
+        self.run_button = None
+        self.save_button = None
+        self.save_log_option = None
+        self.status_label = None
         self.root = ctk.CTk()
 
         import utils.utils as shared_utils
