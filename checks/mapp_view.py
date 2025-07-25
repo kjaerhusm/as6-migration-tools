@@ -41,7 +41,7 @@ def check_mappView(directory):
     for root, dirs, files in os.walk(os.path.join(directory, "Physical")):
         # Check if "mappView" folder exists in current directory and save its path
         if "mappView" in dirs:
-            mappView_path = os.path.join(directory, "mappView")
+            mappView_path = os.path.join(root, "mappView")
             mappView_settings_result["locations"].append(mappView_path)
 
     return mappView_settings_result
