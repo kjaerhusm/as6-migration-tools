@@ -300,16 +300,11 @@ class ModernMigrationGUI:
             corner_radius=8,
         )
         self.save_button.pack(anchor="e")
-        self.script_ran.trace_add("write", self.toggle_save_button)
+        self.script_ran.trace_add("write", self.toggle_save_buttons)
 
     def toggle_run_button(self, *args):
         self.run_button.configure(
             state="normal" if self.selected_folder.get() else "disabled"
-        )
-
-    def toggle_save_button(self, *args):
-        self.save_button.configure(
-            state="normal" if self.script_ran.get() else "disabled"
         )
 
     def browse_folder(self):

@@ -169,31 +169,6 @@ def process_var_file(file_path, patterns):
     return results
 
 
-def process_var_typ_file(file_path, patterns):
-    """
-    Processes a .var file to find matches for the given patterns.
-    Ensures function block names in variable declarations are matched.
-
-    Args:
-        file_path (str): Path to the file.
-        patterns (dict): Patterns to match with reasons.
-
-    Returns:
-        list: Matches found in the file.
-    """
-    results = []
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-        content = f.read()
-        # Regex to match the format: name : FunctionBlockName;
-        matches = re.findall(r":\s*([A-Za-z0-9_]+)\s*;", content)
-        for match in matches:
-            for pattern, reason in patterns.items():
-                # Compare case-insensitively
-                if match.lower() == pattern.lower():
-                    results.append((pattern, reason, file_path))
-    return results
-
-
 def process_st_c_file(file_path, patterns):
     """
     Processes a .st, .c, or .cpp file to find matches for the given patterns.
