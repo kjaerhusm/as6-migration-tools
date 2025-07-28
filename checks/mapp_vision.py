@@ -2,26 +2,11 @@ import os
 import re
 
 
-def check_vision_settings(directory):
+def check_vision_settings(directory, log, verbose=False):
     """
     Checks for the presence of mappVision settings files in the specified directory.
-
-    Args:
-        directory (str): Path to the directory to scan.
-
-    Returns:
-        dict: Contains information about mappVision settings found:
-             - 'found': Boolean indicating if mappVision was found
-             - 'version': Version of mappVision if found
-             - 'locations': List of mappVision folder paths
-             - 'total_files': Total number of files in all mappVision folders
     """
-    vision_settings_result = {
-        "found": False,
-        "version": "",
-        "locations": [],
-        "total_files": 0,
-    }
+    found = False
 
     # Find the .apj file in the directory
     apj_file = None
@@ -31,7 +16,7 @@ def check_vision_settings(directory):
             break
 
     if not apj_file:
-        return vision_settings_result
+        return found
 
     # If .apj file is found, check for mappVision line in the .apj file
     with open(apj_file, "r", encoding="utf-8", errors="ignore") as f:
@@ -39,23 +24,23 @@ def check_vision_settings(directory):
             if "<mappVision " in line and "Version=" in line:
                 match = re.search(r'Version="(\d+)\.(\d+)', line)
                 if match:
+                    found = True
                     major = int(match.group(1))
                     minor = int(match.group(2))
-                    vision_settings_result["found"] = True
-                    vision_settings_result["version"] = f"{major}.{minor}"
+                    version = f"{major}.{minor}"
 
-    # Walk through all directories
-    for root, dirs, files in os.walk(os.path.join(directory, "Physical")):
-        # Check if "mappVision" folder exists in current directory
-        if "mappVision" in dirs:
-            vision_path = os.path.join(root, "mappVision")
-            vision_settings_result["locations"].append(vision_path)
+                    log(
+                        f"\n\nFound usage of mapp Vision (Version: {version}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!",
+                        when="AS6",
+                        severity="WARNING",
+                    )
 
-            # Count files in the mappVision folder and its subdirectories
-            file_count = 0
-            for sub_root, _, sub_files in os.walk(vision_path):
-                file_count += len(sub_files)
+    if verbose:
+        # Walk through all directories
+        for root, dirs, files in os.walk(os.path.join(directory, "Physical")):
+            # Check if "mappVision" folder exists in current directory
+            if "mappVision" in dirs:
+                vision_path = os.path.join(root, "mappVision")
+                log(f"mappVision folders found at: {vision_path}", severity="INFO")
 
-            vision_settings_result["total_files"] += file_count
-
-    return vision_settings_result
+    return found

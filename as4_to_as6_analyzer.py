@@ -724,21 +724,10 @@ def main():
             else:
                 log_v("- None")
 
-            vision_settings_results = check_vision_settings(args.project_path)
-            if vision_settings_results["found"]:
-                log(
-                    f"\n\nFound usage of mapp Vision (Version: {vision_settings_results['version']}). "
-                    "After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!"
-                )
+            # Find mappVision issues
+            found_any_invalid_functions = check_vision_settings(args.project_path, log, args.verbose)
 
-                # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
-                if vision_settings_results["locations"]:
-                    log_v("mappVision folders found at:", prepend="\n")
-                    for location in vision_settings_results["locations"]:
-                        log_v(f"- {location}")
-
-                found_any_invalid_functions = True
-
+            # Find mappView issues
             found_any_invalid_functions = check_mappView(args.project_path, log, args.verbose)
 
             log("\n\nChecking mapp version in project file...")
