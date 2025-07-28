@@ -723,12 +723,7 @@ def main():
             found_any_invalid_functions = check_mappView(args.project_path, log, args.verbose)
 
             log("\n\nChecking mapp version in project file...")
-            mapp_results = check_mapp_version(args.project_path)
-            if mapp_results:
-                for msg in mapp_results:
-                    log(f"- {msg}")
-            else:
-                log_v("- No mapp version information found.")
+            found_any_invalid_functions = check_mapp_version(args.project_path, log, args.verbose)
 
             end_time = time.time()
             log(

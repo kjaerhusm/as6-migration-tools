@@ -2,20 +2,15 @@ import re
 from pathlib import Path
 
 
-def check_mapp_version(directory):
+def check_mapp_version(directory, log, verbose=False):
     """
     Checks for the mapp Services version in the .apj project file.
-
-    Args:
-        directory (str): Path to the project directory.
-
-    Returns:
-        list: List of warnings or information about mapp Services version.
     """
-    messages = []
+    found = False
+    message = ""
     apj_file = next(Path(directory).glob("*.apj"), None)
     if not apj_file:
-        return messages
+        return found
 
     # If no .apj file is found, return an empty list
     apj_path = Path(apj_file)
@@ -26,42 +21,46 @@ def check_mapp_version(directory):
         ):
             match = re.search(r'Version="(\d+)\.(\d+)', line)
             if match:
+                found = True
+
                 # Extract major and minor version numbers
                 major, minor = int(match.group(1)), int(match.group(2))
                 version_str = f"{major}.{minor}"
-                messages.append(f"Detected Mapp Services version: {version_str}")
+                message = f"Detected Mapp Services version: {version_str}"
 
                 if major == 5 and minor < 20:
-                    messages.extend(
-                        [
-                            "It is recommended to use a mapp Services version 5.20 or later for the conversion.",
-                            "If a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed.",
-                            "Please update the mapp Services version in AS4 to 5.20 or later before migrating to AS6.",
-                        ]
+                    log(
+                        "\nIt is recommended to use a mapp Services version 5.20 or later for the conversion."
+                        "\nIf a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed."
+                        "\nPlease update the mapp Services version in AS4 to 5.20 or later before migrating to AS6.",
+                        when="AS6",
+                        severity="MANDATORY"
                     )
-                messages.extend(
-                    [
-                        "The automatic mapp Services configuration upgrade is only available with mapp Services 6.0.",
-                        "Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.",
-                    ]
-                )
+                else:
+                    log(
+                        "\nThe automatic mapp Services configuration upgrade is only available with mapp Services 6.0."
+                        "\nPlease ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.",
+                        when="AS6",
+                        severity="MANDATORY"
+                    )
 
         # Check for mappMotion version 5.x
         if "<mappMotion " in line and 'Version="5.' in line:
-            messages.extend(
-                [
-                    "Detected Mapp Motion version: 5.x",
-                    "You must first upgrade mappMotion to version 6.0 using 'Change runtime versions' in AS6.",
-                    "Once mappMotion 6.0 is set, a dialog will assist with converting all project configurations.",
-                ]
+            log(
+                "\nDetected Mapp Motion version: 5.x"
+                "\nYou must first upgrade mappMotion to version 6.0 using 'Change runtime versions' in AS6."
+                "\nOnce mappMotion 6.0 is set, a dialog will assist with converting all project configurations.",
+                when="AS6",
+                severity="MANDATORY",
             )
 
     # Make sure all mapp folders are present in the Physical directory
     # Get all folders in the Physical directory
     physical_path = Path(directory) / "Physical"
     if not physical_path.is_dir():
-        messages.append(f"Could not find Physical in {directory}")
-        return messages
+        message.append(f"Could not find Physical in {directory}")
+        log(message, when="AS4", severity="ERROR")
+        return found
 
     # Check if relevant mapp folders exists in the config folder directory
     mapp_folders_to_check = ["mappServices", "mappMotion", "mappView"]
@@ -87,11 +86,12 @@ def check_mapp_version(directory):
             grouped_results[config_folder.name] = missing
 
     if grouped_results:
-        result = "Some configurations are missing one or more of the mapp folders"
+        message = "\nSome configurations are missing one or more of the mapp folders"
         for config_name, missing_mapp_folders in grouped_results.items():
             missing_folders = ", ".join(sorted(missing_mapp_folders))
-            result += f"\n  - '{config_name}': {missing_folders}"
-        result += "\nYou can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
-        messages.append(result)
+            message += f"\n  - '{config_name}': {missing_folders}"
 
-    return messages
+        message += "\n\nYou can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
+        log(message, when="AS4", severity="MANDATORY")
+
+    return found
