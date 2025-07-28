@@ -12,7 +12,7 @@ from utils import utils
 # path to the current script
 script_directory = Path(__file__).resolve().parent
 
-# filens containing discontinuation information
+# files containing discontinuation information
 discontinuation_info = {
     "obsolete_libs": {},
     "manual_process_libs": {},
