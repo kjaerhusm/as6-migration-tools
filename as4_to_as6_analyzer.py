@@ -684,13 +684,8 @@ def main():
             if not found_any_invalid_functions:
                 log_v("- None")
 
-            log("\n\nChecking for safety...")
-            safety_results = check_safety(args.project_path)
-            if safety_results:
-                for entry in safety_results:
-                    log(f"- {entry}")
-            else:
-                log_v("- None")
+            # Find Safety system issues
+            check_safety(args.project_path, log, args.verbose)
 
             # Find mappVision issues
             check_vision_settings(args.project_path, log, args.verbose)
