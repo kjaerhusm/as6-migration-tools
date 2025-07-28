@@ -27,7 +27,7 @@ def check_vision_settings(directory, log, verbose=False):
                     log(
                         f"\n\nFound usage of mapp Vision (Version: {version}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!",
                         when="AS6",
-                        severity="WARNING",
+                        severity="MANDATORY",
                     )
 
     if verbose:
