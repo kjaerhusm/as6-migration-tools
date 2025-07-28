@@ -523,19 +523,10 @@ def main():
             # Boolean flag to indicate whether deprecated math functions were found
             found_deprecated_math = bool(deprecated_math_files)
 
-            log("\n\nChecking project and hardware files for compatibility...")
             file_patterns = [".apj", ".hw"]
-            compatibility_results = check_files_for_compatibility(
-                args.project_path, file_patterns
+            check_files_for_compatibility(
+                args.project_path, file_patterns, log, args.verbose
             )
-            if compatibility_results:
-                for file_path, issue in compatibility_results:
-                    log(f"- {file_path}: {issue}")
-                log(
-                    "\nPlease ensure these files are saved at least once with Automation Studio 4.12."
-                )
-            else:
-                log_v("- All project and hardware files are valid.")
 
             check_uad_files(physical_path, log, args.verbose)
 
