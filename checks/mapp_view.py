@@ -7,7 +7,7 @@ def check_mappView(directory, log, verbose=False):
     Checks for the presence of mappView settings files in the specified directory.
     """
 
-    log("─" * 80 + "\nChecking mapp version in project file...")
+    log("─" * 80 + "\nChecking mappView version in project file...")
 
     # Find the .apj file in the directory
     apj_file = next(Path(directory).glob("*.apj"), None)
@@ -24,8 +24,9 @@ def check_mappView(directory, log, verbose=False):
                 minor = int(match.group(2))
                 version = f"{major}.{minor}"
 
+                log(f"Found usage of mappView (Version: {version})", severity="INFO")
                 log(
-                    f"\n\nFound usage of mappView (Version: {version}). Several security settings will be enforced after the migration."
+                    f"Several security settings will be enforced after the migration:"
                     "\n"
                     "\n- To allow access without a certificate"
                     "\n  Change the following settings in the OPC Client/Server configuration (Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
