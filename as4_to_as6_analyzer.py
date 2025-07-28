@@ -1,7 +1,6 @@
 import os
 import sys
 import re
-import concurrent.futures
 import time
 import json
 import argparse
@@ -54,20 +53,6 @@ deprecated_math_functions = set(discontinuation_info["deprecated_math_functions"
 pass
 
 
-def display_progress(message):
-    """
-    Displays a progress message on the same line in the terminal.
-    In GUI mode, stdout may be None, so we fall back to printing.
-    """
-    try:
-        sys.stdout.write("\r" + " " * 80)
-        sys.stdout.write("\r" + message)
-        sys.stdout.flush()
-    except Exception:
-        # Fallback: simple print if stdout is unavailable
-        print(message)
-
-
 def process_stub(file_path, *args):
     """
     Stub process function for demonstration purposes.
@@ -84,41 +69,7 @@ def process_stub(file_path, *args):
 
 
 def scan_files_parallel(root_dir, extensions, process_function, *args):
-    """
-    Scans files in a directory tree in parallel for specific content.
-
-    Args:
-        root_dir (Path): The root directory to search in.
-        extensions (list): File extensions to include.
-        process_function (callable): The function to apply on each file.
-        *args: Additional arguments to pass to the process_function.
-
-    Returns:
-        list: Aggregated results from all scanned files.
-    """
-    results = []
-
-    file_paths = [
-        str(path)
-        for ext in extensions
-        for path in root_dir.rglob(f"*{ext}")
-        if path.is_file()
-    ]
-
-    total_files = len(file_paths)
-    display_progress(f"Found {total_files} files to process...")
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = {
-            executor.submit(process_function, str(path), *args): path
-            for path in file_paths
-        }
-        for i, future in enumerate(concurrent.futures.as_completed(futures), 1):
-            display_progress(f"Processing file {i}/{total_files}...")
-            results.extend(future.result())
-
-    display_progress("Processing complete.".ljust(50))  # Clear line
-    return results
+    return utils.scan_files_parallel(root_dir, extensions, process_function, *args)
 
 
 def process_pkg_file(file_path, patterns):
@@ -141,55 +92,6 @@ def process_pkg_file(file_path, patterns):
         for pattern, reason in patterns.items():
             if match.lower() == pattern.lower():
                 results.append((pattern, reason, file_path))
-    return results
-
-
-def process_var_file(file_path, patterns):
-    """
-    Processes a .var file to find matches for obsolete function blocks.
-
-    Args:
-        file_path (str): Path to the .var file.
-        patterns (dict): Patterns to match with reasons.
-
-    Returns:
-        list: Matches found in the file.
-    """
-    results = []
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    # Regex for function block declarations, e.g., : MpAlarmXConfigMapping;
-    matches = re.findall(r":\s*([A-Za-z0-9_]+)\s*;", content)
-    for match in matches:
-        for pattern, reason in patterns.items():
-            if match.lower() == pattern.lower():
-                results.append((pattern, reason, file_path))
-    return results
-
-
-def process_st_c_file(file_path, patterns):
-    """
-    Processes a .st, .c, or .cpp file to find matches for the given patterns.
-
-    Args:
-        file_path (str): Path to the file.
-        patterns (dict): Patterns to match with reasons.
-
-    Returns:
-        list: Matches found in the file.
-    """
-    results = []
-    matched_files = set()  # To store file paths and ensure uniqueness
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    # Check for other patterns if necessary
-    for pattern, reason in patterns.items():
-        if (
-            re.search(rf"\b{re.escape(pattern)}\b", content)
-            and file_path not in matched_files
-        ):
-            results.append((pattern, reason, file_path))
-            matched_files.add(file_path)  # Ensure file is added only once
     return results
 
 
@@ -448,20 +350,6 @@ def main():
                 obsolete_dict,
             )
 
-            invalid_var_typ_files = scan_files_parallel(
-                logical_path,
-                [".var", ".typ"],
-                process_var_file,
-                obsolete_function_blocks,
-            )
-
-            invalid_st_c_files = scan_files_parallel(
-                logical_path,
-                [".st", ".c", ".cpp"],
-                process_st_c_file,
-                obsolete_functions,
-            )
-
             hardware_results = scan_files_parallel(
                 physical_path,
                 [".hw"],
@@ -494,34 +382,6 @@ def main():
                 process_c_cpp_hpp_includes_file,
                 obsolete_dict,
             )
-
-            # Store the list of files containing deprecated string functions
-            deprecated_string_files = check_deprecated_string_functions(
-                logical_path,
-                [".st"],
-                deprecated_string_functions,
-            )
-
-            # Ensure we have a valid list, even if no deprecated functions are found
-            if not isinstance(deprecated_string_files, list):
-                deprecated_string_files = []  # Fallback to an empty list
-
-            # Boolean flag to indicate whether deprecated string functions were found
-            found_deprecated_string = bool(deprecated_string_files)
-
-            # Store the list of files containing deprecated math functions
-            deprecated_math_files = check_deprecated_math_functions(
-                logical_path,
-                [".st"],
-                deprecated_math_functions,
-            )
-
-            # Ensure we have a valid list, even if no deprecated functions are found
-            if not isinstance(deprecated_math_files, list):
-                deprecated_math_files = []  # Fallback to an empty list
-
-            # Boolean flag to indicate whether deprecated math functions were found
-            found_deprecated_math = bool(deprecated_math_files)
 
             file_patterns = [".apj", ".hw"]
             check_files_for_compatibility(
@@ -623,57 +483,15 @@ def main():
             else:
                 log_v("- None")
 
-            log(
-                "\n\nThe following invalid function blocks were found in .var and .typ files:"
+            check_functions(
+                args.project_path,
+                log,
+                args.verbose,
+                obsolete_function_blocks,
+                obsolete_functions,
+                deprecated_string_functions,
+                deprecated_math_functions,
             )
-            if invalid_var_typ_files:
-                for block, reason, file_path in invalid_var_typ_files:
-                    log(f"- {block}: {reason} (Found in: {file_path})")
-            else:
-                log_v("- None")
-
-            log(
-                "\n\nThe following invalid functions were found in .st, .c and .cpp files:"
-            )
-            found_any_invalid_functions = False
-
-            if invalid_st_c_files:
-                for function, reason, file_path in invalid_st_c_files:
-                    log(f"- {function}: {reason} (Found in: {file_path})")
-                found_any_invalid_functions = True
-
-            if found_deprecated_string:
-                log(
-                    "- Deprecated AsString functions detected in the project: Consider using the helper asstring_to_asbrstr.py to replace them."
-                )
-                found_any_invalid_functions = True
-
-                # Verbose: Print where the deprecated string functions were found only if --verbose is enabled
-                if args.verbose and deprecated_string_files:
-                    log_v(
-                        "Deprecated AsString functions detected in the following files:",
-                        prepend="\n",
-                    )
-                    for f in deprecated_string_files:
-                        log_v(f"- {f}")
-
-            if found_deprecated_math:
-                log(
-                    "- Deprecated AsMath functions detected in the project: Consider using the helper asmath_to_asbrmath.py to replace them."
-                )
-                found_any_invalid_functions = True
-
-                # Verbose: Print where the deprecated math functions were found only if --verbose is enabled
-                if deprecated_math_files:
-                    log_v(
-                        "Deprecated AsMath functions detected in the following files:",
-                        prepend="\n",
-                    )
-                    for f in deprecated_math_files:
-                        log_v(f"- {f}")
-
-            if not found_any_invalid_functions:
-                log_v("- None")
 
             # Find Safety system issues
             check_safety(args.project_path, log, args.verbose)

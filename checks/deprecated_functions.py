@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from utils import utils
 
 
 def check_deprecated_string_functions(root_dir, extensions, deprecated_functions):
@@ -50,3 +51,194 @@ def check_deprecated_math_functions(root_dir, extensions, deprecated_functions):
                 pass
 
     return deprecated_files
+
+
+def check_deprecated_functions(
+    project_root,
+    log,
+    verbose=False,
+    deprecated_string_functions=None,
+    deprecated_math_functions=None,
+):
+    logical_path = Path(project_root) / "Logical"
+
+    # Store the list of files containing deprecated string functions
+    deprecated_string_files = check_deprecated_string_functions(
+        logical_path,
+        [".st"],
+        deprecated_string_functions,
+    )
+
+    # Ensure we have a valid list, even if no deprecated functions are found
+    if not isinstance(deprecated_string_files, list):
+        deprecated_string_files = []  # Fallback to an empty list
+
+    # Boolean flag to indicate whether deprecated string functions were found
+    found_deprecated_string = bool(deprecated_string_files)
+
+    # Store the list of files containing deprecated math functions
+    deprecated_math_files = check_deprecated_math_functions(
+        logical_path,
+        [".st"],
+        deprecated_math_functions,
+    )
+
+    # Ensure we have a valid list, even if no deprecated functions are found
+    if not isinstance(deprecated_math_files, list):
+        deprecated_math_files = []  # Fallback to an empty list
+
+    # Boolean flag to indicate whether deprecated math functions were found
+    found_deprecated_math = bool(deprecated_math_files)
+
+    if found_deprecated_string:
+        log(
+            "- Deprecated AsString functions detected in the project: "
+            "Consider using the helper asstring_to_asbrstr.py to replace them.",
+            when="AS6",
+            severity="WARNING",
+        )
+
+        # Verbose: Print where the deprecated string functions were found only if --verbose is enabled
+        if verbose and deprecated_string_files:
+            log(
+                "Deprecated AsString functions detected in the following files:",
+                severity="INFO",
+            )
+            for f in deprecated_string_files:
+                log(f"- {f}")
+
+    if found_deprecated_math:
+        log(
+            "- Deprecated AsMath functions detected in the project: "
+            "Consider using the helper asmath_to_asbrmath.py to replace them.",
+            when="AS6",
+            severity="WARNING",
+        )
+
+        # Verbose: Print where the deprecated math functions were found only if --verbose is enabled
+        if verbose and deprecated_math_files:
+            log(
+                "Deprecated AsMath functions detected in the following files:",
+                severity="INFO",
+            )
+            for f in deprecated_math_files:
+                log(f"- {f}")
+
+
+def check_obsolete_functions(
+    log,
+    verbose=False,
+    invalid_var_typ_files=None,
+    invalid_st_c_files=None,
+):
+    if invalid_var_typ_files:
+        log(
+            "The following invalid function blocks were found in .var and .typ files:",
+            severity="WARNING",
+        )
+        for block, reason, file_path in invalid_var_typ_files:
+            log(f"- {block}: {reason} (Found in: {file_path})")
+
+    if invalid_st_c_files:
+        log(
+            "The following invalid functions were found in .st, .c and .cpp files:",
+            severity="WARNING",
+        )
+        for function, reason, file_path in invalid_st_c_files:
+            log(f"- {function}: {reason} (Found in: {file_path})")
+
+    if verbose:
+        if not any([invalid_var_typ_files, invalid_st_c_files]):
+            log(
+                "No invalid function blocks or functions found in the project.",
+                severity="INFO",
+            )
+
+
+def process_var_file(file_path, patterns):
+    """
+    Processes a .var file to find matches for obsolete function blocks.
+
+    Args:
+        file_path (str): Path to the .var file.
+        patterns (dict): Patterns to match with reasons.
+
+    Returns:
+        list: Matches found in the file.
+    """
+    results = []
+    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
+
+    # Regex for function block declarations, e.g., : MpAlarmXConfigMapping;
+    matches = re.findall(r":\s*([A-Za-z0-9_]+)\s*;", content)
+    for match in matches:
+        for pattern, reason in patterns.items():
+            if match.lower() == pattern.lower():
+                results.append((pattern, reason, file_path))
+    return results
+
+
+def process_st_c_file(file_path, patterns):
+    """
+    Processes a .st, .c, or .cpp file to find matches for the given patterns.
+
+    Args:
+        file_path (str): Path to the file.
+        patterns (dict): Patterns to match with reasons.
+
+    Returns:
+        list: Matches found in the file.
+    """
+    results = []
+    matched_files = set()  # To store file paths and ensure uniqueness
+    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
+
+    # Check for other patterns if necessary
+    for pattern, reason in patterns.items():
+        if (
+            re.search(rf"\b{re.escape(pattern)}\b", content)
+            and file_path not in matched_files
+        ):
+            results.append((pattern, reason, file_path))
+            matched_files.add(file_path)  # Ensure file is added only once
+    return results
+
+
+def check_functions(
+    project_root,
+    log,
+    verbose=False,
+    obsolete_function_blocks=None,
+    obsolete_functions=None,
+    deprecated_string_functions=None,
+    deprecated_math_functions=None,
+):
+    log("─" * 80 + "\nChecking for obsolete and deprecated FUBs and functions...")
+
+    logical_path = Path(project_root) / "Logical"
+
+    invalid_var_typ_files = utils.scan_files_parallel(
+        logical_path,
+        [".var", ".typ"],
+        process_var_file,
+        obsolete_function_blocks,
+    )
+
+    invalid_st_c_files = utils.scan_files_parallel(
+        logical_path,
+        [".st", ".c", ".cpp"],
+        process_st_c_file,
+        obsolete_functions,
+    )
+
+    check_obsolete_functions(
+        log, verbose, invalid_var_typ_files, invalid_st_c_files
+    )
+
+    check_deprecated_functions(
+        project_root,
+        log,
+        verbose,
+        deprecated_string_functions,
+        deprecated_math_functions,
+    )
