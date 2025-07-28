@@ -33,7 +33,7 @@ def check_mapp_version(directory, log, verbose=False):
                         "\nIt is recommended to use a mapp Services version 5.20 or later for the conversion."
                         "\nIf a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed."
                         "\nPlease update the mapp Services version in AS4 to 5.20 or later before migrating to AS6.",
-                        when="AS6",
+                        when="AS4",
                         severity="MANDATORY",
                     )
                 else:
