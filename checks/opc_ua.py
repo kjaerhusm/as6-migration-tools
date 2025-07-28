@@ -3,17 +3,22 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-def check_uad_files(root_dir: Path):
+def check_uad_files(root_dir: Path, log, verbose=False):
     """
     Checks if .uad files are located in any directory ending with Connectivity/OpcUA.
     Returns a list of misplaced .uad files.
 
     Args:
         root_dir: Root directory of the project.
+        log: Logging function to report issues.
+        verbose: If True, logs additional information.
 
     Returns:
-        list: List of misplaced .uad file paths.
+        Nothing
     """
+
+    log("Checking OPC configuration...", severity="INFO")
+
     required_suffix = os.path.normpath(os.path.join("Connectivity", "OpcUA"))
     misplaced_files = []
     old_version = []
@@ -32,4 +37,33 @@ def check_uad_files(root_dir: Path):
         except Exception:
             pass
 
-    return misplaced_files, old_version
+    if misplaced_files:
+        log(
+            "The following .uad files are not located in the required Connectivity/OpcUA directory:",
+            when="AS4",
+            severity="MANDATORY",
+        )
+        for file_path in misplaced_files:
+            log(f"- {file_path}", severity="MANDATORY")
+        log(
+            "\nPlease create (via AS 4.12) and move these files to the required directory: Connectivity/OpcUA.",
+            severity="MANDATORY",
+        )
+    else:
+        log("- All .uad files are in the correct location.", severity="VERBOSE")
+
+    if old_version:
+        log(
+            "The following .uad files do not have the minimum file version 9:",
+            when="AS4",
+            severity="MANDATORY",
+        )
+        for file_path in old_version:
+            log(f"- {file_path}")
+        log(
+            "Please edit the uad file, make a small change and save the file to trigger the file update.",
+            when="AS4",
+            severity="MANDATORY",
+        )
+    else:
+        log("- All .uad files have the correct minimum version.", severity="VERBOSE")

@@ -6,15 +6,15 @@ from pathlib import Path
 
 from CTkMessagebox import CTkMessagebox
 
-from classes.ConsoleColors import ConsoleColors
-
 _is_verbose = False
+
 
 class ConsoleColors:
     RESET = "\x1b[0m"  # Reset all formatting
     MANDATORY = "\x1b[1;31m"  # Set style to bold, red foreground.
     WARNING = "\x1b[1;33m"  # Set style to bold, yellow foreground.
     INFO = "\x1b[92m"  # Set style to light green foreground.
+
 
 def get_build_number():
     try:
@@ -34,7 +34,7 @@ def log(message, log_file=None, when="", severity=""):
         message = f"[{when}] {message}"
     if severity != "":
         # Farbliche Hervorhebung je nach Severity-Level
-        if severity.upper() == "MANDATORY":
+        if severity.upper() == "MANDATORY" or severity.upper() == "ERROR":
             colored_severity = f"{ConsoleColors.MANDATORY}[{severity}]{ConsoleColors.RESET}"
         elif severity.upper() == "WARNING":
             colored_severity = f"{ConsoleColors.WARNING}[{severity}]{ConsoleColors.RESET}"
@@ -42,7 +42,7 @@ def log(message, log_file=None, when="", severity=""):
             colored_severity = f"{ConsoleColors.INFO}[{severity}]{ConsoleColors.RESET}"
         else:
             colored_severity = f"[{severity}]"
-        
+
         # Für Konsole mit Farbe
         console_message = f"{colored_severity} {message}"
         # Für Datei ohne Farbe
@@ -50,9 +50,12 @@ def log(message, log_file=None, when="", severity=""):
     else:
         console_message = message
         file_message = message
-    
-    #console_message = f"[\r{console_message}"
-    print(f"\n{console_message}")  # Print to console with colors (with newline at start)
+
+    # Print to console with colors (with newline at start)
+    print(
+        f"\n{console_message}",
+        file=(sys.stderr if severity.upper() == "ERROR" else sys.stdout)
+    )
     if log_file:
         log_file.write(file_message + "\n")  # Write to file without colors
         log_file.flush()  # Ensure data is written immediately
@@ -66,31 +69,23 @@ def log_v(message, log_file=None, prepend="", when="", severity=""):
 def get_and_check_project_file(project_path):
     project_path = Path(project_path)
     if not project_path.exists():
-        if sys.stdin.isatty():
-            print(ConsoleColors.ERROR)
-        print(
-            f"Error: The provided project path does not exist: '{project_path}'"
+        log(
+            f"The provided project path does not exist: '{project_path}'"
             "\nEnsure the path is correct and the project folder exists."
             "\nIf the path contains spaces, make sure to wrap it in quotes, like this:"
             f'\n   python {os.path.basename(sys.argv[0])} "C:\\path\\to\\your\\project"',
-            file=sys.stderr,
+            severity="ERROR",
         )
-        if sys.stdin.isatty():
-            print(f"{ConsoleColors.RESET}\n")
         sys.exit(1)
 
     # Check if .apj file exists in the provided path
     apj_file = next(project_path.glob("*.apj"), None)
     if not apj_file:
-        if sys.stdin.isatty():
-            print(ConsoleColors.ERROR)
-        print(
-            f"Error: No .apj file found in the provided path: {project_path}"
+        log(
+            f"No .apj file found in the provided path: {project_path}"
             "\nPlease specify a valid Automation Studio project path.",
-            file=sys.stderr,
+            severity="ERROR",
         )
-        if sys.stdin.isatty():
-            print(f"{ConsoleColors.RESET}\n")
         sys.exit(1)
 
     return os.path.basename(apj_file)
