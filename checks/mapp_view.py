@@ -10,16 +10,11 @@ def check_mappView(directory, log, verbose=False):
         directory (str): Path to the directory to scan.
 
     Returns:
-        dict: Contains information about mappView settings found:
-             - 'found': Boolean indicating if mappVision was found
-             - 'version': Version of mappView if found
+        Nothing
     """
-    mappView_settings_result = {"found": False, "version": "", "locations": []}
     directory = Path(directory)
 
     # Find the .apj file in the directory
-
-    found_mappView = False
     apj_file = next(directory.glob("*.apj"), None)
     if not apj_file:
         return found_mappView
@@ -29,7 +24,6 @@ def check_mappView(directory, log, verbose=False):
         if "<mappView " in line and "Version=" in line:
             match = re.search(r'Version="(\d+)\.(\d+)', line)
             if match:
-                found_mappView = True
                 major = int(match.group(1))
                 minor = int(match.group(2))
                 version = f"{major}.{minor}"
@@ -65,5 +59,3 @@ def check_mappView(directory, log, verbose=False):
         for mappView_path in Path(directory, "Physical").rglob("mappView"):
             if mappView_path.is_dir():
                 log(f"mappView folders found at: {mappView_path}", severity="INFO")
-
-    return found_mappView

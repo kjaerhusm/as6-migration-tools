@@ -35,5 +35,3 @@ def check_vision_settings(directory, log, verbose=False):
         for vision_path in Path(directory, "Physical").rglob("mappVision"):
             if vision_path.is_dir():
                 log(f"mappVision folders found at: {vision_path}", severity="INFO")
-
-    return found
