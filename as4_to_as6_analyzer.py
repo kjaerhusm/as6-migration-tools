@@ -717,17 +717,17 @@ def main():
                 log_v("- None")
 
             # Find mappVision issues
-            found_any_invalid_functions = check_vision_settings(args.project_path, log, args.verbose)
+            check_vision_settings(args.project_path, log, args.verbose)
 
             # Find mappView issues
-            found_any_invalid_functions = check_mappView(args.project_path, log, args.verbose)
+            check_mappView(args.project_path, log, args.verbose)
 
-            log("\n\nChecking mapp version in project file...")
-            found_any_invalid_functions = check_mapp_version(args.project_path, log, args.verbose)
+            # Find mappService issues
+            check_mapp_version(args.project_path, log, args.verbose)
 
             end_time = time.time()
             log(
-                f"\n\nScanning completed successfully in {end_time - start_time:.2f} seconds."
+                "─" * 80 + f"\nScanning completed successfully in {end_time - start_time:.2f} seconds."
             )
 
         except Exception as e:

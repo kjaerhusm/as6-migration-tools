@@ -5,24 +5,15 @@ from pathlib import Path
 def check_mappView(directory, log, verbose=False):
     """
     Checks for the presence of mappView settings files in the specified directory.
-
-    Args:
-        directory (str): Path to the directory to scan.
-
-    Returns:
-        dict: Contains information about mappView settings found:
-             - 'found': Boolean indicating if mappVision was found
-             - 'version': Version of mappView if found
     """
-    mappView_settings_result = {"found": False, "version": "", "locations": []}
-    directory = Path(directory)
+
+    log("─" * 80 + "\nChecking mapp version in project file...")
 
     # Find the .apj file in the directory
-
-    found_mappView = False
-    apj_file = next(directory.glob("*.apj"), None)
+    apj_file = next(Path(directory).glob("*.apj"), None)
     if not apj_file:
-        return found_mappView
+        log(f"Could no open apj file", severity="ERROR")
+        return
 
     # If .apj file is found, check for mappView line in the .apj file
     for line in apj_file.read_text(encoding="utf-8", errors="ignore").splitlines():

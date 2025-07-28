@@ -6,12 +6,13 @@ def check_vision_settings(directory, log, verbose=False):
     """
     Checks for the presence of mappVision settings files in the specified directory.
     """
-    found = False
+    log("─" * 80 + "\nChecking mapp version in project file...")
 
     # Find the .apj file in the directory
     apj_file = next(Path(directory).glob("*.apj"), None)
     if not apj_file:
-        return found
+        log(f"Could no open apj file", severity="ERROR")
+        return
 
     # If .apj file is found, check for mappVision line in the .apj file
     with Path(apj_file).open(encoding="utf-8", errors="ignore") as f:
@@ -35,5 +36,3 @@ def check_vision_settings(directory, log, verbose=False):
         for vision_path in Path(directory, "Physical").rglob("mappVision"):
             if vision_path.is_dir():
                 log(f"mappVision folders found at: {vision_path}", severity="INFO")
-
-    return found

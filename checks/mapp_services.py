@@ -6,11 +6,13 @@ def check_mapp_version(directory, log, verbose=False):
     """
     Checks for the mapp Services version in the .apj project file.
     """
-    found = False
-    message = ""
+
+    log("─" * 80 + "\nChecking mapp version in project file...")
+
     apj_file = next(Path(directory).glob("*.apj"), None)
     if not apj_file:
-        return found
+        log(f"Could not open apj file", severity="ERROR")
+        return
 
     # If no .apj file is found, return an empty list
     apj_path = Path(apj_file)
@@ -26,7 +28,7 @@ def check_mapp_version(directory, log, verbose=False):
                 # Extract major and minor version numbers
                 major, minor = int(match.group(1)), int(match.group(2))
                 version_str = f"{major}.{minor}"
-                message = f"Detected Mapp Services version: {version_str}"
+                message =+ f"Detected Mapp Services version: {version_str}"
 
                 if major == 5 and minor < 20:
                     log(
@@ -60,7 +62,7 @@ def check_mapp_version(directory, log, verbose=False):
     if not physical_path.is_dir():
         message.append(f"Could not find Physical in {directory}")
         log(message, when="AS4", severity="ERROR")
-        return found
+        return
 
     # Check if relevant mapp folders exists in the config folder directory
     mapp_folders_to_check = ["mappServices", "mappMotion", "mappView"]
@@ -93,5 +95,3 @@ def check_mapp_version(directory, log, verbose=False):
 
         message += "\n\nYou can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
         log(message, when="AS4", severity="MANDATORY")
-
-    return found
