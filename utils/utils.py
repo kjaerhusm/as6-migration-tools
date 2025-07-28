@@ -10,6 +10,11 @@ from classes.ConsoleColors import ConsoleColors
 
 _is_verbose = False
 
+class ConsoleColors:
+    RESET = "\x1b[0m"  # Reset all formatting
+    MANDATORY = "\x1b[1;31m"  # Set style to bold, red foreground.
+    WARNING = "\x1b[1;33m"  # Set style to bold, yellow foreground.
+    INFO = "\x1b[92m"  # Set style to light green foreground.
 
 def get_build_number():
     try:
@@ -24,16 +29,38 @@ def set_verbose(verbose):
     _is_verbose = verbose
 
 
-def log(message, log_file=None):
-    print(message)  # Print to console
+def log(message, log_file=None, when="", severity=""):
+    if when != "":
+        message = f"[{when}] {message}"
+    if severity != "":
+        # Farbliche Hervorhebung je nach Severity-Level
+        if severity.upper() == "MANDATORY":
+            colored_severity = f"{ConsoleColors.MANDATORY}[{severity}]{ConsoleColors.RESET}"
+        elif severity.upper() == "WARNING":
+            colored_severity = f"{ConsoleColors.WARNING}[{severity}]{ConsoleColors.RESET}"
+        elif severity.upper() == "INFO":
+            colored_severity = f"{ConsoleColors.INFO}[{severity}]{ConsoleColors.RESET}"
+        else:
+            colored_severity = f"[{severity}]"
+        
+        # Für Konsole mit Farbe
+        console_message = f"{colored_severity} {message}"
+        # Für Datei ohne Farbe
+        file_message = f"[{severity}] {message}"
+    else:
+        console_message = message
+        file_message = message
+    
+    #console_message = f"[\r{console_message}"
+    print(f"\n{console_message}")  # Print to console with colors (with newline at start)
     if log_file:
-        log_file.write(message + "\n")  # Write to file
+        log_file.write(file_message + "\n")  # Write to file without colors
         log_file.flush()  # Ensure data is written immediately
 
 
-def log_v(message, log_file=None, prepend=""):
+def log_v(message, log_file=None, prepend="", when="", severity=""):
     if _is_verbose:
-        log(f"{prepend}[VERBOSE] {message}", log_file)
+        log(f"{prepend}[VERBOSE] {message}", log_file, when, severity)
 
 
 def get_and_check_project_file(project_path):

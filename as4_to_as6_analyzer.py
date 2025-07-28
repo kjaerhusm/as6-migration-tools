@@ -15,7 +15,6 @@ root_pkg_path = r"Logical\Libraries\Package.pkg"
 # path to the current script
 script_directory = Path(__file__).resolve().parent
 
-
 # filens containing discontinuation information
 discontinuation_info = {
     "obsolete_libs": {},
@@ -421,15 +420,15 @@ def main():
     with open(output_file, "w", encoding="utf-8") as file:
         try:
 
-            def log(message, log_file=file):
-                utils.log(message, log_file)
+            def log(message, when="", severity=""):
+                utils.log(message, log_file=file, when=when, severity=severity)
 
             def log_v(message, log_file=file, prepend=""):
                 utils.log_v(message, log_file, prepend)
 
-            log(
+            utils.log(
                 "Scanning started... Please wait while the script analyzes your project files.\n",
-                file,
+                file,                
             )
 
             start_time = time.time()
@@ -740,38 +739,7 @@ def main():
 
                 found_any_invalid_functions = True
 
-            mappView_settings_results = check_mappView(args.project_path)
-            if mappView_settings_results["found"]:
-                log(
-                    f"\n\nFound usage of mappView (Version: {mappView_settings_results['version']}). Several security settings will be enforced after the migration."
-                    "\n"
-                    "\n- To allow access without a certificate"
-                    "\n  Change the following settings in the OPC Client/Server configuration (Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
-                    "\n  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled"
-                    "\n"
-                    "\n- User login will be enabled by default. To allow anonymous access"
-                    "\n  Change the following settings in mappView configuration (Configuration View/mappView/Config.mappviewcfg):"
-                    "\n  MappViewConfiguration->Server Configuration->Startup User: anonymous token"
-                    "\n"
-                    "\n- Change the following settings in the OPC Client/Server configuration (Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
-                    "\n  ClientServerConfiguration->Security->Authentication->Authentication Methods->Anymous: Enabled"
-                    "\n"
-                    "\n- Change the following settings in the User role system (Configuration View/AccessAndSecurity/UserRoleSystem/User.user):"
-                    '\n  Assign the role "BR_Engineer" to the user "Anonymous". Create that user if it doesn\'t already exist, assign no password.'
-                    "\n"
-                    "\n- To allow access to a File device from a running mappView application, it is now required to explicitly whitelist it for reading:"
-                    "\n  - Open the mappView server configuration file Configuration View/mappView/Config.mappviewcfg)"
-                    '\n  - Check "Change Advanced Parameter Visibility" button in the editor toolbar'
-                    '\n  - Enter your accessed File device "Name" under "MappViewConfiguration->Server configuration->File device whitelist"'
-                )
-
-                # Verbose: Print detailed information about mappVision locations if verbose mode is enabled
-                if mappView_settings_results["locations"]:
-                    log_v("mappView folders found at:", prepend="\n")
-                    for location in mappView_settings_results["locations"]:
-                        log_v(f"- {location}")
-
-                found_any_invalid_functions = True
+            found_any_invalid_functions = check_mappView(args.project_path, log, args.verbose)
 
             log("\n\nChecking mapp version in project file...")
             mapp_results = check_mapp_version(args.project_path)

@@ -4,6 +4,7 @@ import sys
 import threading
 import tkinter as tk
 import webbrowser
+import re
 from pathlib import Path
 from tkinter import filedialog, messagebox
 
@@ -51,6 +52,14 @@ class ModernMigrationGUI:
         self.save_log_option = None
         self.status_label = None
         self.root = ctk.CTk()
+
+        # Color mapping for ANSI codes
+        self.color_map = {
+            '\x1b[1;31m': 'red',      # Bold red (ERROR/MANDATORY)
+            '\x1b[1;33m': 'orange',   # Bold yellow (WARNING)
+            '\x1b[92m': 'green',      # Light green (INFO)
+            '\x1b[0m': 'normal',      # Reset
+        }
 
         import utils.utils as shared_utils
 
@@ -139,6 +148,11 @@ class ModernMigrationGUI:
         self.update_menubar_theme()
         ctk.set_appearance_mode(mode)
         self.menubar.configure(bg_color="#ffffff" if mode == "Light" else "#000000")
+        
+        # Update normal text color based on theme
+        normal_color = "black" if mode == "Light" else "white"
+        if hasattr(self, 'log_text') and self.log_text:
+            self.log_text._textbox.tag_configure("normal", foreground=normal_color)
 
     def toggle_save_buttons(self, *args):
         state = "normal" if self.script_ran.get() else "disabled"
@@ -284,6 +298,12 @@ class ModernMigrationGUI:
         )
         self.log_text.pack(fill="both", expand=True, padx=20, pady=10)
         self.log_text.configure(state="disabled")
+        
+        # Configure color tags for different severity levels
+        self.log_text._textbox.tag_configure("red", foreground="red")
+        self.log_text._textbox.tag_configure("orange", foreground="orange")
+        self.log_text._textbox.tag_configure("green", foreground="green")
+        self.log_text._textbox.tag_configure("normal", foreground="white" if ctk.get_appearance_mode() == "Dark" else "black")
 
     def build_save_ui(self):
         frame = ctk.CTkFrame(self.root, fg_color="transparent")
@@ -390,10 +410,38 @@ class ModernMigrationGUI:
         self.script_ran.set(True)
 
     def append_log(self, message):
+        """Append message to log with color support for ANSI escape codes"""
         self.log_text.configure(state="normal")
-        self.log_text.insert("end", message)
+        
+        # Parse ANSI escape codes and apply colors
+        self.parse_and_insert_colored_text(message)
+        
         self.log_text.see("end")
         self.log_text.configure(state="disabled")
+
+    def parse_and_insert_colored_text(self, text):
+        """Parse ANSI escape codes and insert text with appropriate colors"""
+        # Pattern to match ANSI escape codes
+        ansi_pattern = r'(\x1b\[[0-9;]*m)'
+        
+        # Split text by ANSI codes
+        parts = re.split(ansi_pattern, text)
+        
+        current_tag = "normal"
+        
+        for part in parts:
+            if part in self.color_map:
+                # This is an ANSI code, update current tag
+                current_tag = self.color_map[part]
+            elif part:  # Only insert non-empty parts
+                # This is actual text, insert with current color tag
+                start_pos = self.log_text._textbox.index("end-1c")
+                self.log_text.insert("end", part)
+                end_pos = self.log_text._textbox.index("end-1c")
+                
+                # Apply the color tag to the inserted text
+                if current_tag != "normal":
+                    self.log_text._textbox.tag_add(current_tag, start_pos, end_pos)
 
     def update_status(self, message):
         self.status_label.after(0, lambda: self.status_label.configure(text=message))
