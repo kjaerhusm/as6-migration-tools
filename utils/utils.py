@@ -122,7 +122,7 @@ def ask_user(message, default="y", parent=None, extra_note=""):
         )
         result = ask_user_gui(cleaned_msg, extra_note=extra_note)
         choice = "y" if result else "n"
-        print(f"[INFO] {message} (User selected: '{choice}')")
+        log(f"{message} (User selected: '{choice}')", severity="INFO")
         return choice
 
     # Fallback to terminal
@@ -130,8 +130,8 @@ def ask_user(message, default="y", parent=None, extra_note=""):
         if sys.stdin and sys.stdin.isatty():
             return input(message).strip().lower()
     except Exception as e:
-        print(f"[DEBUG] ask_user fallback triggered due to: {e}")
-    print(f"[INFO] {message} (Automatically using default: '{default}')")
+        log(f"ask_user fallback triggered due to: {e}", severity="DEBUG")
+    log(f"{message} (Automatically using default: '{default}')", severity="INFO")
     return default
 
 
