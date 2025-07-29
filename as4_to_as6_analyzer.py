@@ -69,109 +69,6 @@ def process_stub(file_path, *args):
     return []
 
 
-def scan_files_parallel(root_dir, extensions, process_function, *args):
-    return utils.scan_files_parallel(root_dir, extensions, process_function, *args)
-
-
-def process_pkg_file(file_path, patterns):
-    """
-    Processes a .pkg file to find matches for obsolete libraries.
-
-    Args:
-        file_path (str): Path to the .pkg file.
-        patterns (dict): Patterns to match with reasons.
-
-    Returns:
-        list: Matches found in the file.
-    """
-    results = []
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    # Regex for library names between > and <
-    matches = re.findall(r">([^<]+)<", content, re.IGNORECASE)
-    for match in matches:
-        for pattern, reason in patterns.items():
-            if match.lower() == pattern.lower():
-                results.append((pattern, reason, file_path))
-    return results
-
-
-def process_lby_file(file_path, patterns):
-    """
-    Processes a .lby file to find obsolete dependencies.
-
-    Args:
-        file_path (str): Path to the .lby file.
-        patterns (dict): Patterns of obsolete dependencies with reasons.
-
-    Returns:
-        list: Matches found in the file in the format (library_name, dependency, reason, file_path).
-    """
-    results = []
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    # Extract library name (directory name as identifier)
-    library_name = os.path.basename(os.path.dirname(file_path))
-    # Extract dependencies from the XML content
-    dependencies = re.findall(
-        r'<Dependency ObjectName="([^"]+)"', content, re.IGNORECASE
-    )
-    for dependency in dependencies:
-        for pattern, reason in patterns.items():
-            # Compare case-insensitively
-            if dependency.lower() == pattern.lower():
-                results.append((library_name, dependency, reason, file_path))
-    return results
-
-
-def process_c_cpp_hpp_includes_file(file_path, patterns):
-    """
-    Processes a C, C++, or header (.hpp) file to find obsolete dependencies in #include statements.
-
-    Args:
-        file_path (str): Path to the file.
-        patterns (dict): Dictionary of obsolete libraries with reasons.
-
-    Returns:
-        list: Matches found in the file in the format (library_name, reason, file_path).
-    """
-    results = []
-    include_pattern = re.compile(r'#include\s+[<"]([^">]+)[">]')
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    for line in content:
-        match = include_pattern.search(line)
-        if match:
-            included_library = match.group(1).lower()  # Normalize case
-            for pattern, reason in patterns.items():
-                if included_library == f"{pattern.lower()}.h":
-                    results.append((pattern, reason, file_path))
-    return results
-
-
-# Function to process libraries requiring manual process
-def process_manual_libraries(file_path, patterns):
-    """
-    Processes .pkg or .lby files to find libraries that require manual action during migration.
-
-    Args:
-        file_path (str): Path to the file.
-        patterns (dict): Libraries to be checked for manual process.
-
-    Returns:
-        list: Matches found in the file.
-    """
-    results = []
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    matches = re.findall(r">([^<]+)<", content, re.IGNORECASE)
-    for match in matches:
-        for library, action in patterns.items():
-            if match.lower() == library.lower():
-                results.append((library, action, file_path))
-    return results
-
-
 def parse_args():
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
@@ -244,9 +141,6 @@ def main():
             def log(message, when="", severity=""):
                 utils.log(message, log_file=file, when=when, severity=severity)
 
-            def log_v(message, log_file=file, prepend=""):
-                utils.log_v(message, log_file, prepend)
-
             utils.log(
                 "Scanning started... Please wait while the script analyzes your project files.\n",
                 file,
@@ -263,35 +157,6 @@ def main():
             logical_path = Path(args.project_path) / "Logical"
             physical_path = Path(args.project_path) / "Physical"
 
-            # Use project_path as the root directory for scanning
-            manual_libs_results = scan_files_parallel(
-                logical_path,
-                [".pkg"],
-                process_manual_libraries,
-                manual_process_libraries,
-            )
-
-            invalid_pkg_files = scan_files_parallel(
-                logical_path,
-                [".pkg"],
-                process_pkg_file,
-                obsolete_dict,
-            )
-
-            lby_dependency_results = scan_files_parallel(
-                logical_path,
-                [".lby"],
-                process_lby_file,
-                obsolete_dict,
-            )
-
-            c_include_dependency_results = scan_files_parallel(
-                logical_path,
-                [".c", ".cpp", ".hpp"],
-                process_c_cpp_hpp_includes_file,
-                obsolete_dict,
-            )
-
             file_patterns = [".apj", ".hw"]
             check_files_for_compatibility(
                 args.project_path, file_patterns, log, args.verbose
@@ -303,41 +168,9 @@ def main():
 
             check_file_devices(physical_path, log, args.verbose)
 
-            log("\n\nThe following invalid libraries were found in .pkg files:")
-            if invalid_pkg_files:
-                for library, reason, file_path in invalid_pkg_files:
-                    log(f"- {library}: {reason} (Found in: {file_path})")
-            else:
-                log_v("- None")
-
-            log(
-                "\n\nThe following libraries might require manual action after migrating the project to Automation Studio 6:"
+            check_libraries(
+                logical_path, log, args.verbose, manual_process_libraries, obsolete_dict
             )
-            if manual_libs_results:
-                for library, reason, file_path in manual_libs_results:
-                    log(f"- {library}: {reason} (Found in: {file_path})")
-            else:
-                log_v("- None")
-
-            # Convert .lby results to match the (library_name, reason, file_path) format
-            normalized_lby_results = [
-                (lib, f"Dependency on {dep}: {reason}", path)
-                for lib, dep, reason, path in lby_dependency_results
-            ]
-
-            # Merge results from .lby and C/C++/HPP include dependencies
-            all_dependency_results = (
-                normalized_lby_results + c_include_dependency_results
-            )
-
-            log(
-                "\n\nThe following obsolete dependencies were found in .lby, .c, .cpp, and .hpp files:"
-            )
-            if all_dependency_results:
-                for library_name, reason, file_path in all_dependency_results:
-                    log(f"- {library_name}: {reason} (Found in: {file_path})")
-            else:
-                log_v("- None")
 
             check_functions(
                 args.project_path,
