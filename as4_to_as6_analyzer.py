@@ -329,7 +329,8 @@ def main():
             if not check_project_path_and_name(args.project_path, apj_file):
                 log(
                     "Invalid path or project name, see "
-                    "https://help.br-automation.com/#/en/6/revinfos/version-info/projekt_aus_automation_studio_4_ubernehmen/automation_studio/notwendige_anpassungen_im_automation_studio_4_projekt.html"
+                    "https://help.br-automation.com/#/en/6/revinfos/version-info/projekt_aus_automation_studio_4_ubernehmen/automation_studio/notwendige_anpassungen_im_automation_studio_4_projekt.html",
+                    severity="ERROR",
                 )
 
             logical_path = Path(args.project_path) / "Logical"
