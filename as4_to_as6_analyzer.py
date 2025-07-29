@@ -5,6 +5,7 @@ import time
 import json
 import argparse
 from pathlib import Path
+
 from checks import *
 from utils import utils
 
@@ -513,19 +514,17 @@ def main():
             )
 
         except Exception as e:
-            error_message = f"\n[ERROR] An unexpected error occurred: {str(e)}"
-
-            # Print error to console
-            print(error_message)
+            error_message = f"An unexpected error occurred: {str(e)}"
+            log(error_message, severity="ERROR")
 
             # Ensure log file is open before writing
             try:
                 with open(output_file, "a", encoding="utf-8") as error_log:
-                    error_log.write(error_message + "\n")
+                    error_log.write(f"\n[ERROR] {error_message}\n")
             except Exception as log_error:
-                print(f"[ERROR] Failed to write error to log file: {log_error}")
+                log(f"Failed to write error to log file: {log_error}", severity="ERROR")
 
-    print(f"\nResults have been saved to {output_file}\n")
+    utils.log(f"Results have been saved to {output_file}\n", log_file=None)
 
 
 if __name__ == "__main__":
