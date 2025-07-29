@@ -129,8 +129,6 @@ def main():
     args = parse_args()
     apj_file = utils.get_and_check_project_file(args.project_path)
 
-    utils.set_verbose(args.verbose)
-
     print(f"Project path validated: {args.project_path}")
     print(f"Using project file: {apj_file}")
 
@@ -141,9 +139,8 @@ def main():
             def log(message, when="", severity=""):
                 utils.log(message, log_file=file, when=when, severity=severity)
 
-            utils.log(
-                "Scanning started... Please wait while the script analyzes your project files.\n",
-                file,
+            log(
+                "Scanning started... Please wait while the script analyzes your project files.",
             )
 
             start_time = time.time()
