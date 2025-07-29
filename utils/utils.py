@@ -176,31 +176,12 @@ def scan_files_parallel(root_dir, extensions, process_function, *args):
         if path.is_file()
     ]
 
-    total_files = len(file_paths)
-    display_progress(f"Found {total_files} files to process...")
-
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = {
             executor.submit(process_function, str(path), *args): path
             for path in file_paths
         }
         for i, future in enumerate(concurrent.futures.as_completed(futures), 1):
-            display_progress(f"Processing file {i}/{total_files}...")
             results.extend(future.result())
 
-    display_progress("Processing complete.".ljust(50))  # Clear line
     return results
-
-
-def display_progress(message):
-    """
-    Displays a progress message on the same line in the terminal.
-    In GUI mode, stdout may be None, so we fall back to printing.
-    """
-    try:
-        sys.stdout.write("\r" + " " * 80)
-        sys.stdout.write("\r" + message)
-        sys.stdout.flush()
-    except Exception:
-        # Fallback: simple print if stdout is unavailable
-        print(message)
