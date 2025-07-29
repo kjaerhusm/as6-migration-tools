@@ -5,6 +5,7 @@ import time
 import json
 import argparse
 from pathlib import Path
+
 from checks import *
 from utils import utils
 
@@ -66,182 +67,6 @@ def process_stub(file_path, *args):
         list: An empty list for this stub function.
     """
     return []
-
-
-def scan_files_parallel(root_dir, extensions, process_function, *args):
-    return utils.scan_files_parallel(root_dir, extensions, process_function, *args)
-
-
-def process_pkg_file(file_path, patterns):
-    """
-    Processes a .pkg file to find matches for obsolete libraries.
-
-    Args:
-        file_path (str): Path to the .pkg file.
-        patterns (dict): Patterns to match with reasons.
-
-    Returns:
-        list: Matches found in the file.
-    """
-    results = []
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    # Regex for library names between > and <
-    matches = re.findall(r">([^<]+)<", content, re.IGNORECASE)
-    for match in matches:
-        for pattern, reason in patterns.items():
-            if match.lower() == pattern.lower():
-                results.append((pattern, reason, file_path))
-    return results
-
-
-def process_hw_file(file_path, hardware_dict):
-    """
-    Processes a .hw file to find unsupported hardware matches.
-
-    Args:
-        file_path (str): Path to the .hw file.
-        hardware_dict (dict): Dictionary of unsupported hardware and their reasons.
-
-    Returns:
-        list: Unique matches found in the file.
-    """
-    results = set()  # Use a set to store unique matches
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    # Regex to extract the Type value from the <Module> elements
-    matches = re.findall(r'<Module [^>]*Type="([^"]+)"', content)
-    for hw_type in matches:
-        for reason, items in hardware_dict.items():
-            if hw_type in items:
-                results.add(
-                    (hw_type, reason, file_path)
-                )  # Add as a tuple to ensure uniqueness
-    return list(results)  # Convert back to a list for consistency
-
-
-def process_file_devices(file_path):
-    """
-    Args:
-        file_path: Path to the .hw file.
-
-    Returns:
-        list: Unique matches found in the file.
-    """
-    exclude = ["C:\\", "D:\\", "E:\\", "F:\\"]
-    results = set()  # Use a set to store unique matches
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    # Regex to extract the value from the file device elements
-    matches = re.findall(
-        r'<Group ID="FileDevice\d+" />\s*<Parameter ID="FileDeviceName\d+" Value="(.*?)" />\s*<Parameter ID="FileDevicePath\d+" Value="(.*?)" />',
-        content,
-    )
-    for name, path in matches:
-        for exclusion in exclude:
-            if path.lower().startswith(exclusion.lower()):
-                results.add((name, path, file_path))
-    return list(results)  # Convert back to a list for consistency
-
-
-def process_ftp_configurations(file_path):
-    """
-    Args:
-        file_path: Path to the .hw file.
-
-    Returns:
-        list: Unique matches found in the file.
-    """
-    results = set()
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    # Regex to extract if the FTP server is activated
-    matches = re.search(r'<Parameter ID="ActivateFtpServer"\s+Value="(\d)" />', content)
-    if not matches or matches.group(0) == "1":
-        matches = re.findall(
-            r'<Parameter ID="FTPMSPartition\d+"\s+Value="(.*?)" />', content
-        )
-        if matches:
-            for match in matches:
-                if "SYSTEM" == match:
-                    results.add((match, file_path))
-    return list(results)  # Convert back to a list for consistency
-
-
-def process_lby_file(file_path, patterns):
-    """
-    Processes a .lby file to find obsolete dependencies.
-
-    Args:
-        file_path (str): Path to the .lby file.
-        patterns (dict): Patterns of obsolete dependencies with reasons.
-
-    Returns:
-        list: Matches found in the file in the format (library_name, dependency, reason, file_path).
-    """
-    results = []
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    # Extract library name (directory name as identifier)
-    library_name = os.path.basename(os.path.dirname(file_path))
-    # Extract dependencies from the XML content
-    dependencies = re.findall(
-        r'<Dependency ObjectName="([^"]+)"', content, re.IGNORECASE
-    )
-    for dependency in dependencies:
-        for pattern, reason in patterns.items():
-            # Compare case-insensitively
-            if dependency.lower() == pattern.lower():
-                results.append((library_name, dependency, reason, file_path))
-    return results
-
-
-def process_c_cpp_hpp_includes_file(file_path, patterns):
-    """
-    Processes a C, C++, or header (.hpp) file to find obsolete dependencies in #include statements.
-
-    Args:
-        file_path (str): Path to the file.
-        patterns (dict): Dictionary of obsolete libraries with reasons.
-
-    Returns:
-        list: Matches found in the file in the format (library_name, reason, file_path).
-    """
-    results = []
-    include_pattern = re.compile(r'#include\s+[<"]([^">]+)[">]')
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    for line in content:
-        match = include_pattern.search(line)
-        if match:
-            included_library = match.group(1).lower()  # Normalize case
-            for pattern, reason in patterns.items():
-                if included_library == f"{pattern.lower()}.h":
-                    results.append((pattern, reason, file_path))
-    return results
-
-
-# Function to process libraries requiring manual process
-def process_manual_libraries(file_path, patterns):
-    """
-    Processes .pkg or .lby files to find libraries that require manual action during migration.
-
-    Args:
-        file_path (str): Path to the file.
-        patterns (dict): Libraries to be checked for manual process.
-
-    Returns:
-        list: Matches found in the file.
-    """
-    results = []
-    content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
-
-    matches = re.findall(r">([^<]+)<", content, re.IGNORECASE)
-    for match in matches:
-        for library, action in patterns.items():
-            if match.lower() == library.lower():
-                results.append((library, action, file_path))
-    return results
 
 
 def parse_args():
@@ -316,9 +141,6 @@ def main():
             def log(message, when="", severity=""):
                 utils.log(message, log_file=file, when=when, severity=severity)
 
-            def log_v(message, log_file=file, prepend=""):
-                utils.log_v(message, log_file, prepend)
-
             utils.log(
                 "Scanning started... Please wait while the script analyzes your project files.\n",
                 file,
@@ -336,54 +158,6 @@ def main():
             logical_path = Path(args.project_path) / "Logical"
             physical_path = Path(args.project_path) / "Physical"
 
-            # Use project_path as the root directory for scanning
-            manual_libs_results = scan_files_parallel(
-                logical_path,
-                [".pkg"],
-                process_manual_libraries,
-                manual_process_libraries,
-            )
-
-            invalid_pkg_files = scan_files_parallel(
-                logical_path,
-                [".pkg"],
-                process_pkg_file,
-                obsolete_dict,
-            )
-
-            hardware_results = scan_files_parallel(
-                physical_path,
-                [".hw"],
-                process_hw_file,
-                unsupported_hardware,
-            )
-
-            file_devices = scan_files_parallel(
-                physical_path,
-                [".hw"],
-                process_file_devices,
-            )
-
-            ftp_configs = scan_files_parallel(
-                physical_path,
-                [".hw"],
-                process_ftp_configurations,
-            )
-
-            lby_dependency_results = scan_files_parallel(
-                logical_path,
-                [".lby"],
-                process_lby_file,
-                obsolete_dict,
-            )
-
-            c_include_dependency_results = scan_files_parallel(
-                logical_path,
-                [".c", ".cpp", ".hpp"],
-                process_c_cpp_hpp_includes_file,
-                obsolete_dict,
-            )
-
             file_patterns = [".apj", ".hw"]
             check_files_for_compatibility(
                 args.project_path, file_patterns, log, args.verbose
@@ -391,98 +165,13 @@ def main():
 
             check_uad_files(physical_path, log, args.verbose)
 
-            log("\n\nThe following unsupported hardware were found:")
-            if hardware_results:
-                grouped_results = {}
-                for hardware_id, reason, file_path in hardware_results:
-                    config_name = os.path.basename(os.path.dirname(file_path))
-                    grouped_results.setdefault(config_name, set()).add(
-                        (hardware_id, reason)
-                    )
+            check_hardware(physical_path, log, args.verbose, unsupported_hardware)
 
-                for config_name, entries in grouped_results.items():
-                    log(f"\nHardware configuration: {config_name}")
-                    for hardware_id, reason in sorted(entries):
-                        log(f"- {hardware_id}: {reason}")
-            else:
-                log_v("- None")
+            check_file_devices(physical_path, log, args.verbose)
 
-            log(
-                "\n\nThe following invalid file devices were found: (accessing system partitions / using drive letters)"
+            check_libraries(
+                logical_path, log, args.verbose, manual_process_libraries, obsolete_dict
             )
-            if file_devices:
-                grouped_results = {}
-                for name, path, file_path in file_devices:
-                    config_name = os.path.basename(os.path.dirname(file_path))
-                    grouped_results.setdefault(config_name, set()).add((name, path))
-
-                for config_name, entries in grouped_results.items():
-                    results = []
-                    for name, path in sorted(entries):
-                        results.append(f"{name} ({path})")
-                    result_string = ", ".join(results)
-                    log(f"Hardware configuration '{config_name}': {result_string}")
-
-                log(
-                    "\nWrite operations on a system partition (C:, D:, E:) are not allowed. In the event of error, "
-                    "a write operation could destroy the system partition so that the target system can no longer be booted.\n"
-                    "The User partition USER_PATH should be used instead!\n"
-                    "In ARsim, the directory corresponding to USER_PATH is found at \\<Project>\\Temp\\Simulation\\<Configuration>\\<CPU>\\USER\\."
-                )
-            else:
-                log_v("- None")
-
-            log(
-                "\n\nThe following potentially invalid ftp configurations were found: (accessing system instead of user partition)"
-            )
-            if ftp_configs:
-                grouped_results = {}
-                for name, file_path in ftp_configs:
-                    config_name = os.path.basename(os.path.dirname(file_path))
-                    grouped_results.setdefault(config_name, set()).add(name)
-
-                for config_name, entries in grouped_results.items():
-                    log(f"\nHardware configuration: {config_name}")
-                    for name in sorted(entries):
-                        log(f"- Accessing '{name}'")
-            else:
-                log_v("- None")
-
-            log("\n\nThe following invalid libraries were found in .pkg files:")
-            if invalid_pkg_files:
-                for library, reason, file_path in invalid_pkg_files:
-                    log(f"- {library}: {reason} (Found in: {file_path})")
-            else:
-                log_v("- None")
-
-            log(
-                "\n\nThe following libraries might require manual action after migrating the project to Automation Studio 6:"
-            )
-            if manual_libs_results:
-                for library, reason, file_path in manual_libs_results:
-                    log(f"- {library}: {reason} (Found in: {file_path})")
-            else:
-                log_v("- None")
-
-            # Convert .lby results to match the (library_name, reason, file_path) format
-            normalized_lby_results = [
-                (lib, f"Dependency on {dep}: {reason}", path)
-                for lib, dep, reason, path in lby_dependency_results
-            ]
-
-            # Merge results from .lby and C/C++/HPP include dependencies
-            all_dependency_results = (
-                normalized_lby_results + c_include_dependency_results
-            )
-
-            log(
-                "\n\nThe following obsolete dependencies were found in .lby, .c, .cpp, and .hpp files:"
-            )
-            if all_dependency_results:
-                for library_name, reason, file_path in all_dependency_results:
-                    log(f"- {library_name}: {reason} (Found in: {file_path})")
-            else:
-                log_v("- None")
 
             check_functions(
                 args.project_path,
@@ -514,19 +203,17 @@ def main():
             )
 
         except Exception as e:
-            error_message = f"\n[ERROR] An unexpected error occurred: {str(e)}"
-
-            # Print error to console
-            print(error_message)
+            error_message = f"An unexpected error occurred: {str(e)}"
+            log(error_message, severity="ERROR")
 
             # Ensure log file is open before writing
             try:
                 with open(output_file, "a", encoding="utf-8") as error_log:
-                    error_log.write(error_message + "\n")
+                    error_log.write(f"\n[ERROR] {error_message}\n")
             except Exception as log_error:
-                print(f"[ERROR] Failed to write error to log file: {log_error}")
+                log(f"Failed to write error to log file: {log_error}", severity="ERROR")
 
-    print(f"\nResults have been saved to {output_file}\n")
+    utils.log(f"Results have been saved to {output_file}\n", log_file=None)
 
 
 if __name__ == "__main__":

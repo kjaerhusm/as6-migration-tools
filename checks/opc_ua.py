@@ -17,7 +17,7 @@ def check_uad_files(root_dir: Path, log, verbose=False):
         Nothing
     """
 
-    log("Checking OPC configuration...", severity="INFO")
+    log("─" * 80 + "\nChecking OPC configuration...")
 
     required_suffix = os.path.normpath(os.path.join("Connectivity", "OpcUA"))
     misplaced_files = []
@@ -50,7 +50,8 @@ def check_uad_files(root_dir: Path, log, verbose=False):
             severity="MANDATORY",
         )
     else:
-        log("- All .uad files are in the correct location.", severity="VERBOSE")
+        if verbose:
+            log("- All .uad files are in the correct location.", severity="INFO")
 
     if old_version:
         log(
@@ -66,4 +67,5 @@ def check_uad_files(root_dir: Path, log, verbose=False):
             severity="MANDATORY",
         )
     else:
-        log("- All .uad files have the correct minimum version.", severity="VERBOSE")
+        if verbose:
+            log("- All .uad files have the correct minimum version.", severity="INFO")

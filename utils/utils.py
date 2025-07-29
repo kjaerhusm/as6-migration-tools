@@ -154,20 +154,24 @@ def ask_user_gui(message: str, extra_note: str = "") -> bool:
     return response == "Yes"
 
 
-def scan_files_parallel(root_dir, extensions, process_function, *args):
+def scan_files_parallel(root_dir, extensions, process_functions, *args):
     """
     Scans files in a directory tree in parallel for specific content.
 
     Args:
         root_dir (Path): The root directory to search in.
         extensions (list): File extensions to include.
-        process_function (callable): The function to apply on each file.
+        process_functions (callable or list): The function to apply on each file.
         *args: Additional arguments to pass to the process_function.
 
     Returns:
-        list: Aggregated results from all scanned files.
+        dict or list: Aggregated results from all scanned files.
     """
-    results = []
+    single_function_mode = not isinstance(process_functions, list)
+    if single_function_mode:
+        process_functions = [process_functions]
+
+    results = {func.__name__: [] for func in process_functions}
 
     file_paths = [
         str(path)
@@ -176,31 +180,21 @@ def scan_files_parallel(root_dir, extensions, process_function, *args):
         if path.is_file()
     ]
 
-    total_files = len(file_paths)
-    display_progress(f"Found {total_files} files to process...")
+    def process_file(path):
+        file_results = {}
+        for func in process_functions:
+            file_results[func.__name__] = func(path, *args)
+        return file_results
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = {
-            executor.submit(process_function, str(path), *args): path
-            for path in file_paths
-        }
-        for i, future in enumerate(concurrent.futures.as_completed(futures), 1):
-            display_progress(f"Processing file {i}/{total_files}...")
-            results.extend(future.result())
+        futures = {executor.submit(process_file, path): path for path in file_paths}
+        for future in concurrent.futures.as_completed(futures):
+            func_results = future.result()
+            for func_name, result in func_results.items():
+                results[func_name].extend(result)
 
-    display_progress("Processing complete.".ljust(50))  # Clear line
-    return results
-
-
-def display_progress(message):
-    """
-    Displays a progress message on the same line in the terminal.
-    In GUI mode, stdout may be None, so we fall back to printing.
-    """
-    try:
-        sys.stdout.write("\r" + " " * 80)
-        sys.stdout.write("\r" + message)
-        sys.stdout.flush()
-    except Exception:
-        # Fallback: simple print if stdout is unavailable
-        print(message)
+    if single_function_mode:
+        # Flatten results if only one function was used
+        return results[process_functions[0].__name__]
+    else:
+        return results
