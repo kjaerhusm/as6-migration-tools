@@ -361,21 +361,34 @@ class ModernMigrationGUI:
         script = self.scripts.get(self.selected_script.get())
         verbose = self.verbose_mode.get()
 
+        original_stdout, original_stderr = sys.stdout, sys.stderr
+        redirector = RedirectText(self.append_log, self.update_status)
+        sys.stdout = redirector
+        sys.stderr = redirector
+
         if not os.path.exists(folder):
-            self.append_log(f"[ERROR] Folder does not exist:\n{folder}")
-            self.update_status("Invalid folder")
+            utils.log(
+                f"Folder does not exist: {folder}",
+                severity="ERROR",
+            )
             self.spinner_running = False
             return
 
         if not self.is_valid_as4_project(folder):
-            self.append_log(f"[ERROR] Folder is not a valid AS4 project:\n{folder}")
-            self.update_status("Not a valid AS4 project")
+            utils.log(
+                f"Folder is not a valid AS4 project: {folder}",
+                severity="ERROR",
+            )
             self.spinner_running = False
             return
 
         if not os.path.exists(script):
-            self.append_log(f"[ERROR] Script not found:\n{script}")
-            self.update_status("Script missing")
+            utils.log(
+                f"Script not found:{script}",
+                severity="ERROR",
+            )
+            self.spinner_running = False
+            return
             self.spinner_running = False
             return
 
@@ -388,11 +401,6 @@ class ModernMigrationGUI:
         module = importlib.util.module_from_spec(spec)
         sys.modules["selected_script"] = module
 
-        original_stdout, original_stderr = sys.stdout, sys.stderr
-        redirector = RedirectText(self.append_log, self.update_status)
-        sys.stdout = redirector
-        sys.stderr = redirector
-
         try:
             spec.loader.exec_module(module)
             sys.argv = ["analyzer", folder]
@@ -402,8 +410,14 @@ class ModernMigrationGUI:
         except Exception as e:
             import traceback
 
-            print(f"[ERROR] Execution failed: {e}")
-            print(traceback.format_exc())
+            utils.log(
+                f"Execution failed: {e}",
+                severity="ERROR",
+            )
+            utils.log(
+                f"Traceback:\n{traceback.format_exc()}",
+                severity="ERROR",
+            )
         finally:
             sys.stdout = original_stdout
             sys.stderr = original_stderr
