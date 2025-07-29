@@ -6,7 +6,7 @@ def check_vision_settings(directory, log, verbose=False):
     """
     Checks for the presence of mappVision settings files in the specified directory.
     """
-    log("─" * 80 + "\nChecking mapp version in project file...")
+    log("─" * 80 + "\nChecking mappVision version in project file...")
 
     # Find the .apj file in the directory
     apj_file = next(Path(directory).glob("*.apj"), None)
@@ -20,13 +20,13 @@ def check_vision_settings(directory, log, verbose=False):
             if "<mappVision " in line and "Version=" in line:
                 match = re.search(r'Version="(\d+)\.(\d+)', line)
                 if match:
-                    found = True
                     major = int(match.group(1))
                     minor = int(match.group(2))
                     version = f"{major}.{minor}"
 
+                    log(f"Found usage of mapp Vision (Version: {version})", severity="INFO")
                     log(
-                        f"\n\nFound usage of mapp Vision (Version: {version}). After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!",
+                        f"After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!",
                         when="AS6",
                         severity="MANDATORY",
                     )

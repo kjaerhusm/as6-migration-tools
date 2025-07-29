@@ -1,4 +1,5 @@
 # Utilities to call in multiple files
+import concurrent.futures
 import hashlib
 import os
 import sys
@@ -147,3 +148,55 @@ def ask_user_gui(message: str, extra_note: str = "") -> bool:
     )
     response = msg.get()
     return response == "Yes"
+
+
+def scan_files_parallel(root_dir, extensions, process_function, *args):
+    """
+    Scans files in a directory tree in parallel for specific content.
+
+    Args:
+        root_dir (Path): The root directory to search in.
+        extensions (list): File extensions to include.
+        process_function (callable): The function to apply on each file.
+        *args: Additional arguments to pass to the process_function.
+
+    Returns:
+        list: Aggregated results from all scanned files.
+    """
+    results = []
+
+    file_paths = [
+        str(path)
+        for ext in extensions
+        for path in root_dir.rglob(f"*{ext}")
+        if path.is_file()
+    ]
+
+    total_files = len(file_paths)
+    display_progress(f"Found {total_files} files to process...")
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = {
+            executor.submit(process_function, str(path), *args): path
+            for path in file_paths
+        }
+        for i, future in enumerate(concurrent.futures.as_completed(futures), 1):
+            display_progress(f"Processing file {i}/{total_files}...")
+            results.extend(future.result())
+
+    display_progress("Processing complete.".ljust(50))  # Clear line
+    return results
+
+
+def display_progress(message):
+    """
+    Displays a progress message on the same line in the terminal.
+    In GUI mode, stdout may be None, so we fall back to printing.
+    """
+    try:
+        sys.stdout.write("\r" + " " * 80)
+        sys.stdout.write("\r" + message)
+        sys.stdout.flush()
+    except Exception:
+        # Fallback: simple print if stdout is unavailable
+        print(message)

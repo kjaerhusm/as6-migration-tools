@@ -2,18 +2,13 @@ import re
 from pathlib import Path
 
 
-def check_files_for_compatibility(directory, extensions):
+def check_files_for_compatibility(directory, extensions, log, verbose=False):
     """
     Checks the compatibility of .apj and .hw files within a directory.
     Validates that files have a minimum required version.
-
-    Args:
-        directory (str): Path to the directory to scan.
-        extensions (list): Extensions of files to check, e.g., ['.apj', '.hw'].
-
-    Returns:
-        list: Results for incompatible files in the format (file_path, issue).
     """
+    log("─" * 80 + "\nChecking project and hardware files for compatibility...")
+
     incompatible_files = []
     required_version_prefix = "4.12"
     version_pattern = re.compile(r'AutomationStudio Version="?([\d.]+)')
@@ -31,6 +26,13 @@ def check_files_for_compatibility(directory, extensions):
                     else:
                         incompatible_files.append((str(path), "Version Unknown"))
                 except Exception as e:
-                    incompatible_files.append((str(path), f"Error reading file: {e}"))
+                    log(f"Error reading file {path}: {e}", severity="ERROR")
 
-    return incompatible_files
+    if incompatible_files:
+        log("The following files are incompatible with the required version:", severity="MANDATORY")
+        for file_path, issue in incompatible_files:
+            log(f"- {file_path}: {issue}")
+        log("Please ensure these files are saved at least once with Automation Studio 4.12", severity="MANDATORY")
+    else:
+        if verbose:
+            log("All project and hardware files are valid.", severity="VERBOSE")
