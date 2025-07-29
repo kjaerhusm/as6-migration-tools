@@ -43,14 +43,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install PyInstaller
-        run: pip install pyinstaller
-
-      - name: Install CustomTkinter
-        run: pip install customtkinter
-        
-      - name: Install CTkMenuBar
-        run: pip install CTkMenuBar
+      - name: Install Requirements
+        run: pip install -r requirements.txt
 
       - name: Build executable
         run: pyinstaller --noconfirm gui_launcher.spec
