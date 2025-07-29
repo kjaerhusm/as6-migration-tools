@@ -104,7 +104,7 @@ def check_file_devices(physical_path, log, verbose=False):
             grouped_results.setdefault(config_name, set()).add(name)
 
         for config_name, entries in grouped_results.items():
-            log(f"\nHardware configuration: {config_name}")
+            log(f"Hardware configuration: {config_name}")
             for name in sorted(entries):
                 log(f"- Accessing '{name}'")
     else:
