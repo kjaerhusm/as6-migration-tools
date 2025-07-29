@@ -190,9 +190,9 @@ def main():
                 total_enums_replacements += enum_replacements
                 total_files_changed += 1
         elif file_path.suffix in {".typ", ".var", ".fun"}:
-            function_replacements, type_replacements, changed = (
-                    replace_fbs_and_types(file_path, fb_mapping, type_mapping)
-                )
+            function_replacements, type_replacements, changed = replace_fbs_and_types(
+                file_path, fb_mapping, type_mapping
+            )
             if changed:
                 total_type_replacements += type_replacements
                 total_function_replacements += function_replacements

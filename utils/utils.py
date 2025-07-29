@@ -36,9 +36,13 @@ def log(message, log_file=None, when="", severity=""):
     if severity != "":
         # Farbliche Hervorhebung je nach Severity-Level
         if severity.upper() == "MANDATORY" or severity.upper() == "ERROR":
-            colored_severity = f"{ConsoleColors.MANDATORY}[{severity}]{ConsoleColors.RESET}"
+            colored_severity = (
+                f"{ConsoleColors.MANDATORY}[{severity}]{ConsoleColors.RESET}"
+            )
         elif severity.upper() == "WARNING":
-            colored_severity = f"{ConsoleColors.WARNING}[{severity}]{ConsoleColors.RESET}"
+            colored_severity = (
+                f"{ConsoleColors.WARNING}[{severity}]{ConsoleColors.RESET}"
+            )
         elif severity.upper() == "INFO":
             colored_severity = f"{ConsoleColors.INFO}[{severity}]{ConsoleColors.RESET}"
         else:
@@ -55,7 +59,7 @@ def log(message, log_file=None, when="", severity=""):
     # Print to console with colors (with newline at start)
     print(
         f"\n{console_message}",
-        file=(sys.stderr if severity.upper() == "ERROR" else sys.stdout)
+        file=(sys.stderr if severity.upper() == "ERROR" else sys.stdout),
     )
     if log_file:
         log_file.write(file_message + "\n")  # Write to file without colors
@@ -144,7 +148,7 @@ def ask_user_gui(message: str, extra_note: str = "") -> bool:
         option_1="Yes",
         option_2="No",
         width=460,
-        wraplength=390
+        wraplength=390,
     )
     response = msg.get()
     return response == "Yes"

@@ -86,19 +86,25 @@ def check_mapp_version(directory, log, verbose=False):
             cpu_pkg_path = start_path / "Cpu.pkg"
             if cpu_pkg_path.exists():
                 try:
-                    cpu_pkg_content = cpu_pkg_path.read_text(encoding="utf-8", errors="ignore")
+                    cpu_pkg_content = cpu_pkg_path.read_text(
+                        encoding="utf-8", errors="ignore"
+                    )
                     missing_copy = missing.copy()  # Create a copy to iterate over
-                    
+
                     for line in cpu_pkg_content.splitlines():
                         for missing_item in missing_copy:
                             if missing_item in line and 'Reference="true"' in line:
                                 # Remove from missing set if found with Reference="true"
                                 if verbose:
-                                    log(f"Removing '{missing_item}' from missing set, found reference in Cpu.pkg", when="AS4", severity="INFO")
+                                    log(
+                                        f"Removing '{missing_item}' from missing set, found reference in Cpu.pkg",
+                                        when="AS4",
+                                        severity="INFO",
+                                    )
                                 missing.discard(missing_item)
                 except Exception as e:
                     log(f"Could not read Cpu.pkg file: {e}", severity="WARNING")
-            
+
             # Only add to results if there are still missing folders after checking Cpu.pkg
             if missing:
                 grouped_results[config_folder.name] = missing

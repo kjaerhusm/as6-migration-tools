@@ -98,7 +98,9 @@ def replace_inputs(file_path: Path, input_mapping):
     return input_replacements, False
 
 
-def replace_fbs_and_types(file_path: Path, fb_mapping, type_mapping, fb_removal_mapping):
+def replace_fbs_and_types(
+    file_path: Path, fb_mapping, type_mapping, fb_removal_mapping
+):
     """
     Replace function block calls and types in a file based on the provided mappings.
     """
@@ -172,7 +174,7 @@ def check_for_library(project_path, library_names):
     """
     Checks if any specified library is used in the project.
     """
-    pkg_file = Path(project_path) / "Logical" /"Libraries" /"Package.pkg"
+    pkg_file = Path(project_path) / "Logical" / "Libraries" / "Package.pkg"
     if not pkg_file.is_file():
         print(f"Error: Could not find Package.pkg file in: {pkg_file}")
         return []

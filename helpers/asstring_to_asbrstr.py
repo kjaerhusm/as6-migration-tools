@@ -6,7 +6,9 @@ from pathlib import Path
 from utils import utils
 
 
-def replace_functions_and_constants(file_path: Path, function_mapping, constant_mapping):
+def replace_functions_and_constants(
+    file_path: Path, function_mapping, constant_mapping
+):
     """
     Replace function calls and constants in a file based on the provided mappings.
     """

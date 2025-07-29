@@ -29,10 +29,16 @@ def check_files_for_compatibility(directory, extensions, log, verbose=False):
                     log(f"Error reading file {path}: {e}", severity="ERROR")
 
     if incompatible_files:
-        log("The following files are incompatible with the required version:", severity="MANDATORY")
+        log(
+            "The following files are incompatible with the required version:",
+            severity="MANDATORY",
+        )
         for file_path, issue in incompatible_files:
             log(f"- {file_path}: {issue}")
-        log("Please ensure these files are saved at least once with Automation Studio 4.12", severity="MANDATORY")
+        log(
+            "Please ensure these files are saved at least once with Automation Studio 4.12",
+            severity="MANDATORY",
+        )
     else:
         if verbose:
             log("All project and hardware files are valid.", severity="VERBOSE")

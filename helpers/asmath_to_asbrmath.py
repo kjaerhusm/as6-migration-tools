@@ -6,7 +6,9 @@ from pathlib import Path
 from utils import utils
 
 
-def replace_functions_and_constants(file_path: Path, function_mapping, constant_mapping):
+def replace_functions_and_constants(
+    file_path: Path, function_mapping, constant_mapping
+):
     """
     Replace function calls and constants in a file based on the provided mappings.
     """
@@ -51,7 +53,7 @@ def check_for_asmath_library(project_path):
     """
     Checks if AsMath library is used in the project.
     """
-    pkg_file =  Path(project_path) / "Logical" / "Libraries" / "Package.pkg"
+    pkg_file = Path(project_path) / "Logical" / "Libraries" / "Package.pkg"
     if not pkg_file.is_file():
         # print(f"Debug: Could not find Package.pkg file in: {pkg_file}")
         return False

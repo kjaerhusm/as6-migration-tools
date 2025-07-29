@@ -321,7 +321,7 @@ def main():
 
             utils.log(
                 "Scanning started... Please wait while the script analyzes your project files.\n",
-                file,                
+                file,
             )
 
             start_time = time.time()
@@ -507,7 +507,8 @@ def main():
 
             end_time = time.time()
             log(
-                "─" * 80 + f"\nScanning completed successfully in {end_time - start_time:.2f} seconds."
+                "─" * 80
+                + f"\nScanning completed successfully in {end_time - start_time:.2f} seconds."
             )
 
         except Exception as e:

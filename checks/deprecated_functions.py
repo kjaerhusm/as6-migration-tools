@@ -17,7 +17,10 @@ def check_deprecated_string_functions(root_dir, extensions, deprecated_functions
             if path.is_file():
                 try:
                     content = path.read_text(encoding="utf-8", errors="ignore")
-                    if any(re.search(rf"\b{func}\b", content) for func in deprecated_functions):
+                    if any(
+                        re.search(rf"\b{func}\b", content)
+                        for func in deprecated_functions
+                    ):
                         deprecated_files.append(str(path))
                 except Exception:
                     pass
@@ -231,9 +234,7 @@ def check_functions(
         obsolete_functions,
     )
 
-    check_obsolete_functions(
-        log, verbose, invalid_var_typ_files, invalid_st_c_files
-    )
+    check_obsolete_functions(log, verbose, invalid_var_typ_files, invalid_st_c_files)
 
     check_deprecated_functions(
         project_root,

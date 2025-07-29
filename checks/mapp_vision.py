@@ -24,7 +24,10 @@ def check_vision_settings(directory, log, verbose=False):
                     minor = int(match.group(2))
                     version = f"{major}.{minor}"
 
-                    log(f"Found usage of mapp Vision (Version: {version})", severity="INFO")
+                    log(
+                        f"Found usage of mapp Vision (Version: {version})",
+                        severity="INFO",
+                    )
                     log(
                         f"After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface!",
                         when="AS6",
