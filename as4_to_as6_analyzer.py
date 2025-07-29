@@ -505,6 +505,7 @@ def main():
             # Find mappService issues
             check_mapp_version(args.project_path, log, args.verbose)
 
+            # Finish up
             end_time = time.time()
             log(
                 "─" * 80

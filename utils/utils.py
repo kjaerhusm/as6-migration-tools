@@ -34,7 +34,7 @@ def log(message, log_file=None, when="", severity=""):
     if when != "":
         message = f"[{when}] {message}"
     if severity != "":
-        # Farbliche Hervorhebung je nach Severity-Level
+        # Color highlighting based on severity level
         if severity.upper() == "MANDATORY" or severity.upper() == "ERROR":
             colored_severity = (
                 f"{ConsoleColors.MANDATORY}[{severity}]{ConsoleColors.RESET}"
@@ -48,9 +48,9 @@ def log(message, log_file=None, when="", severity=""):
         else:
             colored_severity = f"[{severity}]"
 
-        # Für Konsole mit Farbe
+        # For console with color
         console_message = f"{colored_severity} {message}"
-        # Für Datei ohne Farbe
+        # For file without color
         file_message = f"[{severity}] {message}"
     else:
         console_message = message
