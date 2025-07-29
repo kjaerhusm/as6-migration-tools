@@ -8,3 +8,4 @@ from .safety_check import check_safety
 from .hardware_check import check_hardware
 from .file_device_check import check_file_devices
 from .library_check import check_libraries
+from .common import check_project_path_and_name
