@@ -54,21 +54,6 @@ deprecated_math_functions = set(discontinuation_info["deprecated_math_functions"
 pass
 
 
-def process_stub(file_path, *args):
-    """
-    Stub process function for demonstration purposes.
-    Simulates processing of files without actual logic.
-
-    Args:
-        file_path (str): The file path to process.
-        *args: Additional arguments.
-
-    Returns:
-        list: An empty list for this stub function.
-    """
-    return []
-
-
 def parse_args():
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
