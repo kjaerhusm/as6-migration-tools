@@ -8,8 +8,13 @@ from lxml import etree
 from utils import utils
 
 
+def log_v(message, verbose=False):
+    if verbose:
+        utils.log(message, severity="INFO")
+
+
 def add_mapp_package(
-    config_folder_path, subfolders, folder, package_name, package_type
+    config_folder_path, subfolders, folder, package_name, package_type, verbose=False
 ):
     """
     Adds a mapp package (mappServices, mappMotion, mappView) to the cpu.pkg file and creates the folder structure.
@@ -21,7 +26,7 @@ def add_mapp_package(
         package_name (str): Name of the mapp package (e.g., 'mappServices', 'mappMotion', 'mappView')
         package_type (str):The package type to use for the attribute "PackageType" in Package.pkg
     """
-    utils.log(f"\nStart fixing {package_name}")
+    utils.log(f"Start fixing {package_name}", severity="INFO")
 
     # Try to open and parse cpu.pkg as XML
     cpu_pkg_path = Path(config_folder_path) / subfolders[0] / "cpu.pkg"
@@ -54,7 +59,7 @@ def add_mapp_package(
                         break
 
             if objects_node is not None:
-                utils.log_v(f"Found Objects node in cpu.pkg in {folder}")
+                log_v(f"Found Objects node in cpu.pkg in {folder}", verbose=verbose)
 
                 # Check if package object already exists
                 existing_package = None
@@ -75,8 +80,9 @@ def add_mapp_package(
                 for obj in object_elements:
                     if obj.text == package_name and obj.get("Type") == "Package":
                         existing_package = obj
-                        utils.log_v(
-                            f"{package_name} entry already exists in cpu.pkg in {folder}"
+                        log_v(
+                            f"{package_name} entry already exists in cpu.pkg in {folder}",
+                            verbose=verbose,
                         )
                         break
 
@@ -93,38 +99,42 @@ def add_mapp_package(
                         xml_declaration=True,
                         pretty_print=True,
                     )
-                    utils.log_v(f"Added {package_name} object to cpu.pkg in {folder}")
+                    log_v(
+                        f"Added {package_name} object to cpu.pkg in {folder}",
+                        verbose=verbose,
+                    )
                 else:
-                    utils.log_v(
-                        f"{package_name} object already exists in cpu.pkg in {folder}"
+                    log_v(
+                        f"{package_name} object already exists in cpu.pkg in {folder}",
+                        verbose=verbose,
                     )
             else:
-                utils.log("Objects node not found in cpu.pkg")
+                utils.log("Objects node not found in cpu.pkg", severity="INFO")
         except etree.ParseError as e:
-            utils.log(f"Error parsing cpu.pkg XML in {folder}: {e}")
+            utils.log(f"Error parsing cpu.pkg XML in {folder}: {e}", severity="ERROR")
         except Exception as e:
-            utils.log(f"Error opening cpu.pkg in {folder}: {e}")
+            utils.log(f"Error opening cpu.pkg in {folder}: {e}", severity="ERROR")
     else:
-        utils.log(f"cpu.pkg file not found in {config_folder_path}")
+        utils.log(f"cpu.pkg file not found in {config_folder_path}", severity="INFO")
 
     # Check if package folder exists in the subfolders
     plc_folder_path = Path(config_folder_path) / subfolders[0] / package_name
     if plc_folder_path.exists():
-        utils.log_v(f"Found {package_name} folder in {folder}")
+        log_v(f"Found {package_name} folder in {folder}", verbose=verbose)
         return True
     else:
         # Create package folder structure
         plc_folder_path.mkdir(parents=True, exist_ok=True)
-        utils.log_v(f"No {package_name} folder found")
-        utils.log_v(f"Created {package_name} directory: {plc_folder_path}")
+        log_v(f"No {package_name} folder found", verbose=verbose)
+        log_v(f"Created {package_name} directory: {plc_folder_path}", verbose=verbose)
 
         # Create Package.pkg file with specified content
         package_content = f"""<?xml version="1.0" encoding="utf-8"?><?AutomationStudio FileVersion="4.9"?><Package SubType="{package_type}" PackageType="{package_type}" xmlns="http://br-automation.co.at/AS/Package"><Objects /></Package>"""
         package_file_path = plc_folder_path / "Package.pkg"
         package_file_path.write_text(package_content, encoding="utf-8")
 
-        utils.log_v(f"Created Package.pkg file in {package_file_path}")
-        utils.log(f"{package_name} folder structure created successfully!")
+        log_v(f"Created Package.pkg file in {package_file_path}", verbose=verbose)
+        log(f"{package_name} folder structure created successfully!", verbose=verbose)
         return False
 
 
@@ -150,21 +160,19 @@ def main():
     project_path = args.project_path
     apj_file = utils.get_and_check_project_file(project_path)
 
-    utils.set_verbose(args.verbose)
-
     utils.log(f"Project path validated: {project_path}")
     utils.log(f"Using project file: {apj_file}\n")
 
     # Get all folders in the Physical directory
     physical_path = Path(project_path) / "Physical"
     if not physical_path.is_dir():
-        utils.log("Could not find Physical folder")
+        utils.log("Could not find Physical folder", severity="ERROR")
         return
 
     config_folders = [f for f in physical_path.iterdir() if f.is_dir()]
     for config_folder in config_folders:
         # Check if mappServices folder exists in the config folder directory
-        utils.log(f"\nFound configuration folder: {config_folder.name}")
+        utils.log(f"Found configuration folder: {config_folder.name}", severity="INFO")
 
         # Check for sub folders in the config folder
         subfolders = [sf for sf in config_folder.iterdir() if sf.is_dir()]
@@ -178,6 +186,7 @@ def main():
             config_folder.name,
             "mappServices",
             "mappServices",
+            args.verbose,
         )
 
         # Add mappMotion package
@@ -187,6 +196,7 @@ def main():
             config_folder.name,
             "mappMotion",
             "mappMotion",
+            args.verbose,
         )
 
         # Add mappView package
@@ -196,10 +206,12 @@ def main():
             config_folder.name,
             "mappView",
             "mappViewControl",
+            args.verbose,
         )
 
     utils.log(
-        f"\nPlease close and reopen the project in Automation Studio to see the changes."
+        f"Please close and reopen the project in Automation Studio to see the changes.",
+        severity="INFO",
     )
 
 
