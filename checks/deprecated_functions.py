@@ -207,19 +207,12 @@ def process_st_c_file(file_path, patterns):
     return results
 
 
-def check_functions(
-    project_root,
-    log,
-    verbose=False,
-    obsolete_function_blocks=None,
-    obsolete_functions=None,
-    deprecated_string_functions=None,
-    deprecated_math_functions=None,
-):
+def check_functions(project_root, log, verbose=False):
     log("─" * 80 + "\nChecking for obsolete and deprecated FUBs and functions...")
 
     logical_path = Path(project_root) / "Logical"
 
+    obsolete_function_blocks = utils.load_discontinuation_info("obsolete_fbks")
     invalid_var_typ_files = utils.scan_files_parallel(
         logical_path,
         [".var", ".typ"],
@@ -227,6 +220,7 @@ def check_functions(
         obsolete_function_blocks,
     )
 
+    obsolete_functions = utils.load_discontinuation_info("obsolete_funcs")
     invalid_st_c_files = utils.scan_files_parallel(
         logical_path,
         [".st", ".c", ".cpp"],
@@ -236,6 +230,10 @@ def check_functions(
 
     check_obsolete_functions(log, verbose, invalid_var_typ_files, invalid_st_c_files)
 
+    deprecated_string_functions = utils.load_discontinuation_info(
+        "deprecated_string_functions"
+    )
+    deprecated_math_functions = utils.load_discontinuation_info("deprecated_math_functions")
     check_deprecated_functions(
         project_root,
         log,

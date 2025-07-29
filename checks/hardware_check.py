@@ -30,9 +30,10 @@ def process_hw_file(file_path, hardware_dict):
     return list(results)  # Convert back to a list for consistency
 
 
-def check_hardware(physical_path, log, verbose=False, unsupported_hardware=None):
+def check_hardware(physical_path, log, verbose=False):
     log("─" * 80 + "\nChecking for invalid hardware...")
 
+    unsupported_hardware = utils.load_discontinuation_info("unsupported_hw")
     hardware_results = utils.scan_files_parallel(
         physical_path,
         [".hw"],

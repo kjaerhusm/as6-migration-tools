@@ -2,53 +2,11 @@ import os
 import sys
 import re
 import time
-import json
 import argparse
 from pathlib import Path
 
 from checks import *
 from utils import utils
-
-# path to the current script
-script_directory = Path(__file__).resolve().parent
-
-# files containing discontinuation information
-discontinuation_info = {
-    "obsolete_libs": {},
-    "manual_process_libs": {},
-    "obsolete_fbks": {},
-    "obsolete_funcs": {},
-    "unsupported_hw": {},
-    "deprecated_string_functions": {},
-    "deprecated_math_functions": {},
-}
-
-try:
-    discontinuation_dir = Path(script_directory) / "discontinuations"
-    for filename in discontinuation_info:
-        file_path = discontinuation_dir / f"{filename}.json"
-        with file_path.open("r", encoding="utf-8") as json_file:
-            discontinuation_info[filename] = json.load(json_file)
-except Exception as e:
-    utils.log(f"Error reading discontinuation lists: {e}", severity="ERROR")
-    sys.exit(1)
-
-# obsolete libraries with reasons
-obsolete_dict = discontinuation_info["obsolete_libs"]
-# Libraries that must be handled manually
-manual_process_libraries = discontinuation_info["manual_process_libs"]
-# list of obsolete function blocks with reasons
-obsolete_function_blocks = discontinuation_info["obsolete_fbks"]
-# Hardcoded list of obsolete functions with reasons
-obsolete_functions = discontinuation_info["obsolete_funcs"]
-# hardware not supported by >= 6.0
-unsupported_hardware = discontinuation_info["unsupported_hw"]
-# deprecated string functions 8 bit and 16 bit
-deprecated_string_functions = set(discontinuation_info["deprecated_string_functions"])
-# deprecated math functions
-deprecated_math_functions = set(discontinuation_info["deprecated_math_functions"])
-
-pass
 
 
 def parse_args():
@@ -144,22 +102,16 @@ def main():
 
             check_uad_files(physical_path, log, args.verbose)
 
-            check_hardware(physical_path, log, args.verbose, unsupported_hardware)
+            check_hardware(physical_path, log, args.verbose)
 
             check_file_devices(physical_path, log, args.verbose)
 
-            check_libraries(
-                logical_path, log, args.verbose, manual_process_libraries, obsolete_dict
-            )
+            check_libraries(logical_path, log, args.verbose)
 
             check_functions(
                 args.project_path,
                 log,
                 args.verbose,
-                obsolete_function_blocks,
-                obsolete_functions,
-                deprecated_string_functions,
-                deprecated_math_functions,
             )
 
             # Find Safety system issues

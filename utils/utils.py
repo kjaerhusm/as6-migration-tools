@@ -1,6 +1,7 @@
 # Utilities to call in multiple files
 import concurrent.futures
 import hashlib
+import json
 import os
 import sys
 from pathlib import Path
@@ -198,3 +199,15 @@ def scan_files_parallel(root_dir, extensions, process_functions, *args):
         return results[process_functions[0].__name__]
     else:
         return results
+
+
+def load_discontinuation_info(filename):
+    try:
+        root_path = Path(__file__).resolve().parent.parent
+        discontinuation_dir = root_path / "discontinuations"
+        file_path = discontinuation_dir / f"{filename}.json"
+        with file_path.open("r", encoding="utf-8") as json_file:
+            return json.load(json_file)
+    except Exception as e:
+        log(f"Error loading JSON file '{filename}': {e}", severity="ERROR")
+        return {}

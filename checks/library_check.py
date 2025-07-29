@@ -104,11 +104,10 @@ def process_manual_libraries(file_path, patterns):
     return results
 
 
-def check_libraries(
-    logical_path, log, verbose=False, manual_process_libraries=None, obsolete_dict=None
-):
+def check_libraries(logical_path, log, verbose=False):
     log("─" * 80 + "\nChecking for invalid libraries and dependencies...")
 
+    manual_process_libraries = utils.load_discontinuation_info("manual_process_libs")
     manual_libs_results = utils.scan_files_parallel(
         logical_path,
         [".pkg"],
@@ -116,6 +115,7 @@ def check_libraries(
         manual_process_libraries,
     )
 
+    obsolete_dict = utils.load_discontinuation_info("obsolete_libs")
     invalid_pkg_files = utils.scan_files_parallel(
         logical_path,
         [".pkg"],
