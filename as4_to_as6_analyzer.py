@@ -30,10 +30,7 @@ try:
         with file_path.open("r", encoding="utf-8") as json_file:
             discontinuation_info[filename] = json.load(json_file)
 except Exception as e:
-    print(
-        f"\033[1;31m[ERROR]\033[0m Error reading discontinuation lists: {e}",
-        file=sys.stderr,
-    )
+    utils.log(f"Error reading discontinuation lists: {e}", severity="ERROR")
     sys.exit(1)
 
 # obsolete libraries with reasons
@@ -109,13 +106,13 @@ def main():
     """
 
     build_number = utils.get_build_number()
-    print(f"Script build number: {build_number}")
+    utils.log(f"Script build number: {build_number}")
 
     args = parse_args()
     apj_file = utils.get_and_check_project_file(args.project_path)
 
-    print(f"Project path validated: {args.project_path}")
-    print(f"Using project file: {apj_file}")
+    utils.log(f"Project path validated: {args.project_path}")
+    utils.log(f"Using project file: {apj_file}")
 
     output_file = os.path.join(args.project_path, "as4_to_as6_analyzer_result.txt")
     with open(output_file, "w", encoding="utf-8") as file:
