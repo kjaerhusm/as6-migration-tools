@@ -6,3 +6,4 @@ from .mapp_services import check_mapp_version
 from .file_compatibility import check_files_for_compatibility
 from .safety_check import check_safety
 from .hardware_check import check_hardware
+from .file_device_check import check_file_devices
