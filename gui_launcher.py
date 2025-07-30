@@ -366,27 +366,16 @@ class ModernMigrationGUI:
         sys.stdout = redirector
         sys.stderr = redirector
 
+        error_message = None
         if not os.path.exists(folder):
-            utils.log(
-                f"Folder does not exist: {folder}",
-                severity="ERROR",
-            )
-            self.spinner_running = False
-            return
+            error_message = f"Folder does not exist: {folder}"
+        elif not self.is_valid_as4_project(folder):
+            error_message = f"Folder is not a valid AS4 project: {folder}"
+        elif not os.path.exists(script):
+            error_message = f"Script not found: {script}"
 
-        if not self.is_valid_as4_project(folder):
-            utils.log(
-                f"Folder is not a valid AS4 project: {folder}",
-                severity="ERROR",
-            )
-            self.spinner_running = False
-            return
-
-        if not os.path.exists(script):
-            utils.log(
-                f"Script not found:{script}",
-                severity="ERROR",
-            )
+        if error_message:
+            utils.log(error_message, severity="ERROR")
             self.spinner_running = False
             return
 
