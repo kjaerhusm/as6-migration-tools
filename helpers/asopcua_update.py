@@ -131,7 +131,7 @@ def main():
         )
         if proceed != "y":
             utils.log("Operation cancelled. No changes were made.", severity="WARNING")
-            sys.exit(0)
+            return
     else:
         utils.log(f"Libraries found: {', '.join(found_libraries)}.", severity="INFO")
         proceed = utils.ask_user(
@@ -140,7 +140,7 @@ def main():
         )
         if proceed != "y":
             utils.log("Operation cancelled. No changes were made.", severity="WARNING")
-            sys.exit(0)
+            return
 
     fb_mapping = {
         "UA_EventItemOperate": "UA_EventItemOperateList",
