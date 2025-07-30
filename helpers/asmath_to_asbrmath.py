@@ -41,8 +41,9 @@ def replace_functions_and_constants(
         if original_hash == new_hash:
             return function_replacements, constant_replacements, False
 
-        print(
-            f"{function_replacements + constant_replacements:4d} changes written to: {file_path}"
+        utils.log(
+            f"{function_replacements + constant_replacements:4d} changes written to: {file_path}",
+            severity="INFO",
         )
         return function_replacements, constant_replacements, True
 
@@ -55,13 +56,11 @@ def check_for_asmath_library(project_path):
     """
     pkg_file = Path(project_path) / "Logical" / "Libraries" / "Package.pkg"
     if not pkg_file.is_file():
-        # print(f"Debug: Could not find Package.pkg file in: {pkg_file}")
         return False
 
     content = pkg_file.read_text(encoding="iso-8859-1", errors="ignore")
 
     if "AsMath" in content:
-        print("AsMath library found in Package.pkg!\n")
         return True
 
     return False
@@ -76,31 +75,37 @@ def main():
 
     apj_file = utils.get_and_check_project_file(project_path)
 
-    print(f"Project path validated: {project_path}")
-    print(f"Using project file: {apj_file}\n")
+    utils.log(f"Project path validated: {project_path}")
+    utils.log(f"Using project file: {apj_file}\n")
 
-    print("Checking for AsMath library in the project...")
+    utils.log("Checking for AsMath library in the project...")
     library_found = check_for_asmath_library(project_path)
 
-    print(
-        "This script will search for usages of AsMath functions and constants and replace them with the AsBrMath equivalents.\n"
-        "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n"
+    utils.log(
+        "This script will search for usages of AsMath functions and constants and replace them with the AsBrMath equivalents.",
+        severity="INFO",
+    )
+    utils.log(
+        "Before proceeding, make sure you have a backup or are using version control (e.g., Git).",
+        severity="WARNING",
     )
 
     if not library_found:
-        print("AsMath library not found.")
+        utils.log("AsMath library not found.", severity="INFO")
         proceed = utils.ask_user(
             "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
-            extra_note="Note: This script only updates code. You must manually remove 'AsMath' and add 'AsBrMath' in the library manager. Compatible with both AS4 and AS6 after that.",
+            extra_note="Note: This script only updates code. You must manually remove 'AsMath' and add 'AsBrMath' in the library manager. "
+                       "Compatible with both AS4 and AS6 after that.",
         )
     else:
+        utils.log("AsMath library found in Package.pkg!", severity="INFO")
         proceed = utils.ask_user(
             "Do you want to continue? (y/n) [y]: ",
             extra_note="Note: After replacing the code, remember to swap the library from 'AsMath' to 'AsBrMath' manually.",
         )
 
     if proceed != "y":
-        print("Operation cancelled. No changes were made.")
+        utils.log("Operation cancelled. No changes were made.", severity="WARNING")
         return
 
     function_mapping = {
@@ -159,15 +164,15 @@ def main():
                 total_constant_replacements += constant_replacements
                 total_files_changed += 1
 
-    print("\nSummary:")
-    print(f"Total functions replaced: {total_function_replacements}")
-    print(f"Total constants replaced: {total_constant_replacements}")
-    print(f"Total files changed: {total_files_changed}")
+    utils.log("─" * 80 + "\nSummary:")
+    utils.log(f"Total functions replaced: {total_function_replacements}")
+    utils.log(f"Total constants replaced: {total_constant_replacements}")
+    utils.log(f"Total files changed: {total_files_changed}")
 
     if total_function_replacements == 0 and total_constant_replacements == 0:
-        print("\nNo functions or constants needed to be replaced.")
+        utils.log("No functions or constants needed to be replaced.", severity="INFO")
     else:
-        print("\nReplacement completed successfully.")
+        utils.log("Replacement completed successfully.", severity="INFO")
 
 
 if __name__ == "__main__":
