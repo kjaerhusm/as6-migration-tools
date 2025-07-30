@@ -36,7 +36,7 @@ def replace_enums(file_path: Path, enum_mapping):
         if original_hash == new_hash:
             return enum_replacements, False
 
-        print(f"{enum_replacements :4d} changes written to: {file_path}")
+        utils.log(f"{enum_replacements :4d} changes written to: {file_path}", severity="INFO")
         return enum_replacements, True
 
     return enum_replacements, False
@@ -80,8 +80,9 @@ def replace_fbs_and_types(file_path: Path, fb_mapping, type_mapping):
         if original_hash == new_hash:
             return fb_replacements, type_replacements, False
 
-        print(
-            f"{fb_replacements + type_replacements:4d} changes written to: {file_path}"
+        utils.log(
+            f"{fb_replacements + type_replacements:4d} changes written to: {file_path}",
+            severity="INFO",
         )
         return fb_replacements, type_replacements, True
 
@@ -95,7 +96,7 @@ def check_for_library(project_path: Path, library_names):
 
     pkg_file = project_path / "Logical" / "Libraries" / "Package.pkg"
     if not pkg_file.is_file():
-        print(f"Error: Could not find Package.pkg file in: {pkg_file}")
+        utils.log(f"Could not find Package.pkg file in: {pkg_file}", severity="ERROR")
         return []
 
     content = pkg_file.read_text(encoding="iso-8859-1", errors="ignore")
@@ -106,35 +107,39 @@ def main():
     project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
     apj_file = utils.get_and_check_project_file(project_path)
 
-    print(f"Project path validated: {project_path}")
-    print(f"Using project file: {apj_file}\n")
+    utils.log(f"Project path validated: {project_path}")
+    utils.log(f"Using project file: {apj_file}\n")
 
     project_path = Path(project_path)
     library_names = ["AsOpcUac", "AsOpcUas"]
     found_libraries = check_for_library(project_path, library_names)
 
-    print(
-        "This script will search for usages of AsOpcUac and AsOpcUas function blocks, types and enumerators and update the naming.\n"
-        "Before proceeding, make sure you have a backup or are using version control (e.g., Git).\n"
+    utils.log(
+        "This script will search for usages of AsOpcUac and AsOpcUas function blocks, types and enumerators and update the naming.",
+        severity="INFO",
+    )
+    utils.log(
+        "Before proceeding, make sure you have a backup or are using version control (e.g., Git).",
+        severity="WARNING",
     )
 
     if not found_libraries:
-        print("Neither AsOpcUac nor AsOpcUas libraries found.\n")
+        utils.log("Neither AsOpcUac nor AsOpcUas libraries found.", severity="INFO")
         proceed = utils.ask_user(
             "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
             extra_note="After conversion, the project will no longer compile in Automation Studio 4.",
         )
         if proceed != "y":
-            print("Operation cancelled. No changes were made.")
+            utils.log("Operation cancelled. No changes were made.", severity="WARNING")
             sys.exit(0)
     else:
-        print(f"Libraries found: {', '.join(found_libraries)}.\n")
+        utils.log(f"Libraries found: {', '.join(found_libraries)}.", severity="INFO")
         proceed = utils.ask_user(
             "Do you want to continue? (y/n) [y]: ",
             extra_note="After conversion, the project will no longer compile in Automation Studio 4.",
         )
         if proceed != "y":
-            print("Operation cancelled. No changes were made.")
+            utils.log("Operation cancelled. No changes were made.", severity="WARNING")
             sys.exit(0)
 
     fb_mapping = {
@@ -198,20 +203,20 @@ def main():
                 total_function_replacements += function_replacements
                 total_files_changed += 1
 
-    print("\nSummary:")
-    print(f"Total function blocks replaced: {total_function_replacements}")
-    print(f"Total enumerators replaced: {total_enums_replacements}")
-    print(f"Total types replaced: {total_type_replacements}")
-    print(f"Total files changed: {total_files_changed}")
+    utils.log("─" * 80 + "\nSummary:")
+    utils.log(f"Total function blocks replaced: {total_function_replacements}")
+    utils.log(f"Total enumerators replaced: {total_enums_replacements}")
+    utils.log(f"Total types replaced: {total_type_replacements}")
+    utils.log(f"Total files changed: {total_files_changed}")
 
     if (
         total_function_replacements == 0
         and total_enums_replacements == 0
         and total_type_replacements == 0
     ):
-        print("No functions or constants needed to be replaced.")
+        utils.log("No functions or constants needed to be replaced.", severity="INFO")
     else:
-        print("Replacement completed successfully.")
+        utils.log("Replacement completed successfully.", severity="INFO")
 
 
 if __name__ == "__main__":
