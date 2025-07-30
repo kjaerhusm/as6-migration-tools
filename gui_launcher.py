@@ -389,8 +389,6 @@ class ModernMigrationGUI:
             )
             self.spinner_running = False
             return
-            self.spinner_running = False
-            return
 
         if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
             stdlib_path = Path(sys._MEIPASS) / "lib"
