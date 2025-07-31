@@ -55,10 +55,10 @@
     "MpEnergy": "Temporarily removed. The component did not meet customer use cases. A reassessment of energy monitoring is underway to determine the future direction and improvements",
     "MpTweet": "Temporarily removed due to limited use cases. Alternative communication methods are currently being researched, and this function may return in a different form",
     "MpOee": "Temporarily removed due to low demand. The functionality of these components is currently being reviewed",
-    "MpAssetInt": "Temporarily removed due to low demand. The functionality of these components is currently being reviewed - check https://github.com/br-automation-com/mappAssetIntEx",
+    "MpAssetInt": "Temporarily removed due to low demand. The functionality of these components is currently being reviewed - check https://github.com/br-automation-community/mappAssetIntEx",
     "BrAbbRws": "Not supported right now but might be in the future",
     "AsDb": "This library is no longer available from operating system version AR 6.1.",
     "AsWndCon": "The library is not supported in Automation Studio 6.1 - check MTWinder",
-    "IotMqtt": "The library IotMqtt may be built with an obsolete version (\u2264 4.73.0), which is not compatible with AS6. - You can check for an updated AS6-compatible version here: https://github.com/br-automation-com",
-    "PahoMQTT": "The library PahoMQTT may be built with an obsolete version (\u2264 4.73.0), which is not compatible with AS6. - You can check for an updated AS6-compatible version here: https://github.com/br-automation-com"
+    "IotMqtt": "The library IotMqtt may be built with an obsolete version (\u2264 4.73.0), which is not compatible with AS6. - You can check for an updated AS6-compatible version here: https://github.com/br-automation-community",
+    "PahoMQTT": "The library PahoMQTT may be built with an obsolete version (\u2264 4.73.0), which is not compatible with AS6. - You can check for an updated AS6-compatible version here: https://github.com/br-automation-community"
 }
