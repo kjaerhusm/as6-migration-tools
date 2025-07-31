@@ -91,11 +91,7 @@ def main():
 
             check_libraries(logical_path, log, args.verbose)
 
-            check_functions(
-                args.project_path,
-                log,
-                args.verbose,
-            )
+            check_functions(args.project_path, log, args.verbose)
 
             # Find Safety system issues
             check_safety(args.project_path, log, args.verbose)
