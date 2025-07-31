@@ -46,13 +46,17 @@ def check_mapp_version(directory, log, verbose=False):
 
         # Check for mappMotion version 5.x
         if "<mappMotion " in line and 'Version="5.' in line:
-            log("Detected Mapp Motion version: 5.x", severity="INFO")
-            log(
-                "\nYou must first upgrade mappMotion to version 6.0 using 'Change runtime versions' in AS6."
-                "\nOnce mappMotion 6.0 is set, a dialog will assist with converting all project configurations.",
-                when="AS6",
-                severity="MANDATORY",
-            )
+            match = re.search(r'Version="(\d+)\.(\d+)', line)
+            if match:
+                major, minor = int(match.group(1)), int(match.group(2))
+                version_str = f"{major}.{minor}"
+                log(f"Detected Mapp Motion version: {version_str}", severity="INFO")
+                log(
+                    "\nYou must first upgrade mappMotion to version 6.0 using 'Change runtime versions' in AS6."
+                    "\nOnce mappMotion 6.0 is set, a dialog will assist with converting all project configurations.",
+                    when="AS6",
+                    severity="MANDATORY",
+                )
 
     # Make sure all mapp folders are present in the Physical directory
     # Get all folders in the Physical directory
