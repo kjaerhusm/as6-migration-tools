@@ -1,21 +1,14 @@
 import re
-from pathlib import Path
 
 
-def check_mapp_version(directory, log, verbose=False):
+def check_mapp_version(apj_path, log, verbose=False):
     """
     Checks for the mapp Services version in the .apj project file.
     """
 
     log("─" * 80 + "\nChecking mapp version in project file...")
 
-    apj_file = next(Path(directory).glob("*.apj"), None)
-    if not apj_file:
-        log(f"Could not open apj file", severity="ERROR")
-        return
-
     # If no .apj file is found, return an empty list
-    apj_path = Path(apj_file)
     for line in apj_path.read_text(encoding="utf-8", errors="ignore").splitlines():
         # Check for mapp Services version in the .apj file
         if ("<mapp " in line and "Version=" in line) or (
@@ -60,9 +53,9 @@ def check_mapp_version(directory, log, verbose=False):
 
     # Make sure all mapp folders are present in the Physical directory
     # Get all folders in the Physical directory
-    physical_path = Path(directory) / "Physical"
+    physical_path = apj_path.parent / "Physical"
     if not physical_path.is_dir():
-        log(f"Could not find Physical in {directory}", severity="ERROR")
+        log(f"Could not find Physical in {apj_path.parent}", severity="ERROR")
         return
 
     # Check if relevant mapp folders exists in the config folder directory

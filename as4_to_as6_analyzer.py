@@ -75,6 +75,7 @@ def main():
 
             check_project_path_and_name(args.project_path, apj_file, log, args.verbose)
 
+            apj_path = Path(args.project_path) / apj_file
             logical_path = Path(args.project_path) / "Logical"
             physical_path = Path(args.project_path) / "Physical"
 
@@ -91,19 +92,19 @@ def main():
 
             check_libraries(logical_path, log, args.verbose)
 
-            check_functions(args.project_path, log, args.verbose)
+            check_functions(logical_path, log, args.verbose)
 
             # Find Safety system issues
-            check_safety(args.project_path, log, args.verbose)
+            check_safety(apj_path, log, args.verbose)
 
             # Find mappVision issues
-            check_vision_settings(args.project_path, log, args.verbose)
+            check_vision_settings(apj_path, log, args.verbose)
 
             # Find mappView issues
-            check_mappView(args.project_path, log, args.verbose)
+            check_mappView(apj_path, log, args.verbose)
 
             # Find mappService issues
-            check_mapp_version(args.project_path, log, args.verbose)
+            check_mapp_version(apj_path, log, args.verbose)
 
             # Finish up
             end_time = time.time()

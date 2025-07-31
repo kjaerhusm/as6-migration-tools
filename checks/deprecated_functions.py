@@ -57,14 +57,12 @@ def check_deprecated_math_functions(root_dir, extensions, deprecated_functions):
 
 
 def check_deprecated_functions(
-    project_root,
+    logical_path,
     log,
     verbose=False,
     deprecated_string_functions=None,
     deprecated_math_functions=None,
 ):
-    logical_path = Path(project_root) / "Logical"
-
     # Store the list of files containing deprecated string functions
     deprecated_string_files = check_deprecated_string_functions(
         logical_path,
@@ -207,10 +205,8 @@ def process_st_c_file(file_path, patterns):
     return results
 
 
-def check_functions(project_root, log, verbose=False):
+def check_functions(logical_path, log, verbose=False):
     log("─" * 80 + "\nChecking for obsolete and deprecated FUBs and functions...")
-
-    logical_path = Path(project_root) / "Logical"
 
     obsolete_function_blocks = utils.load_discontinuation_info("obsolete_fbks")
     invalid_var_typ_files = utils.scan_files_parallel(
@@ -235,7 +231,7 @@ def check_functions(project_root, log, verbose=False):
     )
     deprecated_math_functions = utils.load_discontinuation_info("deprecated_math_functions")
     check_deprecated_functions(
-        project_root,
+        logical_path,
         log,
         verbose,
         deprecated_string_functions,

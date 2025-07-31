@@ -1,16 +1,15 @@
 import re
 import xml.etree.ElementTree as ET
-from pathlib import Path
 
 
-def check_safety_release(project_root, log, verbose=False):
+def check_safety_release(apj_path, log, verbose=False):
     """
     Checks if the project uses MappSafety or SafetyRelease.
     """
-    project_root = Path(project_root)
+
+    project_root = apj_path.parent
 
     # 1. Check .apj file in root for MappSafety
-    apj_path = next(project_root.glob("*.apj"), None)
     if apj_path:
         try:
             tree = ET.parse(apj_path)
@@ -57,7 +56,7 @@ def check_safety_release(project_root, log, verbose=False):
     return False
 
 
-def check_safety(project_root, log, verbose=False):
+def check_safety(apj_path, log, verbose=False):
     """
     Args:
         project_root: path of the project
@@ -68,7 +67,7 @@ def check_safety(project_root, log, verbose=False):
 
     log("─" * 80 + "\nChecking for safety...")
 
-    found = check_safety_release(project_root, log, verbose)
+    found = check_safety_release(apj_path, log, verbose)
     findings = []
 
     if not found:
