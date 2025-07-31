@@ -95,7 +95,7 @@ def main():
         proceed = utils.ask_user(
             "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
             extra_note="Note: This script only updates code. You must manually remove 'AsMath' and add 'AsBrMath' in the library manager. "
-                       "Compatible with both AS4 and AS6 after that.",
+            "Compatible with both AS4 and AS6 after that.",
         )
     else:
         utils.log("AsMath library found in Package.pkg!", severity="INFO")

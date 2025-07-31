@@ -192,7 +192,9 @@ def check_for_library(project_path, library_names):
     """
     pkg_file = Path(project_path) / "Logical" / "Libraries" / "Package.pkg"
     if not pkg_file.is_file():
-        utils.log(f"Error: Could not find Package.pkg file in: {pkg_file}", severity="ERROR")
+        utils.log(
+            f"Error: Could not find Package.pkg file in: {pkg_file}", severity="ERROR"
+        )
         return []
 
     content = pkg_file.read_text(encoding="iso-8859-1", errors="ignore")
@@ -236,7 +238,9 @@ def main():
     )
 
     if not found_libraries:
-        utils.log("None of the libraries supported by the script were found.", severity="INFO")
+        utils.log(
+            "None of the libraries supported by the script were found.", severity="INFO"
+        )
         proceed = utils.ask_user(
             "Do you want to proceed with replacing functions and constants anyway? (y/n) [y]: ",
             extra_note="After conversion, the project will no longer compile in Automation Studio 4.",
@@ -332,11 +336,15 @@ def main():
             continue
         if file_path.suffix in {".st", ".c", ".cpp", ".ab"}:
             warn_inputs(file_path, input_mapping_warning)
-            enum_replacements, changed = replace_enums(file_path, enum_mapping, args.verbose)
+            enum_replacements, changed = replace_enums(
+                file_path, enum_mapping, args.verbose
+            )
             if changed:
                 total_enums_replacements += enum_replacements
                 total_files_changed += 1
-            input_replacements, changed = replace_inputs(file_path, input_mapping, args.verbose)
+            input_replacements, changed = replace_inputs(
+                file_path, input_mapping, args.verbose
+            )
             if changed:
                 total_input_replacements += input_replacements
                 total_files_changed += 1
@@ -348,7 +356,6 @@ def main():
                 total_type_replacements += type_replacements
                 total_function_replacements += function_replacements
                 total_files_changed += 1
-
 
     utils.log("─" * 80 + "\nSummary:")
     utils.log(f"Total function blocks replaced: {total_function_replacements}")
@@ -366,7 +373,9 @@ def main():
             total_input_replacements,
         ]
     ):
-        utils.log("No functions, inputs or constants needed to be replaced.", severity="INFO")
+        utils.log(
+            "No functions, inputs or constants needed to be replaced.", severity="INFO"
+        )
     else:
         utils.log("Replacement completed successfully.", severity="INFO")
 

@@ -36,7 +36,9 @@ def replace_enums(file_path: Path, enum_mapping):
         if original_hash == new_hash:
             return enum_replacements, False
 
-        utils.log(f"{enum_replacements :4d} changes written to: {file_path}", severity="INFO")
+        utils.log(
+            f"{enum_replacements :4d} changes written to: {file_path}", severity="INFO"
+        )
         return enum_replacements, True
 
     return enum_replacements, False

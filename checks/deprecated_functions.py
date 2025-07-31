@@ -229,7 +229,9 @@ def check_functions(logical_path, log, verbose=False):
     deprecated_string_functions = utils.load_discontinuation_info(
         "deprecated_string_functions"
     )
-    deprecated_math_functions = utils.load_discontinuation_info("deprecated_math_functions")
+    deprecated_math_functions = utils.load_discontinuation_info(
+        "deprecated_math_functions"
+    )
     check_deprecated_functions(
         logical_path,
         log,
