@@ -11,7 +11,7 @@ def check_files_for_compatibility(directory, extensions, log, verbose=False):
 
     incompatible_files = []
     required_version_prefix = "4.12"
-    version_pattern = re.compile(r'AutomationStudio Version="?([\d.]+)')
+    version_pattern = re.compile(r'AutomationStudio (?:Working)?Version="?([\d.]+)')
 
     for ext in extensions:
         for path in Path(directory).rglob(f"*{ext}"):
