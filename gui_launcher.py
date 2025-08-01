@@ -235,6 +235,7 @@ class ModernMigrationGUI:
         entry = ctk.CTkEntry(
             frame, textvariable=self.selected_folder, font=FIELD_FONT, width=1000
         )
+        entry.bind("<Double-Button-1>", lambda e: self.browse_folder())
         entry.grid(row=1, column=0, sticky="ew", padx=(0, 10), pady=(0, 5))
         self.browse_button = ctk.CTkButton(
             frame,
