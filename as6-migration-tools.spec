@@ -12,7 +12,7 @@ a = Analysis(
         ('checks/*', 'checks'),
         ('discontinuations/*', 'discontinuations'),
         ('version.txt', '.'),
-        ('br_icon.ico', '.'),
+        ('gui_icon.ico', '.'),
         ('as4_to_as6_analyzer.py', '.'),
         ('helpers/*', 'helpers'),
     ],

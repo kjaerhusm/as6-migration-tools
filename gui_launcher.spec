@@ -15,7 +15,11 @@ a = Analysis(
         ('checks/*.py', 'checks'),
         ('utils/*.py', 'utils'),
     ],
-    hiddenimports=[],
+    hiddenimports=[
+        'CTkMessagebox',
+        'tkinter',
+        'lxml', 'lxml.etree', 'lxml._elementpath'
+    ],
     hookspath=[],
     runtime_hooks=[],
     excludes=[],
