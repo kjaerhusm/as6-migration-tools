@@ -134,7 +134,7 @@ def add_mapp_package(
         package_file_path.write_text(package_content, encoding="utf-8")
 
         log_v(f"Created Package.pkg file in {package_file_path}", verbose=verbose)
-        log(f"{package_name} folder structure created successfully!", verbose=verbose)
+        log_v(f"{package_name} folder structure created successfully!", verbose=verbose)
         return False
 
 
