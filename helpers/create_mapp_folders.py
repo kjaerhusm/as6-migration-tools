@@ -172,6 +172,7 @@ def main():
     config_folders = [f for f in physical_path.iterdir() if f.is_dir()]
     for config_folder in config_folders:
         # Check if mappServices folder exists in the config folder directory
+        utils.log("─" * 80)
         utils.log(f"Found configuration folder: {config_folder.name}", severity="INFO")
 
         # Check for sub folders in the config folder
@@ -209,6 +210,7 @@ def main():
             args.verbose,
         )
 
+    utils.log("─" * 80)
     utils.log(
         f"Please close and reopen the project in Automation Studio to see the changes.",
         severity="INFO",
