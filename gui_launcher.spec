@@ -14,6 +14,7 @@ a = Analysis(
         ('as4_to_as6_analyzer.py', '.'),
         ('checks/*.py', 'checks'),
         ('utils/*.py', 'utils'),
+        ('links/*.json', 'links')
     ],
     hiddenimports=[
         'CTkMessagebox',
