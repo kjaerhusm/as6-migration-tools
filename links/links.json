@@ -1,0 +1,4 @@
+{
+    "Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg": {"prefix": "opc_ua_help", "url": "configuration/runtime/opcua_runtimeconfiguration.html"},
+    "Configuration View/mappView/Config.mappviewcfg": {"prefix": "mapp_view_help", "url": "engineering/organization/mappviewconfiguration/mappviewconfiguration.html"}
+}
