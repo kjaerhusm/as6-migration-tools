@@ -1,4 +1,6 @@
 {
     "Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg": {"prefix": "opc_ua_help", "url": "configuration/runtime/opcua_runtimeconfiguration.html"},
-    "Configuration View/mappView/Config.mappviewcfg": {"prefix": "mapp_view_help", "url": "engineering/organization/mappviewconfiguration/mappviewconfiguration.html"}
+    "Configuration View/mappView/Config.mappviewcfg": {"prefix": "mapp_view_help", "url": "engineering/organization/mappviewconfiguration/mappviewconfiguration.html"},
+    "AR/Features_and_changes": {"prefix": "", "url": "revinfos/version-info/new_functions/features_and_changes.html"},
+    "AS4/Migration": {"prefix": "as4_migration", "url": "notwendige_anpassungen_im_automation_studio_4_projekt.html"}
 }

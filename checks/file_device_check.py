@@ -83,7 +83,9 @@ def check_file_devices(physical_path, log, verbose=False):
         log(
             "\nWrite operations on a system partition (C:, D:, E:) are not allowed. In the event of error, "
             "a write operation could destroy the system partition so that the target system can no longer be booted.\n"
-            "The User partition USER_PATH should be used instead!\n"
+            "The User partition USER_PATH should be used instead! ("
+            + utils.url("AR/Features_and_changes")
+            + ") \n"
             "In ARsim, the directory corresponding to USER_PATH is found at \\<Project>\\Temp\\Simulation\\<Configuration>\\<CPU>\\USER\\.",
             when="AS6",
             severity="MANDATORY",

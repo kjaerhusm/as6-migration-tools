@@ -1,6 +1,8 @@
 import re
 import xml.etree.ElementTree as ET
 
+from utils import utils
+
 
 def check_safety_release(apj_path, log, verbose=False):
     """
@@ -38,7 +40,10 @@ def check_safety_release(apj_path, log, verbose=False):
                         "Legacy safety is no longer supported with AS 6.x.\n"
                         "When upgrading from a Safety Release to mapp Safety 6.x, all conversion steps from the Safety Release "
                         "to mapp Safety 5.x must be performed in AS 4.x first.\n"
-                        "More info: https://help.br-automation.com/#/en/4/safety/mapp_safety/getting-started/proj-conversion/umstieg_auf_mapp_safety_5.x.html",
+                        "More info: "
+                        + utils.url(
+                            "https://help.br-automation.com/#/en/4/safety/mapp_safety/getting-started/proj-conversion/umstieg_auf_mapp_safety_5.x.html"
+                        ),
                         when="AS4",
                         severity="MANDATORY",
                     )

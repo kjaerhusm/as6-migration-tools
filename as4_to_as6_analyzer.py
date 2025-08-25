@@ -1,7 +1,7 @@
+import argparse
 import os
 import sys
 import time
-import argparse
 from pathlib import Path
 
 from checks import *
@@ -32,14 +32,18 @@ def parse_args():
         required=False,
         help="Outputs verbose information",
     )
+    parser.add_argument(
+        "--no-file",
+        action="store_true",
+        help="Do not write a result file; log only to console/UI.",
+    )
     # Parse the arguments
 
     # Fallback if no arguments are provided (e.g. when run from GUI)
     if len(sys.argv) == 1:
-        # Default to current directory as project path
-        sys.argv += [".", "-v"]
-        # Optionally enable verbose mode by default from GUI
-        # sys.argv += ["-v"]
+        # Default to current directory as project path, verbose on,
+        # and NO file output when launched via GUI.
+        sys.argv += [".", "-v", "--no-file"]
 
     return parser.parse_args()
 
@@ -48,7 +52,7 @@ def parse_args():
 def main():
     """
     Main function to scan for obsolete libraries, function blocks, functions, and unsupported hardware.
-    Outputs the results to a file as well as the console.
+    Writes to a file only when requested; otherwise logs to console/UI only.
     """
 
     build_number = utils.get_build_number()
@@ -60,71 +64,104 @@ def main():
     utils.log(f"Project path validated: {args.project_path}")
     utils.log(f"Using project file: {apj_file}")
 
-    output_file = os.path.join(args.project_path, "as4_to_as6_analyzer_result.txt")
-    with open(output_file, "w", encoding="utf-8") as file:
+    # Decide whether to write a result file.
+    # - If parse_args() defines '--no-file' and sets it for GUI runs, no file is created.
+    # - If '--output' is provided, use it; otherwise default to the project folder.
+    no_file = bool(getattr(args, "no_file", False))
+    custom_output = getattr(args, "output", None)
+
+    output_file = None
+    file_handle = None
+    if not no_file:
+        output_file = custom_output or os.path.join(
+            args.project_path, "as4_to_as6_analyzer_result.txt"
+        )
         try:
-
-            def log(message, when="", severity=""):
-                utils.log(message, log_file=file, when=when, severity=severity)
-
-            log(
-                "Scanning started... Please wait while the script analyzes your project files.",
-            )
-
-            start_time = time.time()
-
-            check_project_path_and_name(args.project_path, apj_file, log, args.verbose)
-
-            apj_path = Path(args.project_path) / apj_file
-            logical_path = Path(args.project_path) / "Logical"
-            physical_path = Path(args.project_path) / "Physical"
-
-            file_patterns = [".apj", ".hw"]
-            check_files_for_compatibility(
-                args.project_path, file_patterns, log, args.verbose
-            )
-
-            check_uad_files(physical_path, log, args.verbose)
-
-            check_hardware(physical_path, log, args.verbose)
-
-            check_file_devices(physical_path, log, args.verbose)
-
-            check_libraries(logical_path, log, args.verbose)
-
-            check_functions(logical_path, log, args.verbose)
-
-            # Find Safety system issues
-            check_safety(apj_path, log, args.verbose)
-
-            # Find mappVision issues
-            check_vision_settings(apj_path, log, args.verbose)
-
-            # Find mappView issues
-            check_mappView(apj_path, log, args.verbose)
-
-            # Find mappService issues
-            check_mapp_version(apj_path, log, args.verbose)
-
-            # Finish up
-            end_time = time.time()
-            log(
-                "─" * 80
-                + f"\nScanning completed successfully in {end_time - start_time:.2f} seconds."
-            )
-
+            file_handle = open(output_file, "w", encoding="utf-8")
         except Exception as e:
-            error_message = f"An unexpected error occurred: {str(e)}"
-            log(error_message, severity="ERROR")
+            # If file cannot be opened, continue without file output but warn the user.
+            utils.log(
+                f"Failed to open result file '{output_file}' for writing: {e}. "
+                f"Continuing without file output.",
+                severity="WARNING",
+            )
+            output_file = None
+            file_handle = None
 
-            # Ensure log file is open before writing
+    # Unified logger: always logs to console; optionally mirrors to file if file_handle is set.
+    def log(message, when="", severity=""):
+        utils.log(message, log_file=file_handle, when=when, severity=severity)
+
+    try:
+        log(
+            "Scanning started... Please wait while the script analyzes your project files."
+        )
+        start_time = time.time()
+
+        # Validate naming and basic structure
+        check_project_path_and_name(args.project_path, apj_file, log, args.verbose)
+
+        # Resolve key paths
+        apj_path = Path(args.project_path) / apj_file
+        logical_path = Path(args.project_path) / "Logical"
+        physical_path = Path(args.project_path) / "Physical"
+
+        # Generic file compatibility checks
+        file_patterns = [".apj", ".hw"]
+        check_files_for_compatibility(
+            args.project_path, file_patterns, log, args.verbose
+        )
+
+        # Hardware & configuration checks
+        check_uad_files(physical_path, log, args.verbose)
+        check_hardware(physical_path, log, args.verbose)
+        check_file_devices(physical_path, log, args.verbose)
+
+        # Software/libraries/function checks
+        check_libraries(logical_path, log, args.verbose)
+        check_functions(logical_path, log, args.verbose)
+
+        # Special-domain checks
+        check_safety(apj_path, log, args.verbose)  # Safety system issues
+        check_vision_settings(apj_path, log, args.verbose)  # mappVision issues
+        check_mappView(apj_path, log, args.verbose)  # mappView issues
+        check_mapp_version(
+            apj_path, log, args.verbose
+        )  # mappService/mapp version issues
+
+        # Finish up
+        end_time = time.time()
+        log(
+            "─" * 80
+            + f"\nScanning completed successfully in {end_time - start_time:.2f} seconds."
+        )
+
+    except Exception as e:
+        error_message = f"An unexpected error occurred: {str(e)}"
+        # Always report to console/UI
+        utils.log(error_message, severity="ERROR")
+
+        # Append to file only if file output was enabled
+        if output_file:
             try:
                 with open(output_file, "a", encoding="utf-8") as error_log:
                     error_log.write(f"\n[ERROR] {error_message}\n")
             except Exception as log_error:
-                log(f"Failed to write error to log file: {log_error}", severity="ERROR")
+                utils.log(
+                    f"Failed to write error to log file: {log_error}", severity="ERROR"
+                )
 
-    utils.log(f"Results have been saved to {output_file}\n", log_file=None)
+    finally:
+        # Close the file handle if we opened one
+        if file_handle:
+            try:
+                file_handle.close()
+            except Exception:
+                pass
+
+    # Tail message only if a file was actually created
+    if output_file:
+        utils.log(f"Results have been saved to {output_file}\n")
 
 
 if __name__ == "__main__":

@@ -48,8 +48,9 @@ positional arguments:
   project_path   Automation Studio 4.x path containing *.apj file
 
 options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Outputs verbose information
+  -h,		--help			Show this help message and exit
+  -v,		--verbose		Outputs verbose information
+  -no-file,	--no-file		Skip creating the analysis file in the AS folder
 
 ```
 

@@ -1,10 +1,10 @@
 import importlib.util
 import os
+import re
 import sys
 import threading
 import tkinter as tk
 import webbrowser
-import re
 from pathlib import Path
 from tkinter import filedialog, messagebox
 
@@ -397,9 +397,17 @@ class ModernMigrationGUI:
 
         try:
             spec.loader.exec_module(module)
+
+            # Build sys.argv for the selected script (no restore version)
             sys.argv = ["analyzer", folder]
+
+            # Only the AS4→AS6 analyzer supports/needs --no-file from the GUI
+            if self.selected_script.get() == "Evaluate AS4 project":
+                sys.argv.append("--no-file")
+
             if verbose:
                 sys.argv.append("--verbose")
+
             module.main()
         except Exception as e:
             import traceback
