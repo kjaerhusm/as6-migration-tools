@@ -14,6 +14,7 @@ class ConsoleColors:
     MANDATORY = "\x1b[1;31m"  # Set style to bold, red foreground.
     WARNING = "\x1b[1;33m"  # Set style to bold, yellow foreground.
     INFO = "\x1b[92m"  # Set style to light green foreground.
+    UNDERLINE = "\x1b[4;94m" # Set style to underlined
 
 
 def get_build_number():
@@ -23,6 +24,11 @@ def get_build_number():
     except Exception:
         return "?"
 
+def url(text, log_file=None):
+    if log_file:
+        return f"{text}"
+    else:
+        return f"{ConsoleColors.UNDERLINE}{text}{ConsoleColors.RESET}"
 
 def log(message, log_file=None, when="", severity=""):
     if when != "":
@@ -199,3 +205,40 @@ def load_discontinuation_info(filename):
     except Exception as e:
         log(f"Error loading JSON file '{filename}': {e}", severity="ERROR")
         return {}
+
+def load_file_info(folder, filename):
+    try:
+        root_path = Path(__file__).resolve().parent.parent
+        discontinuation_dir = root_path / folder
+        file_path = discontinuation_dir / f"{filename}.json"
+        with file_path.open("r", encoding="utf-8") as json_file:
+            return json.load(json_file)
+    except Exception as e:
+        log(f"Error loading JSON file '{filename}': {e}", severity="ERROR")
+        return {}
+
+def build_web_path(links, url):
+    item = None
+    path = "https://www.br-automation.com/en/"
+    if url in links:
+        item = links[url]
+    if item is not None:
+        if "prefix" in item:
+            if item["prefix"] == "mapp_view_license":
+                path += "products/software/mapp-technology/mapp-view/mapp-view-licensing/"
+            elif item["prefix"] == "mapp_view_widget":
+                path = "https://help.br-automation.com/#/en/6/visualization/mappview/widgets/"
+            elif item["prefix"] == "mapp_view_help":
+                path = "https://help.br-automation.com/#/en/6/visualization/mappview/"
+            elif item["prefix"] == "mapp_connect_help":
+                path = "https://help.br-automation.com/#/en/6/visualization/mappconnect/"
+            elif item["prefix"] == "opc_ua_help":
+                path = "https://help.br-automation.com/#/en/6/communication/opcua/"
+        path += item["url"]
+    else:
+        if "http" in url or "https" in url:
+            path = url
+        else:
+            path += "product/"+url
+
+    return path
