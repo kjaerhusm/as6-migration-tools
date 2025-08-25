@@ -214,29 +214,29 @@ def load_file_info(folder, filename):
 
 
 def build_web_path(links, url):
-    item = None
-    path = None
     path_web = "https://www.br-automation.com/en"
     path_help = "https://help.br-automation.com/#/en/6"
+
+    # Direct check for external links
+    if "http" in url or "https" in url:
+        return url
+
+    # Check if url is in links
     if url in links:
         item = links[url]
-    if item is not None:
-        if "prefix" in item:
-            if item["prefix"] == "mapp_view_license":
-                path = f"{path_web}/products/software/mapp-technology/mapp-view/mapp-view-licensing/"
-            elif item["prefix"] == "mapp_view_widget":
-                path = f"{path_help}/visualization/mappview/widgets/"
-            elif item["prefix"] == "mapp_view_help":
-                path = f"{path_help}/visualization/mappview/"
-            elif item["prefix"] == "mapp_connect_help":
-                path = f"{path_help}/visualization/mappconnect/"
-            elif item["prefix"] == "opc_ua_help":
-                path = f"{path_help}/communication/opcua/"
-        path += item["url"]
-    else:
-        if "http" in url or "https" in url:
-            path = url
-        else:
-            path = f"{path_web}/product/{url}"
 
-    return path
+        # Dictionary for Prefix-Mappings
+        prefix_paths = {
+            "mapp_view_license": f"{path_web}/products/software/mapp-technology/mapp-view/mapp-view-licensing/",
+            "mapp_view_widget": f"{path_help}/visualization/mappview/widgets/",
+            "mapp_view_help": f"{path_help}/visualization/mappview/",
+            "mapp_connect_help": f"{path_help}/visualization/mappconnect/",
+            "opc_ua_help": f"{path_help}/communication/opcua/",
+        }
+
+        # Get base path if we have a prefix
+        base_path = prefix_paths.get(item.get("prefix", ""), "")
+        return base_path + item["url"]
+
+    # Default-url for unknown paths
+    return f"{path_web}/product/{url}"
