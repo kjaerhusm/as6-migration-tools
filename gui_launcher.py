@@ -5,6 +5,8 @@ import sys
 import threading
 import tkinter as tk
 import webbrowser
+from datetime import datetime
+from html import escape
 from pathlib import Path
 from tkinter import filedialog, messagebox
 
@@ -53,7 +55,7 @@ class ModernMigrationGUI:
         self.status_label = None
         self.root = ctk.CTk()
 
-        # Color mapping for ANSI codes
+        # Color mapping for ANSI codes (used for GUI rendering)
         self.color_map = {
             "\x1b[1;31m": "red",  # Bold red (ERROR/MANDATORY)
             "\x1b[1;33m": "orange",  # Bold yellow (WARNING)
@@ -61,6 +63,10 @@ class ModernMigrationGUI:
             "\x1b[4;94m": "blue",  # Underline Blue (LINK)
             "\x1b[0m": "normal",  # Reset
         }
+
+        # Keep a raw buffer of everything appended to the log (including ANSI codes)
+        # This is the single source of truth for HTML export.
+        self.raw_log_buffer = []
 
         import utils.utils as shared_utils
 
@@ -429,12 +435,13 @@ class ModernMigrationGUI:
         self.script_ran.set(True)
 
     def append_log(self, message):
-        """Append message to log with color support for ANSI escape codes"""
+        """Append message to log with color support for ANSI escape codes, and keep raw buffer for HTML export."""
+        # Store raw message for HTML export
+        self.raw_log_buffer.append(message)
+
+        # Append to GUI
         self.log_text.configure(state="normal")
-
-        # Parse ANSI escape codes and apply colors
         self.parse_and_insert_colored_text(message)
-
         self.log_text.see("end")
         self.log_text.configure(state="disabled")
 
@@ -456,26 +463,20 @@ class ModernMigrationGUI:
             webbrowser.open_new(utils.build_web_path(self.links, clicked_text))
 
     def parse_and_insert_colored_text(self, text):
-        """Parse ANSI escape codes and insert text with appropriate colors"""
-        # Pattern to match ANSI escape codes
+        """Parse ANSI escape codes and insert text with appropriate colors in the GUI widget."""
         ansi_pattern = r"(\x1b\[[0-9;]*m)"
 
-        # Split text by ANSI codes
         parts = re.split(ansi_pattern, text)
-
         current_tag = "normal"
 
         for part in parts:
             if part in self.color_map:
-                # This is an ANSI code, update current tag
                 current_tag = self.color_map[part]
-            elif part:  # Only insert non-empty parts
-                # This is actual text, insert with current color tag
+            elif part:
                 start_pos = self.log_text._textbox.index("end-1c")
                 self.log_text.insert("end", part)
                 end_pos = self.log_text._textbox.index("end-1c")
 
-                # Apply the color tag to the inserted text
                 if current_tag != "normal":
                     self.log_text._textbox.tag_add(current_tag, start_pos, end_pos)
 
@@ -492,23 +493,329 @@ class ModernMigrationGUI:
     def update_status(self, message):
         self.status_label.after(0, lambda: self.status_label.configure(text=message))
 
+    # ---------------------------
+    # HTML export (Save Log)
+    # ---------------------------
+
     def save_log(self):
+        """Save the current log as a standalone .html file and open it in the default browser."""
         file_path = filedialog.asksaveasfilename(
-            defaultextension=".txt",
-            filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+            defaultextension=".html",
+            filetypes=[("HTML files", "*.html"), ("All files", "*.*")],
         )
-        if file_path:
-            try:
-                log_content = self.log_text.get("1.0", "end")
-                Path(file_path).write_text(log_content, encoding="utf-8")
-                messagebox.showinfo("Success", f"Log saved to:\n{file_path}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to save file:\n{e}")
+        if not file_path:
+            return
+        try:
+            html_content = self.generate_html_log()
+            Path(file_path).write_text(html_content, encoding="utf-8")
+            # Always open in default browser after saving
+            webbrowser.open_new_tab(Path(file_path).resolve().as_uri())
+            messagebox.showinfo("Success", f"HTML log saved to:\n{file_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save file:\n{e}")
+
+    def generate_html_log(self) -> str:
+        """
+        Convert the raw ANSI-colored log (self.raw_log_buffer) into an HTML document.
+        - Preserves colors (ERROR/WARNING/INFO) via CSS classes.
+        - Turns underline+blue segments into <a href="...">...</a> using links.json mapping.
+        - Adds a simple header with project path, date, and tool version.
+        """
+        # Fallback if raw buffer is empty (shouldn't happen if a script ran)
+        if not self.raw_log_buffer:
+            text_only = self.log_text.get("1.0", "end-1c")
+            return self._wrap_html_document(self._wrap_pre(escape(text_only)))
+
+        ansi_pattern = r"(\x1b\[[0-9;]*m)"  # SGR sequences
+        # Fast-path for known severity colors (kept for compatibility)
+        fast_color_map = {
+            "\x1b[1;31m": "red",  # ERROR/MANDATORY
+            "\x1b[1;33m": "orange",  # WARNING
+            "\x1b[92m": "green",  # INFO
+        }
+
+        body_parts = []
+        current = "normal"
+
+        # Track SGR flags to detect links robustly
+        underline_on = False
+        blue_on = False
+
+        link_buffer = []
+
+        def flush_link():
+            """Flush accumulated link text into an <a> tag and reset the link buffer."""
+            nonlocal link_buffer
+            link_text = "".join(link_buffer).strip()
+            link_buffer.clear()
+            if link_text:
+                try:
+                    href = utils.build_web_path(self.links, link_text)
+                except Exception:
+                    href = link_text  # best effort fallback
+                body_parts.append(f'<a href="{escape(href)}">{escape(link_text)}</a>')
+
+        import re as _re
+
+        for raw_line in self.raw_log_buffer:
+            tokens = _re.split(ansi_pattern, raw_line)  # keep ANSI tokens
+            for t in tokens:
+                if not t:
+                    continue
+
+                # Is this an SGR code?
+                if _re.fullmatch(ansi_pattern, t):
+                    # Parse SGR params, e.g. "1;31", "4", "94", "0"
+                    params = t[2:-1]  # strip \x1b[  and trailing m
+                    codes = []
+                    if params:
+                        for c in params.split(";"):
+                            if c.isdigit():
+                                try:
+                                    codes.append(int(c))
+                                except ValueError:
+                                    pass
+
+                    # Reset?
+                    if 0 in codes:
+                        # Leaving any modes, close a pending link if needed
+                        if current == "blue":
+                            flush_link()
+                        underline_on = False
+                        blue_on = False
+                        current = "normal"
+                        continue
+
+                    # Toggle underline/color flags (24 = underline off, 39 = default fg color)
+                    if 4 in codes:
+                        underline_on = True
+                    if 24 in codes:
+                        underline_on = False
+                    if 94 in codes:
+                        blue_on = True
+                    if 39 in codes:
+                        blue_on = False
+
+                    # Determine if we should be in link (blue+underline) mode
+                    want_blue = underline_on and blue_on
+                    if current == "blue" and not want_blue:
+                        flush_link()
+                        current = "normal"
+                        # Note: keep evaluating for severity fast-path below
+
+                    if want_blue and current != "blue":
+                        current = "blue"
+                        continue  # style change handled; next token will be text
+
+                    # Fast-path severity colors (still allow them to override normal mode)
+                    if t in fast_color_map:
+                        # If we were in link mode, close it before switching to colored spans
+                        if current == "blue":
+                            flush_link()
+                            current = "normal"
+                        current = fast_color_map[t]
+                        continue
+
+                    # Any other SGR we don't care about
+                    continue
+
+                # --- Normal text chunk ---
+                if current == "blue":
+                    # Handle possible embedded newlines inside link text
+                    s = t.replace("\r\n", "\n")
+                    parts = s.split("\n")
+                    for i, seg in enumerate(parts):
+                        if seg:
+                            link_buffer.append(seg)
+                        if i < len(parts) - 1:
+                            flush_link()
+                            body_parts.append("\n")
+                else:
+                    safe = escape(t)
+                    if current in ("red", "orange", "green"):
+                        body_parts.append(f'<span class="{current}">{safe}</span>')
+                    else:
+                        body_parts.append(safe)
+
+        # End of stream: close any pending link
+        if current == "blue":
+            flush_link()
+
+        # Build header/meta
+        project_path = (
+            self.selected_folder.get()
+            if hasattr(self.selected_folder, "get")
+            else str(self.selected_folder)
+        )
+        try:
+            version_txt = (
+                Path(self.resource_path("version.txt"))
+                .read_text(encoding="utf-8")
+                .strip()
+            )
+        except Exception:
+            version_txt = ""
+
+        header_html = self._build_header(project_path, version_txt)
+
+        body_html = "".join(body_parts)
+        # Add icons/labels to [ERROR]/[MANDATORY]/[WARNING]/[INFO]
+        body_html = self._add_severity_icons(body_html)
+
+        return self._wrap_html_document(header_html + self._wrap_pre(body_html))
+
+    def _wrap_pre(self, inner: str) -> str:
+        """Wrap log body in <pre> to preserve whitespace/newlines."""
+        return f'<pre class="log">{inner}</pre>'
+
+    def _add_severity_icons(self, html: str) -> str:
+        """
+        Post-process the rendered HTML (inside <pre>) and prepend an icon + ARIA label
+        to severity tokens like [ERROR]/[MANDATORY]/[WARNING]/[INFO].
+        Keeps the original token for familiarity, improves accessibility/scanability.
+        """
+        import re
+
+        replacements = {
+            r"\[ERROR\]": '<span class="sev sev-error" role="img" aria-label="Error">❗</span><span class="sr-only">Error: </span>[ERROR]',
+            r"\[MANDATORY\]": '<span class="sev sev-error" role="img" aria-label="Mandatory">❗</span><span class="sr-only">Mandatory: </span>[MANDATORY]',
+            r"\[WARNING\]": '<span class="sev sev-warning" role="img" aria-label="Warning">⚠️</span><span class="sr-only">Warning: </span>[WARNING]',
+            r"\[INFO\]": '<span class="sev sev-info" role="img" aria-label="Info">ℹ️</span><span class="sr-only">Info: </span>[INFO]',
+        }
+        for pat, repl in replacements.items():
+            html = re.sub(pat, repl, html)
+        return html
+
+    def _build_header(self, project_path: str, version_txt: str) -> str:
+        """Build the header with counters, metadata and a repo link."""
+        raw = "".join(self.raw_log_buffer)
+        err = raw.count("[ERROR]") + raw.count("[MANDATORY]")
+        warn = raw.count("[WARNING]")
+        info = raw.count("[INFO]")
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Read/clean version and build the link label
+        version = (version_txt or "").strip()
+        repo_url = "https://github.com/br-automation-community/as6-migration-tools"
+        link_label = "as6-migration-tools" + (f" v{escape(version)}" if version else "")
+        tool_link_html = f'<a href="{repo_url}">{link_label}</a>'
+
+        badges = (
+            f'<span class="badge red"><span class="ico" role="img" aria-label="Errors">❗</span>Errors: {err}</span>'
+            f'<span class="badge orange"><span class="ico" role="img" aria-label="Warnings">⚠️</span>Warnings: {warn}</span>'
+            f'<span class="badge green"><span class="ico" role="img" aria-label="Info items">ℹ️</span>Info: {info}</span>'
+        )
+
+        meta = f"""
+    <div class="meta">
+      <div><strong>Project:</strong> {escape(project_path or "-")}</div>
+      <div><strong>Generated:</strong> {escape(ts)}</div>
+      <div>{tool_link_html}</div>  <!-- replaces 'Tool version:' line -->
+    </div>
+    """
+        return f"<header><h1>AS4 → AS6 Migration Log</h1>{badges}{meta}<hr></header>"
+
+    def _wrap_html_document(self, body_inner: str) -> str:
+        """Return a minimal standalone HTML document with dark theme and print-friendly light mode."""
+        css = """
+    :root {
+      --bg: #0f172a;       /* slate-900 */
+      --fg: #e5e7eb;       /* gray-200 */
+      --muted: #94a3b8;    /* slate-400 */
+      --hr: rgba(148, 163, 184, 0.25);
+      --badge-bg: #1f2937; /* gray-800 */
+      --link: #60a5fa;     /* blue-400 */
+      --red: #ef4444;      /* red-500 */
+      --orange: #f59e0b;   /* amber-500 */
+      --green: #22c55e;    /* green-500 */
+    }
+    @media print {
+      :root {
+        --bg: #ffffff;
+        --fg: #111827;
+        --muted: #374151;
+        --hr: #e5e7eb;
+        --badge-bg: #f3f4f6;
+        --link: #1d4ed8;
+      }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      margin: 20px;
+      line-height: 1.35;
+    }
+    header h1 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: var(--fg); }
+
+    /* Badges */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 9999px; margin-right: 8px;
+      font-size: 12px; font-weight: 700; background: var(--badge-bg);
+      font-variant-numeric: tabular-nums;   /* stable widths for counts */
+    }
+    .badge.red    { color: var(--red); }
+    .badge.orange { color: var(--orange); }
+    .badge.green  { color: var(--green); }
+    .badge .ico { margin-right: 6px; display: inline-block; }
+
+    /* Meta */
+    .meta { margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+    /* Log body */
+    .log {
+      white-space: pre-wrap;
+      font-size: 13px;
+      margin: 0;           /* avoid extra spacing around the log */
+      tab-size: 4;         /* nicer alignment for indented/log-style text */
+    }
+    .log a { word-break: break-word; overflow-wrap: anywhere; }
+
+    /* Severity color spans (already emitted by generator) */
+    .red    { color: var(--red);   font-weight: 700; }
+    .orange { color: var(--orange);font-weight: 700; }
+    .green  { color: var(--green); }
+
+    /* Anchors, rule */
+    a { color: var(--link); text-decoration: underline; }
+    hr { border: 0; height: 1px; background: var(--hr); margin: 12px 0 16px 0; }
+
+    /* Screen-reader only label (for accessibility) */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+
+    /* Inline severity icon used in lines */
+    .sev {
+      display: inline-block; width: 1.25em; text-align: center; margin-right: .25em;
+      vertical-align: -0.08em; /* icon baseline alignment */
+    }
+    .sev-error   { color: var(--red);   font-weight: 700; }
+    .sev-warning { color: var(--orange);font-weight: 700; }
+    .sev-info    { color: var(--green); }
+    """
+        return f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AS4 → AS6 Migration Log</title>
+    <style>{css}</style>
+    </head>
+    <body>
+    {body_inner}
+    </body>
+    </html>"""
 
     def clear_log(self):
+        """Clear GUI log and the raw buffer."""
         self.log_text.configure(state="normal")
         self.log_text.delete("1.0", "end")
         self.log_text.configure(state="disabled")
+        self.raw_log_buffer.clear()
 
     def run(self):
         self.root.mainloop()
