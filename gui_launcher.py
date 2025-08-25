@@ -103,7 +103,7 @@ class ModernMigrationGUI:
             "MappMotion Update": self.resource_path("helpers/mappmotion_update.py"),
         }
 
-        self.links = utils.load_file_info("links","links")
+        self.links = utils.load_file_info("links", "links")
 
         self.build_ui()
         self.script_ran.trace_add("write", self.toggle_save_buttons)
@@ -307,7 +307,9 @@ class ModernMigrationGUI:
         self.log_text._textbox.tag_configure("red", foreground="red")
         self.log_text._textbox.tag_configure("orange", foreground="orange")
         self.log_text._textbox.tag_configure("green", foreground="green")
-        self.log_text._textbox.tag_configure("blue", foreground="#1db6e0", underline="true")
+        self.log_text._textbox.tag_configure(
+            "blue", foreground="#1db6e0", underline="true"
+        )
         self.log_text._textbox.tag_configure(
             "normal",
             foreground="white" if ctk.get_appearance_mode() == "Dark" else "black",
@@ -428,7 +430,7 @@ class ModernMigrationGUI:
         self.log_text.see("end")
         self.log_text.configure(state="disabled")
 
-    def urlClick(self,event):
+    def urlClick(self, event):
         index = self.log_text._textbox.index(f"@{event.x},{event.y}")
         tags = self.log_text._textbox.tag_names(index)
         clicked_text = None
@@ -437,11 +439,13 @@ class ModernMigrationGUI:
             ranges = self.log_text._textbox.tag_ranges(tag)
             for start, end in zip(ranges[::2], ranges[1::2]):
                 # Check if the click was within this range
-                if self.log_text._textbox.compare(index, ">=", start) and self.log_text._textbox.compare(index, "<", end):
+                if self.log_text._textbox.compare(
+                    index, ">=", start
+                ) and self.log_text._textbox.compare(index, "<", end):
                     clicked_text = self.log_text._textbox.get(start, end)
                     break
         if clicked_text is not None:
-            webbrowser.open_new(utils.build_web_path(self.links,clicked_text))
+            webbrowser.open_new(utils.build_web_path(self.links, clicked_text))
 
     def parse_and_insert_colored_text(self, text):
         """Parse ANSI escape codes and insert text with appropriate colors"""
@@ -467,9 +471,9 @@ class ModernMigrationGUI:
                 if current_tag != "normal":
                     self.log_text._textbox.tag_add(current_tag, start_pos, end_pos)
 
-        self.log_text._textbox.tag_bind('blue', '<1>', self.urlClick)
-        self.log_text._textbox.tag_bind('blue', '<Enter>', self.on_enter)
-        self.log_text._textbox.tag_bind('blue', '<Leave>', self.on_leave)
+        self.log_text._textbox.tag_bind("blue", "<1>", self.urlClick)
+        self.log_text._textbox.tag_bind("blue", "<Enter>", self.on_enter)
+        self.log_text._textbox.tag_bind("blue", "<Leave>", self.on_leave)
 
     def on_enter(self, event):
         self.log_text._textbox.config(cursor="hand2")  # Changes to hand cursor
