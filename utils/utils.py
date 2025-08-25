@@ -215,30 +215,28 @@ def load_file_info(folder, filename):
 
 def build_web_path(links, url):
     item = None
-    path = "https://www.br-automation.com/en/"
+    path = None
+    path_web = "https://www.br-automation.com/en"
+    path_help = "https://help.br-automation.com/#/en/6"
     if url in links:
         item = links[url]
     if item is not None:
         if "prefix" in item:
             if item["prefix"] == "mapp_view_license":
-                path += (
-                    "products/software/mapp-technology/mapp-view/mapp-view-licensing/"
-                )
+                path = f"{path_web}/products/software/mapp-technology/mapp-view/mapp-view-licensing/"
             elif item["prefix"] == "mapp_view_widget":
-                path = "https://help.br-automation.com/#/en/6/visualization/mappview/widgets/"
+                path = f"{path_help}/visualization/mappview/widgets/"
             elif item["prefix"] == "mapp_view_help":
-                path = "https://help.br-automation.com/#/en/6/visualization/mappview/"
+                path = f"{path_help}/visualization/mappview/"
             elif item["prefix"] == "mapp_connect_help":
-                path = (
-                    "https://help.br-automation.com/#/en/6/visualization/mappconnect/"
-                )
+                path = f"{path_help}/visualization/mappconnect/"
             elif item["prefix"] == "opc_ua_help":
-                path = "https://help.br-automation.com/#/en/6/communication/opcua/"
+                path = f"{path_help}/communication/opcua/"
         path += item["url"]
     else:
         if "http" in url or "https" in url:
             path = url
         else:
-            path += "product/" + url
+            path = f"{path_web}/product/{url}"
 
     return path
