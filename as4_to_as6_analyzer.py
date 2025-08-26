@@ -37,6 +37,11 @@ def parse_args():
         action="store_true",
         help="Do not write a result file; log only to console/UI.",
     )
+    parser.add_argument(
+        "--output",
+        type=str,
+        help="Custom output file path. If not provided, defaults to 'as4_to_as6_analyzer_result.txt' in the project folder.",
+    )
     # Parse the arguments
 
     # Fallback if no arguments are provided (e.g. when run from GUI)
@@ -46,6 +51,32 @@ def parse_args():
         sys.argv += [".", "-v", "--no-file"]
 
     return parser.parse_args()
+
+
+def open_output_file(project_path, no_file, custom_output):
+    """
+    Opens the output file based on the given arguments.
+    """
+    output_file = None
+    file_handle = None
+
+    if not no_file:
+        output_file = custom_output or str(
+            Path(project_path) / "as4_to_as6_analyzer_result.txt"
+        )
+        try:
+            file_handle = open(output_file, "w", encoding="utf-8")
+        except Exception as e:
+            # If file cannot be opened, continue without file output but warn the user.
+            utils.log(
+                f"Failed to open result file '{output_file}' for writing: {e}. "
+                f"Continuing without file output.",
+                severity="WARNING",
+            )
+            output_file = None
+            file_handle = None
+
+    return output_file, file_handle
 
 
 # Update main function to handle project directory input and optional verbose flag
@@ -67,26 +98,9 @@ def main():
     # Decide whether to write a result file.
     # - If parse_args() defines '--no-file' and sets it for GUI runs, no file is created.
     # - If '--output' is provided, use it; otherwise default to the project folder.
-    no_file = bool(getattr(args, "no_file", False))
-    custom_output = getattr(args, "output", None)
-
-    output_file = None
-    file_handle = None
-    if not no_file:
-        output_file = custom_output or os.path.join(
-            args.project_path, "as4_to_as6_analyzer_result.txt"
-        )
-        try:
-            file_handle = open(output_file, "w", encoding="utf-8")
-        except Exception as e:
-            # If file cannot be opened, continue without file output but warn the user.
-            utils.log(
-                f"Failed to open result file '{output_file}' for writing: {e}. "
-                f"Continuing without file output.",
-                severity="WARNING",
-            )
-            output_file = None
-            file_handle = None
+    output_file, file_handle = open_output_file(
+        args.project_path, args.no_file, args.output
+    )
 
     # Unified logger: always logs to console; optionally mirrors to file if file_handle is set.
     def log(message, when="", severity=""):
