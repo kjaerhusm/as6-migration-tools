@@ -11,7 +11,7 @@ concurrency:
 on:
   push:
     branches: [ main ]
-    # Do not trigger a new run when the bump commit only touches version.txt
+    # Do not trigger a new run when the bump commit only touches version.txt 
     paths-ignore:
       - 'version.txt'
 
