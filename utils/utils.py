@@ -3,10 +3,13 @@ import concurrent.futures
 import hashlib
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
 from CTkMessagebox import CTkMessagebox
+
+_CACHED_LINKS = None
 
 
 class ConsoleColors:
@@ -25,14 +28,40 @@ def get_build_number():
         return "?"
 
 
-def url(text, log_file=None):
-    if log_file:
-        return f"{text}"
-    else:
-        return f"{ConsoleColors.UNDERLINE}{text}{ConsoleColors.RESET}"
+def url(text):
+    return f"{ConsoleColors.UNDERLINE}{text}{ConsoleColors.RESET}"
+
+
+def get_links():
+    global _CACHED_LINKS
+    if _CACHED_LINKS is None:
+        _CACHED_LINKS = load_file_info("links", "links")
+    return _CACHED_LINKS
+
+
+def extract_urls(text):
+    """
+    Extracts all HTTP and HTTPS URLs from the given text.
+    """
+    url_pattern = (
+        r"\bhttps?:\/\/(?:www\.)?[a-zA-Z0-9\-._~%]+(?:\.[a-zA-Z]{2,})(?:\/[^\s]*)?\b"
+    )
+    return re.findall(url_pattern, text)
+
+
+def linkify(text):
+    links = get_links()
+    for link in links:
+        if link in text:
+            text = text.replace(link, url(link))
+    urls = extract_urls(text)
+    for u in urls:
+        text = text.replace(u, url(u))
+    return text
 
 
 def log(message, log_file=None, when="", severity=""):
+    message = linkify(message)
     if when != "":
         message = f"[{when}] {message}"
     if severity != "":

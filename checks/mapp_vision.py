@@ -23,9 +23,7 @@ def check_vision_settings(apj_path, log, verbose=False):
                     severity="INFO",
                 )
                 log(
-                    f"After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface! ("
-                    + utils.url("AR/Features_and_changes")
-                    + ")",
+                    f"After migrating to AS6 make sure that IP forwarding is activated under the Powerlink interface! (AR/Features_and_changes)",
                     when="AS6",
                     severity="MANDATORY",
                 )

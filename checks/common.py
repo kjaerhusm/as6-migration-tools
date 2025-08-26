@@ -15,6 +15,6 @@ def check_project_path_and_name(path, name, log, verbose=False):
         project_name_pattern, name, flags=re.ASCII
     ):
         log(
-            "Invalid path or project name, see " + utils.url("AS4/Migration"),
+            "Invalid path or project name, see AS4/Migration",
             severity="ERROR",
         )

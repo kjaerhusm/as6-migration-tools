@@ -23,17 +23,11 @@ def check_mappView(apj_path, log, verbose=False):
                     f"Several security settings will be enforced after the migration:"
                     "\n"
                     "\n- To allow access without a certificate"
-                    "\n  Change the following settings in the OPC Client/Server configuration ("
-                    + utils.url(
-                        "Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg"
-                    )
-                    + "):"
+                    "\n  Change the following settings in the OPC Client/Server configuration (Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
                     "\n  ClientServerConfiguration->Security->MessageSecurity->SecurityPolicies->None: Enabled"
                     "\n"
                     "\n- User login will be enabled by default. To allow anonymous access"
-                    "\n  Change the following settings in mappView configuration ("
-                    + utils.url("Configuration View/mappView/Config.mappviewcfg")
-                    + "):"
+                    "\n  Change the following settings in mappView configuration (Configuration View/mappView/Config.mappviewcfg):"
                     "\n  MappViewConfiguration->Server Configuration->Startup User: anonymous token"
                     "\n"
                     "\n- Change the following settings in the OPC Client/Server configuration (Configuration View/Connectivity/OpcUaCs/UaCsConfig.uacfg):"
