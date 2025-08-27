@@ -81,7 +81,7 @@ class ModernMigrationGUI:
         sys.modules["utils.utils"] = shared_utils
         self.utils = shared_utils
 
-        build = utils.get_build_number()
+        build = utils.get_version()
         self.root.title(f"AS4 to AS6 Migration Tool (Build {build})")
         self.root.geometry("1500x900")
 
@@ -384,6 +384,10 @@ class ModernMigrationGUI:
         x = self.root.winfo_rootx() + (self.root.winfo_width() // 2) - (720 // 2)
         y = self.root.winfo_rooty() + (self.root.winfo_height() // 2) - (360 // 2)
         msg_win.geometry(f"+{x}+{y}")
+
+        # Show version/build at the top of the About box
+        build = utils.get_version()
+        tk.Label(msg_win, text=f"Version: {build}", font=LABEL_FONT, bg=bg, fg=fg).pack(pady=(8, 4))
 
         tk.Label(
             msg_win,
@@ -848,16 +852,10 @@ class ModernMigrationGUI:
             if hasattr(self.selected_folder, "get")
             else str(self.selected_folder)
         )
-        try:
-            version_txt = (
-                Path(self.resource_path("version.txt"))
-                .read_text(encoding="utf-8")
-                .strip()
-            )
-        except Exception:
-            version_txt = ""
 
-        header_html = self._build_header(project_path, version_txt)
+        release_version = utils.get_version()
+
+        header_html = self._build_header(project_path, release_version)
 
         body_html = "".join(body_parts)
         # Add icons/labels to [ERROR]/[MANDATORY]/[WARNING]/[INFO]
@@ -887,7 +885,7 @@ class ModernMigrationGUI:
             html = re.sub(pat, repl, html)
         return html
 
-    def _build_header(self, project_path: str, version_txt: str) -> str:
+    def _build_header(self, project_path: str, release_version: str) -> str:
         """Build the header with counters, metadata and a repo link."""
         raw = "".join(self.raw_log_buffer)
         err = raw.count("[ERROR]") + raw.count("[MANDATORY]")
@@ -896,7 +894,7 @@ class ModernMigrationGUI:
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Read/clean version and build the link label
-        version = (version_txt or "").strip()
+        version = (release_version or "").strip()
         repo_url = "https://github.com/br-automation-community/as6-migration-tools"
         link_label = "as6-migration-tools" + (f" v{escape(version)}" if version else "")
         tool_link_html = f'<a href="{repo_url}">{link_label}</a>'

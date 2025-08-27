@@ -4,6 +4,10 @@ import hashlib
 import json
 import os
 import re
+<<<<<<< HEAD
+=======
+import subprocess
+>>>>>>> develop
 import sys
 from pathlib import Path
 
@@ -20,6 +24,7 @@ class ConsoleColors:
     UNDERLINE = "\x1b[4;94m"  # Set style to underlined
 
 
+<<<<<<< HEAD
 def get_build_number():
     try:
         version_file = Path(__file__).resolve().parent.parent / "version.txt"
@@ -27,6 +32,47 @@ def get_build_number():
     except Exception:
         return "?"
 
+=======
+def get_version() -> str:
+    """
+    Resolve tool version for GUI/CLI.
+
+    Order:
+      1) env RELEASE_VERSION (set by CI)
+      2) version.txt next to the frozen EXE (or PyInstaller _MEIPASS)
+      3) 'not_released' for local/dev runs
+
+    We intentionally DO NOT read version.txt from CWD/repo during dev
+    to avoid accidental overrides.
+    """
+    import os
+    import sys
+    from pathlib import Path
+
+    env_ver = os.getenv("RELEASE_VERSION")
+    if env_ver:
+        return env_ver.strip()
+
+    try:
+        if getattr(sys, "frozen", False):
+            exe_dir = Path(sys.executable).resolve().parent
+            candidates = [exe_dir / "version.txt"]
+            meipass = getattr(sys, "_MEIPASS", None)
+            if meipass:
+                candidates.append(Path(meipass) / "version.txt")
+            for vf in candidates:
+                try:
+                    if vf.is_file():
+                        txt = vf.read_text(encoding="utf-8").strip()
+                        if txt:
+                            return txt
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    return "not_released"
+>>>>>>> develop
 
 def url(text):
     return f"{ConsoleColors.UNDERLINE}{text}{ConsoleColors.RESET}"
@@ -271,3 +317,7 @@ def build_web_path(links, url):
 
     # Default-url for unknown paths
     return f"{path_web}/product/{url}"
+<<<<<<< HEAD
+=======
+
+>>>>>>> develop
