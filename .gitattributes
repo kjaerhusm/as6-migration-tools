@@ -1,1 +1,32 @@
-* export-ignore
+# Keep GitHub's auto-generated "Source code (zip/tar.gz)" archives useful.
+# Only exclude CI/build noise. Do NOT exclude your actual source directories.
+
+# Exclude common CI/build artifacts from `git archive` (affects GitHub auto-archives).
+.github/         export-ignore
+.vscode/         export-ignore
+.idea/           export-ignore
+.venv/           export-ignore
+__pycache__/     export-ignore
+*.pyc            export-ignore
+dist/            export-ignore
+build/           export-ignore
+
+# Sensible defaults for line endings and binary detection (harmless, cross-platform).
+*                 text=auto
+*.py              text eol=lf
+*.yml             text eol=lf
+*.yaml            text eol=lf
+*.md              text eol=lf
+*.sh              text eol=lf
+*.bat             text eol=crlf
+*.cmd             text eol=crlf
+
+# Mark common binaries to avoid diff/merge heuristics.
+*.png             binary
+*.jpg             binary
+*.jpeg            binary
+*.gif             binary
+*.ico             binary
+*.zip             binary
+*.exe             binary
+*.dll             binary

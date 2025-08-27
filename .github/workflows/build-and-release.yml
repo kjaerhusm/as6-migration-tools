@@ -11,7 +11,7 @@ concurrency:
 on:
   push:
     branches: [ main ]
-    # Do not trigger a new run when the bump commit only touches version.txt 
+    # Do not trigger a new run when the bump commit only touches version.txt
     paths-ignore:
       - 'version.txt'
 
@@ -124,6 +124,17 @@ jobs:
         with:
           name: release-artifacts
           path: release
+
+      # Sanity check: simulate GitHub's auto "Source code.zip" to catch export-ignore issues early
+      - name: Sanity check auto-archive will have content
+        run: |
+          git archive --format=zip -o /tmp/auto.zip ${{ needs.build.outputs.built_sha }}
+          unzip -l /tmp/auto.zip
+          COUNT=$(unzip -Z1 /tmp/auto.zip | wc -l)
+          if [ "$COUNT" -lt 5 ]; then
+            echo "Auto-generated archive looks too small (files: $COUNT). Check .gitattributes export-ignore rules."
+            exit 1
+          fi
 
       # Create a versioned release with an immutable, unique tag
       - name: Create GitHub Release (versioned tag)
