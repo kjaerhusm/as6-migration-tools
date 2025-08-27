@@ -20,13 +20,6 @@ class ConsoleColors:
     INFO = "\x1b[92m"  # Set style to light green foreground.
     UNDERLINE = "\x1b[4;94m"  # Set style to underlined
 
-def get_build_number():
-    try:
-        version_file = Path(__file__).resolve().parent.parent / "version.txt"
-        return version_file.read_text(encoding="utf-8").strip()
-    except Exception:
-        return "?"
-
 def get_version() -> str:
     """
     Resolve tool version for GUI/CLI.

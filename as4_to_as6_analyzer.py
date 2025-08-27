@@ -87,7 +87,7 @@ def main():
     """
 
     build_version = utils.get_version()
-    utils.log(f"Script build number: {build_version}")
+    utils.log(f"Script version: {build_version}")
 
     args = parse_args()
     apj_file = utils.get_and_check_project_file(args.project_path)

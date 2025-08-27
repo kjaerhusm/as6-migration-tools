@@ -912,7 +912,7 @@ class ModernMigrationGUI:
       <div>{tool_link_html}</div>  <!-- replaces 'Tool version:' line -->
     </div>
     """
-        return f"<header><h1>AS4 → AS6 Migration Log</h1>{badges}{meta}<hr></header>"
+        return f"<header><h1>AS4 to AS6 Migration Log</h1>{badges}{meta}<hr></header>"
 
     def _wrap_html_document(self, body_inner: str) -> str:
         """Return a minimal standalone HTML document with dark theme and print-friendly light mode."""
@@ -1001,7 +1001,7 @@ class ModernMigrationGUI:
     <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AS4 → AS6 Migration Log</title>
+    <title>AS4 to AS6 Migration Log</title>
     <style>{css}</style>
     </head>
     <body>
