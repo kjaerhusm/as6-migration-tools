@@ -3,7 +3,6 @@ name: Build and Release (timestamp version)
 permissions:
   contents: write
 
-# Prevent collisions and ensure deterministic releases
 concurrency:
   group: as6-migration-tools-${{ github.ref }}
   cancel-in-progress: true
@@ -32,7 +31,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Computed version: $VERSION"
 
-  build:
+    build:
     needs: prepare
     runs-on: windows-latest
     outputs:
@@ -43,7 +42,6 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      # Write version.txt so PyInstaller bundles it (no commit to repo)
       - name: Write version.txt for runtime embedding
         shell: pwsh
         run: |
@@ -65,15 +63,16 @@ jobs:
           RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
         run: pyinstaller --noconfirm gui_launcher.spec
 
-      # Ensure version.txt sits next to the EXE inside the zip (handy for users)
-      - name: Copy version.txt into dist
-        shell: pwsh
-        run: Copy-Item version.txt dist/
-
-      - name: Zip EXE and all contents of dist/
+      - name: Zip only the EXE (exclude version.txt)
         shell: pwsh
         run: |
-          Compress-Archive -Path "dist\*" -DestinationPath "dist\as6-migration-tools.zip"
+          if (!(Test-Path "dist\as6-migration-tools.exe")) {
+            Write-Error "EXE not found in dist"
+          }
+          if (Test-Path "dist\as6-migration-tools.zip") {
+            Remove-Item "dist\as6-migration-tools.zip" -Force
+          }
+          Compress-Archive -Path "dist\as6-migration-tools.exe" -DestinationPath "dist\as6-migration-tools.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -115,7 +114,7 @@ jobs:
       - name: Create GitHub Release (versioned tag from timestamp)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.prepare.outputs.version }}              # e.g. v20250827_1101
+          tag_name: v${{ needs.prepare.outputs.version }}
           target_commitish: ${{ needs.build.outputs.built_sha }}
           name: "AS4 to AS6 Migration Tools ${{ needs.prepare.outputs.version }}"
           make_latest: true
