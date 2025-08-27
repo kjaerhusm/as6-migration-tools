@@ -4,10 +4,7 @@ import hashlib
 import json
 import os
 import re
-<<<<<<< HEAD
-=======
 import subprocess
->>>>>>> develop
 import sys
 from pathlib import Path
 
@@ -23,8 +20,6 @@ class ConsoleColors:
     INFO = "\x1b[92m"  # Set style to light green foreground.
     UNDERLINE = "\x1b[4;94m"  # Set style to underlined
 
-
-<<<<<<< HEAD
 def get_build_number():
     try:
         version_file = Path(__file__).resolve().parent.parent / "version.txt"
@@ -32,7 +27,6 @@ def get_build_number():
     except Exception:
         return "?"
 
-=======
 def get_version() -> str:
     """
     Resolve tool version for GUI/CLI.
@@ -72,7 +66,6 @@ def get_version() -> str:
         pass
 
     return "not_released"
->>>>>>> develop
 
 def url(text):
     return f"{ConsoleColors.UNDERLINE}{text}{ConsoleColors.RESET}"
@@ -317,7 +310,3 @@ def build_web_path(links, url):
 
     # Default-url for unknown paths
     return f"{path_web}/product/{url}"
-<<<<<<< HEAD
-=======
-
->>>>>>> develop
