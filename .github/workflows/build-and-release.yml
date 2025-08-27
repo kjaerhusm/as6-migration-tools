@@ -31,7 +31,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Computed version: $VERSION"
 
-    build:
+  build:
     needs: prepare
     runs-on: windows-latest
     outputs:
