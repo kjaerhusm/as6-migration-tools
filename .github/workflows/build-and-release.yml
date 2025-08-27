@@ -1,9 +1,9 @@
-name: Build and Release
+name: Build and Release (timestamp version)
 
 permissions:
   contents: write
 
-# Ensure only one run per ref at a time (prevents version/tag races)
+# Prevent collisions and ensure deterministic releases
 concurrency:
   group: as6-migration-tools-${{ github.ref }}
   cancel-in-progress: true
@@ -11,49 +11,26 @@ concurrency:
 on:
   push:
     branches: [ main ]
-    # Do not trigger a new run when the bump commit only touches version.txt
-    paths-ignore:
-      - 'version.txt'
 
 jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.bump.outputs.new_version }}
+      version: ${{ steps.ver.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
-      - id: bump
-        name: Read and bump version
+      - id: ver
+        name: Compute release version (Europe/Copenhagen)
         shell: bash
         run: |
-          set -Eeuo pipefail
-          # Guard: version.txt must exist and contain a single non-negative integer.
-          if [[ ! -f version.txt ]]; then
-            echo "version.txt is missing. This file is maintained by CI. Do not delete or edit it." >&2
-            exit 1
-          fi
-
-          VERSION=$(<version.txt)
-          if ! [[ "$VERSION" =~ ^[0-9]+$ ]]; then
-            echo "Invalid version in version.txt: '$VERSION'." >&2
-            exit 1
-          fi
-
-          NEW_VERSION=$((VERSION + 1))
-          printf '%s\n' "$NEW_VERSION" > version.txt
-          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Commit bumped version
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@github.com"
-          git add version.txt
-          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
-          git push
+          TZ="Europe/Copenhagen"
+          VERSION=$(date +'%Y%m%d_%H%M')   # e.g. 20250827_1101
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Computed version: $VERSION"
 
   build:
     needs: prepare
@@ -61,16 +38,16 @@ jobs:
     outputs:
       built_sha: ${{ steps.meta.outputs.sha }}
     steps:
-      # Always build from the latest commit on main (includes the bump commit)
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
-      # Belt-and-suspenders: ensure the bumped version is present
-      - name: Ensure bumped version file
-        shell: bash
-        run: echo "${{ needs.prepare.outputs.version }}" > version.txt
+      # Write version.txt so PyInstaller bundles it (no commit to repo)
+      - name: Write version.txt for runtime embedding
+        shell: pwsh
+        run: |
+          '${{ needs.prepare.outputs.version }}' | Set-Content -Encoding utf8 version.txt
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -84,7 +61,14 @@ jobs:
         run: pip install pyinstaller
 
       - name: Build executable
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
         run: pyinstaller --noconfirm gui_launcher.spec
+
+      # Ensure version.txt sits next to the EXE inside the zip (handy for users)
+      - name: Copy version.txt into dist
+        shell: pwsh
+        run: Copy-Item version.txt dist/
 
       - name: Zip EXE and all contents of dist/
         shell: pwsh
@@ -97,7 +81,6 @@ jobs:
           name: release-artifacts
           path: dist/as6-migration-tools.zip
 
-      # Capture the exact commit we built from (pin the release/tag to this)
       - name: Capture built commit SHA
         id: meta
         shell: bash
@@ -107,19 +90,12 @@ jobs:
     needs: [build, prepare]
     runs-on: ubuntu-latest
     steps:
-      # Check out exactly the commit we built
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.build.outputs.built_sha }}
           fetch-depth: 0
 
-      - name: Download GUI artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: release-artifacts
-          path: release
-
-      # Sanity check: simulate GitHub's auto "Source code.zip" to catch export-ignore issues early
+      # Sanity check: simulate GitHub's auto "Source code.zip"
       - name: Sanity check auto-archive will have content
         run: |
           git archive --format=zip -o /tmp/auto.zip ${{ needs.build.outputs.built_sha }}
@@ -130,14 +106,19 @@ jobs:
             exit 1
           fi
 
-      # Create a versioned release with an immutable, unique tag
-      - name: Create GitHub Release (versioned tag)
+      - name: Download GUI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: release
+
+      - name: Create GitHub Release (versioned tag from timestamp)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.prepare.outputs.version }}              # immutable, unique tag
-          target_commitish: ${{ needs.build.outputs.built_sha }}       # pin to built commit
-          name: "AS6 Migration Tools v${{ needs.prepare.outputs.version }}"
-          make_latest: true                                            # explicitly mark as the latest release
+          tag_name: v${{ needs.prepare.outputs.version }}              # e.g. v20250827_1101
+          target_commitish: ${{ needs.build.outputs.built_sha }}
+          name: "AS4 to AS6 Migration Tools ${{ needs.prepare.outputs.version }}"
+          make_latest: true
           body: |
             ✅ This release contains:
             - The latest GUI tool (`as6-migration-tools.zip`)

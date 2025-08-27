@@ -1,25 +1,30 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
 block_cipher = None
+
+# Build datas list and include version.txt only when it exists (CI)
+datas = [
+    ('discontinuations/*.json', 'discontinuations'),
+    ('gui_icon.ico', '.'),
+    ('helpers/*.py', 'helpers'),
+    ('as4_to_as6_analyzer.py', '.'),
+    ('checks/*.py', 'checks'),
+    ('utils/*.py', 'utils'),
+    ('links/*.json', 'links'),
+]
+if os.path.isfile('version.txt'):
+    datas.append(('version.txt', '.'))
 
 a = Analysis(
     ['gui_launcher.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('discontinuations/*.json', 'discontinuations'),
-        ('version.txt', '.'),
-        ('gui_icon.ico', '.'),
-        ('helpers/*.py', 'helpers'),
-        ('as4_to_as6_analyzer.py', '.'),
-        ('checks/*.py', 'checks'),
-        ('utils/*.py', 'utils'),
-        ('links/*.json', 'links')
-    ],
+    datas=datas,
     hiddenimports=[
         'CTkMessagebox',
         'tkinter',
-        'lxml', 'lxml.etree', 'lxml._elementpath'
+        'lxml', 'lxml.etree', 'lxml._elementpath',
     ],
     hookspath=[],
     runtime_hooks=[],
