@@ -113,12 +113,6 @@ jobs:
           ref: ${{ needs.build.outputs.built_sha }}
           fetch-depth: 0
 
-      - name: Create source archive
-        uses: TheDoctor0/zip-release@0.7.1
-        with:
-          filename: source-code.zip
-          exclusions: .git, .github, __pycache__, *.pyc
-
       - name: Download GUI artifact
         uses: actions/download-artifact@v4
         with:
@@ -147,9 +141,8 @@ jobs:
           body: |
             ✅ This release contains:
             - The latest GUI tool (`as6-migration-tools.zip`)
-            - The latest source code (`source-code.zip`)
+            - Auto-generated source archives by GitHub (see "Source code" links)
           files: |
             release/as6-migration-tools.zip
-            source-code.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
