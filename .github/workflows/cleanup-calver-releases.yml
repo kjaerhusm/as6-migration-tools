@@ -45,117 +45,77 @@ jobs:
              *  - Optionally ALWAYS keep GitHub's "Latest" release (even if older than window).
              *  - Only touch CalVer-matching tags; ignore everything else (e.g., SemVer).
              *
-             * Notes on details you asked about:
-             *  - parseInt(..., 10): the "10" enforces base-10 (decimal) parsing for safety/clarity.
-             *  - per_page: 100 is the GitHub REST API maximum per page; fewer requests, faster execution.
-             *  - Setting max_keep = 1 means: within the 28-day window, keep ONLY the newest; delete the rest.
+             * Notes:
+             *  - parseInt(..., 10) enforces base-10 (decimal) parsing.
+             *  - per_page: 100 is the REST API max per page (fewer requests).
+             *  - max_keep = 1 means: within the 28-day window, keep ONLY the newest.
              */
 
-            const core = require('@actions/core');
-            const { owner, repo } = context.repo;
-
-            // Inputs: manual runs provide values via workflow_dispatch; scheduled runs use defaults
+            const { owner, repo } = context.repo;          // 'context' is provided by github-script
             const DRY = (core.getInput('dry_run') || 'false') === 'true';
-            const RETENTION_DAYS = Math.max(1, parseInt(core.getInput('retention_days') || '28', 10)); // base-10
-            const MAX_KEEP = Math.max(1, parseInt(core.getInput('max_keep') || '1', 10));              // ensure >= 1
+            const RETENTION_DAYS = Math.max(1, parseInt(core.getInput('retention_days') || '28', 10));
+            const MAX_KEEP = Math.max(1, parseInt(core.getInput('max_keep') || '1', 10));
             const KEEP_LATEST = (core.getInput('keep_latest') || 'true') === 'true';
 
-            // Match dotted CalVer tags like 'v2025.08.27.1109'
             const CALVER = /^v\d{4}\.\d{2}\.\d{2}\.\d{4}$/;
-
             const now = new Date();
             const cutoff = new Date(now.getTime() - RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
-            // Fetch ALL releases with pagination (per_page: 100 is the API max)
+            // Fetch all releases (paginated)
             const all = [];
             for (let page = 1; ; page++) {
-              const { data } = await github.rest.repos.listReleases({
-                owner, repo, per_page: 100, page
-              });
+              const { data } = await github.rest.repos.listReleases({ owner, repo, per_page: 100, page });
               if (!data.length) break;
               all.push(...data);
             }
 
-            // Identify GitHub's "Latest" release id (if any).
-            // getLatestRelease returns the latest non-draft, non-prerelease release.
+            // Identify GitHub's "Latest" release
             let latestId = null;
             try {
               const { data: latest } = await github.rest.repos.getLatestRelease({ owner, repo });
               latestId = latest.id;
             } catch (e) {
-              // No "Latest" yet (e.g., no releases) – that's fine.
+              // no latest yet
             }
 
-            // Helper to pick a release timestamp
             const relTime = (r) => new Date(r.published_at || r.created_at || 0);
 
-            // Filter to CalVer releases (skip drafts), then sort newest -> oldest
             const calver = all
               .filter(r => r.tag_name && CALVER.test(r.tag_name) && !r.draft)
               .sort((a, b) => relTime(b) - relTime(a));
 
-            // Partition into in-window and out-of-window by published/created time
             const inWindow = [];
             const outWindow = [];
-            for (const r of calver) {
-              if (relTime(r) >= cutoff) inWindow.push(r);
-              else outWindow.push(r);
-            }
+            for (const r of calver) (relTime(r) >= cutoff ? inWindow : outWindow).push(r);
 
-            // Keep the first MAX_KEEP items in-window (newest first)
             const keep = new Set(inWindow.slice(0, MAX_KEEP).map(r => r.id));
-
-            // Always keep "Latest" if requested, regardless of window
             if (KEEP_LATEST && latestId) keep.add(latestId);
 
-            // Determine deletion candidates:
             const toDelete = [];
+            for (let i = MAX_KEEP; i < inWindow.length; i++) if (!keep.has(inWindow[i].id)) toDelete.push(inWindow[i]);
+            for (const r of outWindow) if (!keep.has(r.id)) toDelete.push(r);
 
-            // (A) In-window beyond MAX_KEEP
-            for (let i = MAX_KEEP; i < inWindow.length; i++) {
-              const r = inWindow[i];
-              if (!keep.has(r.id)) toDelete.push(r);
-            }
-
-            // (B) Everything out-of-window
-            for (const r of outWindow) {
-              if (!keep.has(r.id)) toDelete.push(r);
-            }
-
-            // Summarize actions in the job summary
             const lines = [];
-            lines.push(`Policy: KEEP top ${MAX_KEEP} CalVer releases within last ${RETENTION_DAYS} days (intersection)`);
+            lines.push(`Policy: KEEP top ${MAX_KEEP} within last ${RETENTION_DAYS} days (intersection)`);
             lines.push(`Cutoff (UTC): ${cutoff.toISOString()}`);
-            lines.push(`Total releases (all): ${all.length}`);
-            lines.push(`CalVer-matching releases: ${calver.length}`);
+            lines.push(`Total releases: ${all.length}`);
+            lines.push(`CalVer releases: ${calver.length}`);
             lines.push(`In-window: ${inWindow.length}, Out-of-window: ${outWindow.length}`);
             lines.push(`Keeping in-window: ${Math.min(inWindow.length, MAX_KEEP)}`);
             lines.push(`Keeping 'Latest': ${KEEP_LATEST && latestId ? 'yes' : 'no'}`);
             lines.push(`To delete: ${toDelete.length} ${DRY ? '(DRY-RUN)' : ''}`);
             lines.push('');
-            for (const r of toDelete) {
-              lines.push(`- ${r.tag_name} | created ${r.created_at} | url: ${r.html_url}`);
-            }
+            for (const r of toDelete) lines.push(`- ${r.tag_name} | created ${r.created_at} | url: ${r.html_url}`);
             core.summary.addHeading('CalVer Cleanup Summary');
             core.summary.addRaw(lines.join('\n') + '\n');
             await core.summary.write();
 
-            // Perform deletions: delete release first, then the tag ref.
             if (!DRY) {
               for (const r of toDelete) {
-                try {
-                  await github.rest.repos.deleteRelease({ owner, repo, release_id: r.id });
-                  core.info(`Deleted release ${r.tag_name} (id ${r.id})`);
-                } catch (e) {
-                  core.warning(`Failed to delete release ${r.tag_name}: ${e.message}`);
-                }
-                try {
-                  await github.rest.git.deleteRef({ owner, repo, ref: `tags/${r.tag_name}` });
-                  core.info(`Deleted tag ${r.tag_name}`);
-                } catch (e) {
-                  // Tag might already be missing; ignore 404/422.
-                  core.warning(`Failed to delete tag ${r.tag_name}: ${e.message}`);
-                }
+                try { await github.rest.repos.deleteRelease({ owner, repo, release_id: r.id }); core.info(`Deleted release ${r.tag_name}`); }
+                catch (e) { core.warning(`Failed to delete release ${r.tag_name}: ${e.message}`); }
+                try { await github.rest.git.deleteRef({ owner, repo, ref: `tags/${r.tag_name}` }); core.info(`Deleted tag ${r.tag_name}`); }
+                catch (e) { core.warning(`Failed to delete tag ${r.tag_name}: ${e.message}`); }
               }
             } else {
               core.info('DRY-RUN: no deletions performed.');

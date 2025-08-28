@@ -27,7 +27,7 @@ jobs:
         name: Compute CalVer (Europe/Copenhagen) + SHA7
         shell: bash
         run: |
-          TZ="Europe/Copenhagen"
+          export TZ=Europe/Copenhagen
           TS=$(date +'%Y.%m.%d.%H%M')           # e.g. 2025.08.27.1109
           SHA7=$(git rev-parse --short=7 HEAD)  # e.g. abc1234
           echo "version_ui=${TS}+g${SHA7}" >> "$GITHUB_OUTPUT"   # for UI/EXE
