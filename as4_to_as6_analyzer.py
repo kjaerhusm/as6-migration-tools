@@ -86,8 +86,8 @@ def main():
     Writes to a file only when requested; otherwise logs to console/UI only.
     """
 
-    build_number = utils.get_build_number()
-    utils.log(f"Script build number: {build_number}")
+    build_version = utils.get_version()
+    utils.log(f"Script version: {build_version}")
 
     args = parse_args()
     apj_file = utils.get_and_check_project_file(args.project_path)
