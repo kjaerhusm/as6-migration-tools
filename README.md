@@ -3,6 +3,9 @@
 **Open-source tools for analyzing and migrating B&R Automation Studio 4 (AS4) projects to Automation Studio 6 (AS6).**  
 Detects obsolete libraries, unsupported hardware, deprecated functions - and includes helper scripts for automatic code conversion.
 
+<!-- Total downloads across all releases (counts only uploaded assets) -->
+[![Downloads](https://img.shields.io/github/downloads/br-automation-community/as6-migration-tools/total.svg)](https://github.com/br-automation-community/as6-migration-tools/releases)
+
 > ⚠️ **Disclaimer:** This project is **unofficial** and not provided or endorsed by B&R Industrial Automation.  
 > It is offered as an open-source tool, with no warranty or guarantees.  
 > Use at your own risk - contributions and improvements are very welcome!
