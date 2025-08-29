@@ -20,12 +20,44 @@ class ConsoleColors:
     UNDERLINE = "\x1b[4;94m"  # Set style to underlined
 
 
-def get_build_number():
+def get_version() -> str:
+    """
+    Resolve tool version for GUI/CLI.
+
+    Order:
+      1) env RELEASE_VERSION (set by CI)
+      2) version.txt next to the frozen EXE (or PyInstaller _MEIPASS)
+      3) 'not_released' for local/dev runs
+
+    We intentionally DO NOT read version.txt from CWD/repo during dev
+    to avoid accidental overrides.
+    """
+    # 1) CI-provided environment variable
+    env_ver = os.getenv("RELEASE_VERSION")
+    if env_ver:
+        return env_ver.strip()
+
+    # 2) When frozen by PyInstaller, read bundled version.txt if present
     try:
-        version_file = Path(__file__).resolve().parent.parent / "version.txt"
-        return version_file.read_text(encoding="utf-8").strip()
+        if getattr(sys, "frozen", False):
+            exe_dir = Path(sys.executable).resolve().parent
+            candidates = [exe_dir / "version.txt"]
+            meipass = getattr(sys, "_MEIPASS", None)
+            if meipass:
+                candidates.append(Path(meipass) / "version.txt")
+            for vf in candidates:
+                try:
+                    if vf.is_file():
+                        txt = vf.read_text(encoding="utf-8").strip()
+                        if txt:
+                            return txt
+                except Exception:
+                    pass
     except Exception:
-        return "?"
+        pass
+
+    # 3) Default for local/dev runs
+    return "dev"
 
 
 def url(text):
