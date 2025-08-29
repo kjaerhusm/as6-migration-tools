@@ -1,10 +1,12 @@
 # as6-migration-tools
 
+[![Latest (incl. pre-releases)](https://img.shields.io/github/downloads-pre/br-automation-community/as6-migration-tools/latest/total.svg)](https://github.com/br-automation-community/as6-migration-tools/releases)
+[![Total downloads](https://img.shields.io/github/downloads/br-automation-community/as6-migration-tools/total.svg)](https://github.com/br-automation-community/as6-migration-tools/releases)
+[![License](https://img.shields.io/github/license/br-automation-community/as6-migration-tools.svg)](https://github.com/br-automation-community/as6-migration-tools/blob/main/LICENSE)
+[![Build](https://github.com/br-automation-community/as6-migration-tools/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/br-automation-community/as6-migration-tools/actions/workflows/build-and-release.yml)
+
 **Open-source tools for analyzing and migrating B&R Automation Studio 4 (AS4) projects to Automation Studio 6 (AS6).**  
 Detects obsolete libraries, unsupported hardware, deprecated functions - and includes helper scripts for automatic code conversion.
-
-<!-- Total downloads across all releases (counts only uploaded assets) -->
-[![Downloads](https://img.shields.io/github/downloads/br-automation-community/as6-migration-tools/total.svg)](https://github.com/br-automation-community/as6-migration-tools/releases)
 
 > ⚠️ **Disclaimer:** This project is **unofficial** and not provided or endorsed by B&R Industrial Automation.  
 > It is offered as an open-source tool, with no warranty or guarantees.  
@@ -51,9 +53,9 @@ positional arguments:
   project_path   Automation Studio 4.x path containing *.apj file
 
 options:
-  -h,		--help			Show this help message and exit
-  -v,		--verbose		Outputs verbose information
-  -no-file,	--no-file		Skip creating the analysis file in the AS folder
+  -h,        --help      Show this help message and exit
+  -v,        --verbose   Outputs verbose information
+  --no-file              Skip creating the analysis file in the AS folder
 
 ```
 
