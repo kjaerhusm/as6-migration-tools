@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 
 from checks import *
+from checks.mapp_view_wdk import check_wdk_usage
 from utils import utils
 
 
@@ -139,9 +140,8 @@ def main():
         check_safety(apj_path, log, args.verbose)  # Safety system issues
         check_vision_settings(apj_path, log, args.verbose)  # mappVision issues
         check_mappView(apj_path, log, args.verbose)  # mappView issues
-        check_mapp_version(
-            apj_path, log, args.verbose
-        )  # mappService/mapp version issues
+        check_wdk_usage(logical_path, log, args.verbose)  # Detect WDK
+        check_mapp_version(apj_path, log, args.verbose)  # mappService/mapp version issues
 
         # Finish up
         end_time = time.time()
