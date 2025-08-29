@@ -24,7 +24,7 @@ Detects obsolete libraries, unsupported hardware, deprecated functions - and inc
 
 ## Installation
 
-- ✅ **Recommended:** Download the latest release from [GitHub Releases](https://github.com/br-automation-community/as6-migration-tools/releases/tag/latest)  
+- ✅ **Recommended:** Download the latest release from [GitHub Releases](https://github.com/br-automation-community/as6-migration-tools/releases/)  
   Unzip and run `as6-migration-tools.exe`.
 
 - 🐍 **Alternative (Python source):**  
