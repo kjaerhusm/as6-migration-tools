@@ -37,7 +37,7 @@ def check_mappView(apj_path, log, verbose=False):
                     '\n  Assign the role "BR_Engineer" to the user "Anonymous". Create that user if it doesn\'t already exist, assign no password.'
                     "\n"
                     "\n- To allow access to a File device from a running mappView application, it is now required to explicitly whitelist it for reading:"
-                    "\n  - Open the mappView server configuration file Configuration View/mappView/Config.mappviewcfg)"
+                    "\n  - Open the mappView server configuration file (Configuration View/mappView/Config.mappviewcfg)"
                     '\n  - Check "Change Advanced Parameter Visibility" button in the editor toolbar'
                     '\n  - Enter your accessed File device "Name" under "MappViewConfiguration->Server configuration->File device whitelist"',
                     when="AS6",
