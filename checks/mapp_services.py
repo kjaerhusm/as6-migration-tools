@@ -3,21 +3,26 @@ import re
 
 def check_mapp_version(apj_path, log, verbose=False):
     """
-    Checks for the mapp Services version in the .apj project file.
+    Checks mapp Services / mappMotion versions in the .apj and verifies required mapp folders
+    per configuration. Respects referenced packages in cpu.pkg.
     """
 
     log("─" * 80 + "\nChecking mapp version in project file...")
 
-    # If no .apj file is found, return an empty list
-    for line in apj_path.read_text(encoding="utf-8", errors="ignore").splitlines():
-        # Check for mapp Services version in the .apj file
+    # --- Read .apj as plain text (robust vs. namespaces/BOM) ---
+    try:
+        txt = apj_path.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        txt = apj_path.read_text(errors="ignore")
+
+    # --- Version detection (mapp Services & mappMotion 5.x) ---
+    for line in txt.splitlines():
         if ("<mapp " in line and "Version=" in line) or (
             "<mappServices" in line and "Version=" in line
         ):
-            match = re.search(r'Version="(\d+)\.(\d+)', line)
-            if match:
-                # Extract major and minor version numbers
-                major, minor = int(match.group(1)), int(match.group(2))
+            m = re.search(r'Version="(\d+)\.(\d+)', line)
+            if m:
+                major, minor = int(m.group(1)), int(m.group(2))
                 version_str = f"{major}.{minor}"
                 log(f"Detected Mapp Services version: {version_str}", severity="INFO")
 
@@ -37,11 +42,10 @@ def check_mapp_version(apj_path, log, verbose=False):
                         severity="MANDATORY",
                     )
 
-        # Check for mappMotion version 5.x
         if "<mappMotion " in line and 'Version="5.' in line:
-            match = re.search(r'Version="(\d+)\.(\d+)', line)
-            if match:
-                major, minor = int(match.group(1)), int(match.group(2))
+            m = re.search(r'Version="(\d+)\.(\d+)', line)
+            if m:
+                major, minor = int(m.group(1)), int(m.group(2))
                 version_str = f"{major}.{minor}"
                 log(f"Detected Mapp Motion version: {version_str}", severity="INFO")
                 log(
@@ -51,66 +55,87 @@ def check_mapp_version(apj_path, log, verbose=False):
                     severity="MANDATORY",
                 )
 
-    # Make sure all mapp folders are present in the Physical directory
-    # Get all folders in the Physical directory
+    # --- Motion choice detection (plain text; no XML parsing) ---
+    has_acp10 = (
+        re.search(r"<\s*Acp10[A-Za-z0-9_]*\b", txt, flags=re.IGNORECASE) is not None
+    )
+    has_mappmotion = (
+        re.search(r"<\s*mappMotion\b", txt, flags=re.IGNORECASE) is not None
+    )
+    if has_mappmotion and not has_acp10:
+        motion_choice = "mappMotion"
+    elif has_acp10 and not has_mappmotion:
+        motion_choice = "acp10"
+    elif not has_acp10 and not has_mappmotion:
+        motion_choice = "none"
+    else:
+        motion_choice = "mappMotion"  # prefer ACP10 if both somehow appear
+
+    # --- Determine which mapp folders are required to exist for this project ---
+    required_mapp_folders = ["mappServices", "mappView"]
+    if motion_choice == "mappMotion":
+        required_mapp_folders += [
+            "mappMotion",
+            "mappCockpit",
+        ]  # cockpit only relevant with mappMotion
+
+    # --- Check Physical/<Config> for required folders (respect references in cpu.pkg) ---
     physical_path = apj_path.parent / "Physical"
     if not physical_path.is_dir():
         log(f"Could not find Physical in {apj_path.parent}", severity="ERROR")
         return
 
-    # Check if relevant mapp folders exists in the config folder directory
-    mapp_folders_to_check = ["mappServices", "mappMotion", "mappView", "mappCockpit"]
-
     grouped_results = {}
     config_folders = [f for f in physical_path.iterdir() if f.is_dir()]
     for config_folder in config_folders:
-        # Check for sub folders in the config folder
-        subfolders = [f for f in config_folder.iterdir() if f.is_dir()]
-        if not subfolders:
+        # 1) Detect present packages by looking for .../<PackageName>/Package.pkg anywhere under the config
+        found = {name: False for name in required_mapp_folders}
+        for pkg_file in config_folder.rglob("Package.pkg"):
+            pkg_parent = pkg_file.parent.name
+            if pkg_parent in found:
+                found[pkg_parent] = True
+
+        missing = {name for name, ok in found.items() if not ok}
+        if not missing:
             continue
 
-        found_mapp_folders = {folder: False for folder in mapp_folders_to_check}
+        # 2) If missing, try to resolve via cpu.pkg references (case-insensitive name for the file)
+        def _find_cpu_pkg_path(cfg_dir):
+            for sub in sorted(cfg_dir.iterdir()):
+                if not sub.is_dir():
+                    continue
+                for candidate in ("cpu.pkg", "Cpu.pkg", "CPU.pkg"):
+                    p = sub / candidate
+                    if p.exists():
+                        return p
+            return None
 
-        # Walk through all directories
-        start_path = subfolders[0]
-        for path in start_path.rglob("*"):
-            if path.is_dir() and path.name in mapp_folders_to_check:
-                found_mapp_folders[path.name] = True
+        cpu_pkg_path = _find_cpu_pkg_path(config_folder)
+        if cpu_pkg_path:
+            try:
+                cpu_txt = cpu_pkg_path.read_text(encoding="utf-8", errors="ignore")
+                # Remove from missing if Reference="true" -> ...\<name>\Package.pkg
+                for name in list(missing):
+                    if re.search(
+                        rf'Reference\s*=\s*"true".*?{re.escape(name)}[\\/]+Package\.pkg',
+                        cpu_txt,
+                        flags=re.IGNORECASE | re.DOTALL,
+                    ):
+                        missing.discard(name)
+            except Exception as e:
+                log(f"Could not read {cpu_pkg_path}: {e}", severity="WARNING")
 
-        missing = {name for name, found in found_mapp_folders.items() if not found}
         if missing:
-            # Check Cpu.pkg file for referenced packages
-            cpu_pkg_path = start_path / "Cpu.pkg"
-            if cpu_pkg_path.exists():
-                try:
-                    cpu_pkg_content = cpu_pkg_path.read_text(
-                        encoding="utf-8", errors="ignore"
-                    )
-                    missing_copy = missing.copy()  # Create a copy to iterate over
+            grouped_results[config_folder.name] = missing
 
-                    for line in cpu_pkg_content.splitlines():
-                        for missing_item in missing_copy:
-                            if missing_item in line and 'Reference="true"' in line:
-                                # Remove from missing set if found with Reference="true"
-                                if verbose:
-                                    log(
-                                        f"Removing '{missing_item}' from missing set, found reference in Cpu.pkg",
-                                        when="AS4",
-                                        severity="INFO",
-                                    )
-                                missing.discard(missing_item)
-                except Exception as e:
-                    log(f"Could not read Cpu.pkg file: {e}", severity="WARNING")
-
-            # Only add to results if there are still missing folders after checking Cpu.pkg
-            if missing:
-                grouped_results[config_folder.name] = missing
-
+    # --- Report consolidated result (only if something is still missing) ---
     if grouped_results:
-        message = "\nSome configurations are missing one or more of the mapp folders"
+        message = (
+            "\nSome configurations are missing one or more of the required mapp folders"
+        )
         for config_name, missing_mapp_folders in grouped_results.items():
-            missing_folders = ", ".join(sorted(missing_mapp_folders))
-            message += f"\n  - '{config_name}': {missing_folders}"
-
+            message += (
+                f"\n  - '{config_name}': {', '.join(sorted(missing_mapp_folders))}"
+            )
         message += "\n\nYou can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
         log(message, when="AS4", severity="MANDATORY")
