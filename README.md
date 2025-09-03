@@ -2,7 +2,7 @@
 
 [![Total downloads](https://img.shields.io/github/downloads/br-automation-community/as6-migration-tools/total.svg)](https://github.com/br-automation-community/as6-migration-tools/releases)
 [![License](https://img.shields.io/github/license/br-automation-community/as6-migration-tools.svg)](https://github.com/br-automation-community/as6-migration-tools/blob/main/LICENSE)
-[![Build]([![Made For B&R](https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg)](https://www.br-automation.com))](https://github.com/br-automation-community/as6-migration-tools/actions/workflows/build-and-release.yml)
+[![Made For B&R](https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg)](https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg)
 
 **Open-source tools for analyzing and migrating B&R Automation Studio 4 (AS4) projects to Automation Studio 6 (AS6).**  
 Detects obsolete libraries, unsupported hardware, deprecated functions - and includes helper scripts for automatic code conversion.
