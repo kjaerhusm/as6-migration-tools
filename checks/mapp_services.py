@@ -28,16 +28,16 @@ def check_mapp_version(apj_path, log, verbose=False):
 
                 if major == 5 and minor < 20:
                     log(
-                        "\nIt is recommended to use a mapp Services version 5.20 or later for the conversion."
-                        "\nIf a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed."
-                        "\nPlease update the mapp Services version in AS4 to 5.20 or later before migrating to AS6.",
+                        "It is recommended to use a mapp Services version 5.20 or later for the conversion."
+                        "\n - If a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed."
+                        "\n - Please update the mapp Services version in AS4 to 5.20 or later before migrating to AS6.",
                         when="AS4",
                         severity="MANDATORY",
                     )
                 else:
                     log(
-                        "\nThe automatic mapp Services configuration upgrade is only available with mapp Services 6.0."
-                        "\nPlease ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.",
+                        "The automatic mapp Services configuration upgrade is only available with mapp Services 6.0."
+                        "\n - Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.",
                         when="AS6",
                         severity="MANDATORY",
                     )

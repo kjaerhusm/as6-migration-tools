@@ -1,6 +1,5 @@
 import re
 import xml.etree.ElementTree as ET
-from utils import utils
 
 
 def check_mappView(apj_path, log, verbose=False):
@@ -37,9 +36,9 @@ def check_mappView(apj_path, log, verbose=False):
                     '\n  Assign the role "BR_Engineer" to the user "Anonymous". Create that user if it doesn\'t already exist, assign no password.'
                     "\n"
                     "\n- To allow access to a File device from a running mappView application, it is now required to explicitly whitelist it for reading:"
-                    "\n  - Open the mappView server configuration file (Configuration View/mappView/Config.mappviewcfg)"
-                    '\n  - Check "Change Advanced Parameter Visibility" button in the editor toolbar'
-                    '\n  - Enter your accessed File device "Name" under "MappViewConfiguration->Server configuration->File device whitelist"',
+                    "\n  Open the mappView server configuration file (Configuration View/mappView/Config.mappviewcfg)"
+                    '\n  Check "Change Advanced Parameter Visibility" button in the editor toolbar'
+                    '\n  Enter your accessed File device "Name" under "MappViewConfiguration->Server configuration->File device whitelist"',
                     when="AS6",
                     severity="WARNING",
                 )
@@ -64,11 +63,9 @@ def check_mappView(apj_path, log, verbose=False):
                         "widgets.brease.MotionPad",
                     }:
                         log(
-                            "Found use of AuditList, UserList, TextPad or MotionPad widgets that requires the role of BR_Engineer",
+                            "Found use of AuditList, UserList, TextPad or MotionPad widgets that requires the role of BR_Engineer"
+                            "\n - Check in the following (Configuration View/AccessAndSecurity/UserRoleSystem/User.user) that a user with role BR_Engineer is present",
                             severity="INFO",
-                        )
-                        log(
-                            "Check in the following (Configuration View/AccessAndSecurity/UserRoleSystem/User.user) that a user with role BR_Engineer is present"
                         )
 
     if verbose:

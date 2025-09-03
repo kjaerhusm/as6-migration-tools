@@ -292,6 +292,7 @@ def build_web_path(links, url):
             "mapp_view_widget": f"{path_help}/visualization/mappview/widgets/",
             "mapp_view_help": f"{path_help}/visualization/mappview/",
             "mapp_connect_help": f"{path_help}/visualization/mappconnect/",
+            "safety_help": f"{path_help}/safety/",
             "opc_ua_help": f"{path_help}/communication/opcua/",
             "as4_migration": f"{path_help}/revinfos/version-info/projekt_aus_automation_studio_4_ubernehmen/automation_studio/",
             "": f"{path_help}/",
