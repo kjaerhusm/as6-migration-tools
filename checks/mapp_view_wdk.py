@@ -12,11 +12,11 @@ Action:
   and provide a link to the B&R community.
 """
 
-import os
 from pathlib import Path
 from typing import Iterator, Optional
 from enum import Enum
 import xml.etree.ElementTree as ET
+
 
 class WidgetLibraryType(Enum):
     WDK = "WDK"
@@ -42,16 +42,18 @@ def _find_first_wdk_folder(widgets_root: Path) -> Optional[Path]:
     """
     Return the first folder (any depth under the given Widgets root, including the root)
     that contains BOTH a .js and a .html file. If none found, return None.
-    Uses os.walk to avoid repeated directory listings.
+    Avoid multiple directory listings by storing the folders
     """
-    for folder, _dirs, files in os.walk(widgets_root):
-        if not files:
+    already_checked = set()
+    for js_file in widgets_root.rglob("*.js"):
+        folder = js_file.parent
+        if folder in already_checked:
             continue
-        has_js = any(name.lower().endswith(".js") for name in files)
-        has_html = any(name.lower().endswith(".html") for name in files)
-        if has_js and has_html:
-            return Path(folder)
+        if list(folder.glob("*.html")):
+            return folder
+        already_checked.add(folder)
     return None
+
 
 def _detect_widget_library_type(widget_lib_path: Path) -> Optional[WidgetLibraryType]:
     """
@@ -67,7 +69,11 @@ def _detect_widget_library_type(widget_lib_path: Path) -> Optional[WidgetLibrary
     - To diff 4 & 6, we compare the "version" attribute in the file (it's mappView version)
     """
 
-    if not widget_lib_path or not widget_lib_path.exists() or not widget_lib_path.is_dir():
+    if (
+        not widget_lib_path
+        or not widget_lib_path.exists()
+        or not widget_lib_path.is_dir()
+    ):
         return None
 
     mapping_file = widget_lib_path / "WidgetLibrary.mapping"
@@ -80,7 +86,6 @@ def _detect_widget_library_type(widget_lib_path: Path) -> Optional[WidgetLibrary
             return WidgetLibraryType.WDTC
         elif mapping_node is not None:
             return WidgetLibraryType.WDK
-
 
     description_file = widget_lib_path / "Description.widgetlibrary"
     if description_file.exists():
@@ -119,24 +124,26 @@ def check_widget_lib_usage(logical_path: Path, log, verbose: bool = False) -> No
         return
     nb_lib_to_change_found: int = 0
     for root in widgets_roots:
-        libraries_folder: str = [f.path for f in os.scandir(root) if f.is_dir()]
-        for library in libraries_folder:
-            lib_path = Path(library)
+        libraries_folder: list[Path] = [f for f in root.iterdir() if f.is_dir()]
+        for lib_path in libraries_folder:
             rel = lib_path.relative_to(logical_path)
             lib_name = lib_path.name
             lib_type = _detect_widget_library_type(lib_path)
-            if lib_type != WidgetLibraryType.USER_WIDGET_LIB_6 and lib_type != WidgetLibraryType.WDTC:
+            if (
+                lib_type != WidgetLibraryType.USER_WIDGET_LIB_6
+                and lib_type != WidgetLibraryType.WDTC
+            ):
                 nb_lib_to_change_found += 1
 
             if lib_type == WidgetLibraryType.WDK:
                 if verbose:
                     log(f"Found WDK library: {lib_name} ({rel})")
-                
+
                 log(
                     f"Widget library {lib_name} ({rel}) appears to be a WDK (Widget Development Kit) library, which is deprecated and no longer supported in AS6."
                     "\nFor more information, visit the B&R Community: https://community.br-automation.com/c/wdtc/10",
                     when="AS6",
-                    severity="MANDATORY"
+                    severity="MANDATORY",
                 )
             elif lib_type == WidgetLibraryType.WDTC:
                 if verbose:
@@ -144,11 +151,14 @@ def check_widget_lib_usage(logical_path: Path, log, verbose: bool = False) -> No
             elif lib_type == WidgetLibraryType.USER_WIDGET_LIB_4:
                 if verbose:
                     log(f"Found User Widget Library 4: {lib_name} ({rel})")
-                
+
             elif lib_type == WidgetLibraryType.USER_WIDGET_LIB_6:
                 if verbose:
                     log(f"Found User Widget Library 6: {lib_name} ({rel})")
 
     if nb_lib_to_change_found == 0:
         if verbose:
-            log("No WDK usage or User Widget Library detected in mappView/Widgets.", severity="INFO")
+            log(
+                "No WDK usage or User Widget Library detected in mappView/Widgets.",
+                severity="INFO",
+            )
