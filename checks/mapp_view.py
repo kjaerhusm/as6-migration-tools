@@ -50,23 +50,31 @@ def check_mappView(apj_path, log, verbose=False):
                 "xsi": "http://www.w3.org/2001/XMLSchema-instance",
             }
             logical_path = apj_path.parent / "Logical"
-            for content_path in logical_path.rglob("*.content"):
-                tree = ET.parse(content_path)
-                root_elem = tree.getroot()
+            try:
+                for content_path in logical_path.rglob("*.content"):
+                    tree = ET.parse(content_path)
+                    root_elem = tree.getroot()
 
-                for widget in root_elem.findall(".//c:Widget", ns):
-                    xsi_type = widget.attrib.get(f"{{{ns['xsi']}}}type")
-                    if xsi_type in {
-                        "widgets.brease.AuditList",
-                        "widgets.brease.TextPad",
-                        "widgets.brease.UserList",
-                        "widgets.brease.MotionPad",
-                    }:
-                        log(
-                            "Found use of AuditList, UserList, TextPad or MotionPad widgets that requires the role of BR_Engineer"
-                            "\n - Check in the following (Configuration View/AccessAndSecurity/UserRoleSystem/User.user) that a user with role BR_Engineer is present",
-                            severity="INFO",
-                        )
+                    for widget in root_elem.findall(".//c:Widget", ns):
+                        xsi_type = widget.attrib.get(f"{{{ns['xsi']}}}type")
+                        if xsi_type in {
+                            "widgets.brease.AuditList",
+                            "widgets.brease.TextPad",
+                            "widgets.brease.UserList",
+                            "widgets.brease.MotionPad",
+                        }:
+                            log(
+                                "Found use of AuditList, UserList, TextPad or MotionPad widgets that requires the role of BR_Engineer"
+                                "\n - Check in the following (Configuration View/AccessAndSecurity/UserRoleSystem/User.user) that a user with role BR_Engineer is present",
+                                severity="INFO",
+                            )
+            except ET.ParseError as e:
+                log(f"XML parsing error in {content_path}: {e}", severity="ERROR")
+            except Exception as e:
+                log(
+                    f"Unexpected error while processing {content_path}: {e}",
+                    severity="ERROR",
+                )
 
     if verbose:
         # Walk through all directories
