@@ -1,70 +1,71 @@
-# as6-migration-tools
+<!-- Logo -->
+<div align="center">
+  <a href="https://github.com/br-automation-community/as6-migration-tools/releases/latest" target="_blank" rel="noopener noreferrer">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.svg" />
+      <img alt="as6-migration-tools logo" src="docs/logo-light.svg" width="720" />
+    </picture>
+  </a>
+</div>
 
-[![Total downloads](https://img.shields.io/github/downloads/br-automation-community/as6-migration-tools/total.svg)](https://github.com/br-automation-community/as6-migration-tools/releases)
-[![License](https://img.shields.io/github/license/br-automation-community/as6-migration-tools.svg)](https://github.com/br-automation-community/as6-migration-tools/blob/main/LICENSE)
-[![Made For B&R](https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg)](https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg)
+<!-- Stats badges -->
+<p align="center">
+  <img src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2Fbr-automation-community%2Fas6-migration-tools&label=Visitors&icon=heart-fill&color=%23495057&message=&style=flat&tz=localtime" alt="Visitors"/>
+  <a href="https://github.com/br-automation-community/as6-migration-tools/releases" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/github/downloads/br-automation-community/as6-migration-tools/total.svg" alt="Total downloads"/>
+  </a>
+  <img src="https://img.shields.io/badge/dynamic/json?label=Runs&query=%24.value&url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fas6-migration-tools-6f2a48c7%2Frun-clicks&cacheSeconds=300" alt="Script runs"/>
+  <a href="https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg" target="_blank" rel="noopener noreferrer">
+    <img src="https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg" alt="Made for B&R"/>
+  </a>
+</p>
 
-**Open-source tools for analyzing and migrating B&R Automation Studio 4 (AS4) projects to Automation Studio 6 (AS6).**  
-Detects obsolete libraries, unsupported hardware, deprecated functions - and includes helper scripts for automatic code conversion.
+<div align="center">
+  Open-source tools that turn complex Automation Studio migrations into a single, actionable report.
+</div>
+<div align="center">
+  Detecting deprecated libraries & functions, unsupported hardware, and more.
+</div>
 
-> ⚠️ **Disclaimer:** This project is **unofficial** and not provided or endorsed by B&R Industrial Automation.  
-> It is offered as an open-source tool, with no warranty or guarantees.  
-> Use at your own risk - contributions and improvements are very welcome!
+</br>
 
----
+<!-- Demo GIF -->
+<div align="center">
+  <img src="docs/hero-run.gif" width="85%" alt="AS4 → AS6 analyzer running a project scan" />
+</div>
+
+</br>
+
+<!-- CTAs -->
+<p align="center">
+  <a href="https://github.com/br-automation-community/as6-migration-tools/releases/latest" target="_blank" rel="noopener noreferrer">
+    <img alt="Download EXE" src="https://img.shields.io/badge/Download-EXE-informational?style=for-the-badge&logo=windows&logoColor=white" />
+  </a>
+  <a href="https://github.com/br-automation-community/as6-migration-tools/issues/new/choose" target="_blank" rel="noopener noreferrer">
+    <img alt="Report Issue" src="https://img.shields.io/badge/Report-Issue-critical?style=for-the-badge&logo=github" />
+  </a>
+</p>
+
+</br>
 
 ## Features
 
-- Analyze AS4 project structure and content
-- Detect obsolete and deprecated libraries
-- Identify unsupported hardware components
-- Find deprecated function blocks and functions
-- Suggest library upgrades and replacements
-- Check project and hardware file compatibility with AS6
-- Includes helper scripts for code migration and conversion  
-- Easily extendable to support more patterns and conversions
+- Reduce manual grepping and trial-and-error when opening AS4 projects in AS6.
+- Catch breaking changes early: libraries, function blocks/functions, hardware, mapp, and common pitfalls.
+- Repeatable, deterministic scans you can run before every commit or release.
+- Non-destructive by default: analyze first; apply helper conversions when you’re ready.
+- Works fully offline; no telemetry; everything runs locally.
+- Fast feedback on large projects; verbose mode for deep dives.
+- One clean, shareable report per run (severity + path + hint).
+- Windows EXE for one-click usage; Python CLI for power users and CI.
 
 ---
 
-## Installation
 
-- ✅ **Recommended:** Download the latest release from [GitHub Releases](https://github.com/br-automation-community/as6-migration-tools/releases/)  
-  Unzip and run `as6-migration-tools.exe`.
+## Get started
 
-- 🐍 **Alternative (Python source):**  
-  Run `pip install -r requirements.txt`
-
-## Usage
-
-Launch `gui_launcher.py` to open the GUI.  
-Choose the target script, browse to your AS4 project, and click **Run**.
-
-![Example Analysis Output](docs/gui1.png)
-
-Run any of the scripts from the command line:
-
-```bash
-usage: python as4_to_as6_analyzer.py project_path [options]
-
-Scans Automation Studio project for transition from AS4 to AS6
-
-positional arguments:
-  project_path   Automation Studio 4.x path containing *.apj file
-
-options:
-  -h,        --help      Show this help message and exit
-  -v,        --verbose   Outputs verbose information
-  --no-file              Skip creating the analysis file in the AS folder
-
-```
-
-Example:
-
-Run the main script to analyze an Automation Studio 4.12.x project:
-
-```bash
-python as4_to_as6_analyzer.py "C:\path\to\AutomationStudio4Project"
-```
+- **Windows (recommended):** [Download latest release](https://github.com/br-automation-community/as6-migration-tools/releases/latest) → Unzip → Run `as6-migration-tools.exe`
+- **From source (devs):** `pip install -r requirements.txt` → `python gui_launcher.py` **or** `python as4_to_as6_analyzer.py "<path>"`
 
 > 💡 **Tip:** If you're using WSL, convert Windows paths like this:  
 > `C:\Projects\MyProject` → `/mnt/c/Projects/MyProject`
@@ -121,11 +122,8 @@ To prevent this, either use the GUI or change the call to `python -m helpers.<an
 
 ## License
 
-MIT License - free to use for personal or commercial purposes.
+> Unofficial project. Not affiliated with or endorsed by B&R Industrial Automation.  
+> Provided as-is under the MIT License, without warranty.  
+> “B&R” and “Automation Studio” are trademarks of their respective owners.  
 
----
-
-This project is built by and for the B&R developer community.  
-It helps analyze existing AS4 projects, detect potential upgrade issues, and simplify the transition to AS6.
-
-We hope it saves you time and gives you a head start - feedback and pull requests are always welcome 🚀
+💪 Thanks a lot for spending your time helping. Keep rocking 🥂

@@ -1,0 +1,15 @@
+<!-- Light mode variant (centered content) -->
+<svg width="920" height="160" viewBox="0 0 920 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="as6-migration-tools">
+  <title>as6-migration-tools</title>
+  <style>
+    .word { font: 800 72px/1.1 'Segoe UI', Inter, Arial, sans-serif; letter-spacing: 0.5px; fill: #0F172A; }
+    .sub  { font: 600 20px/1.4 'Segoe UI', Inter, Arial, sans-serif; fill: #475569; }
+  </style>
+
+  <text x="50%" y="80" text-anchor="middle" class="word">as6-migration-tools</text>
+
+  <g transform="translate(460,0)">
+    <rect x="-210" y="100" rx="12" ry="12" width="420" height="40" fill="#F1F5F9"/>
+    <text x="0" y="126" text-anchor="middle" class="sub">The AS4 <tspan fill="#F97316">→</tspan> AS6 migration analyzer</text>
+  </g>
+</svg>
