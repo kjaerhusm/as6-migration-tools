@@ -9,6 +9,7 @@ import sys
 import threading
 import urllib.error
 import urllib.request
+import webbrowser
 from pathlib import Path
 
 from CTkMessagebox import CTkMessagebox
@@ -370,6 +371,126 @@ def bump_counter_async(metric: str = "run-clicks") -> None:
     threading.Thread(
         target=_BACKEND.bump, kwargs={"metric": metric}, daemon=True
     ).start()
+
+
+# --- Update-check helpers (GitHub Releases) ---
+
+GITHUB_REPO = "br-automation-community/as6-migration-tools"  # owner/repo
+
+
+def _http_get_json(url: str, timeout: int = 5):
+    """GET JSON with a UA and (if available) the app's global SSL context."""
+    req = urllib.request.Request(url, headers={"User-Agent": "as6-migration-tools"})
+    ctx = globals().get("_SSL_CTX")  # use your global SSL ctx if present
+    if ctx is not None:
+        with urllib.request.urlopen(req, timeout=timeout, context=ctx) as r:
+            return json.load(r)
+    else:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.load(r)
+
+
+def _normalize_calver(v: str) -> tuple[int, ...]:
+    """
+    Normalize tags like 'v2025.09.04.1616' or '2025.09.04.1616+gabc1234' to a tuple of ints.
+    """
+    v = (v or "").strip()
+    if v.startswith("v"):
+        v = v[1:]
+    v = v.split("+", 1)[0]  # drop '+gSHA'
+    parts = [int(p) for p in v.split(".") if p.isdigit()]
+    return tuple(parts)
+
+
+def _is_remote_newer(remote_tag: str, local_ui_version: str) -> bool:
+    """True if remote (GitHub) CalVer is strictly newer than local CalVer."""
+    try:
+        r = _normalize_calver(remote_tag)
+        l = _normalize_calver(local_ui_version)
+        # Compare lexicographically: (YYYY, MM, DD, HHMM)
+        return r > l
+    except Exception:
+        # If parsing fails, be conservative and say "not newer"
+        return False
+
+
+def get_latest_release_info():
+    """
+    Returns (tag, html_url, asset_url_or_none).
+    asset_url picks the EXE/ZIP if we can find a likely match; else None.
+    """
+    api = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+    data = _http_get_json(api)
+    tag = data.get("tag_name") or ""
+    html_url = (
+        data.get("html_url") or f"https://github.com/{GITHUB_REPO}/releases/latest"
+    )
+    asset_url = None
+    for a in data.get("assets", []):
+        name = a.get("name", "").lower()
+        if name in ("as6-migration-tools.exe", "as6-migration-tools.zip"):
+            asset_url = a.get("browser_download_url") or html_url
+            break
+    return tag, html_url, asset_url
+
+
+def check_for_updates_async(parent=None, show_if_current: bool = False) -> None:
+    """
+    Non-blocking update check:
+    - Compares local CalVer from get_version() with GitHub 'releases/latest'.
+    - If newer, prompt the user to download.
+    - If up-to-date and show_if_current=True, inform the user.
+    Uses CTkMessagebox if parent provided, otherwise prints to console.
+    """
+
+    def _task():
+        try:
+            local_ver = get_version()  # e.g. '2025.09.04.1616+gabc1234' or 'dev'
+            tag, html_url, asset_url = get_latest_release_info()
+            if tag and _is_remote_newer(tag, local_ver):
+                msg = (
+                    f"A newer version is available:\n"
+                    f"Current: {local_ver}\nLatest : {tag}\n\nOpen download page?"
+                )
+                if parent is not None:
+                    m = CTkMessagebox(
+                        title="Update available",
+                        message=msg,
+                        icon="info",
+                        option_1="Download",
+                        option_2="Later",
+                        width=460,
+                        wraplength=390,
+                    )
+                    if m.get() == "Download":
+                        webbrowser.open(asset_url or html_url)
+                else:
+                    print(msg + " (opening browser)")
+                    webbrowser.open(asset_url or html_url)
+            else:
+                if show_if_current:
+                    msg = f"You are up to date.\nCurrent: {local_ver}\nLatest : {tag or 'unknown'}"
+                    if parent is not None:
+                        CTkMessagebox(
+                            title="No updates",
+                            message=msg,
+                            icon="check",
+                            width=420,
+                            wraplength=380,
+                        )
+                    else:
+                        print(msg)
+        except Exception as e:
+            # Silent failure by design (no hard dependency on update servers)
+            if parent is None:
+                print(f"[update-check] failed: {e}")
+            # You could optionally surface a soft warning in GUI if you want.
+            pass
+
+    threading.Thread(target=_task, daemon=True).start()
+
+
+# --- end update-check helpers ---
 
 
 def build_web_path(links, url):
