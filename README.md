@@ -11,9 +11,7 @@
 <!-- Stats badges -->
 <p align="center">
   <img src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2Fbr-automation-community%2Fas6-migration-tools&label=Visitors&icon=heart-fill&color=%23495057&message=&style=flat&tz=localtime" alt="Visitors"/>
-  <a href="https://github.com/br-automation-community/as6-migration-tools/releases" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.shields.io/github/downloads/br-automation-community/as6-migration-tools/total.svg" alt="Total downloads"/>
-  </a>
+  [![Downloads](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/br-automation-community/as6-migration-tools/main/badges/lifetime-downloads.json&cacheSeconds=3600)](https://github.com/br-automation-community/as6-migration-tools/releases)
   <img src="https://img.shields.io/badge/dynamic/json?label=Runs&query=%24.value&url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fas6-migration-tools-6f2a48c7%2Frun-clicks&cacheSeconds=300" alt="Script runs"/>
   <a href="https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg" target="_blank" rel="noopener noreferrer">
     <img src="https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg" alt="Made for B&R"/>

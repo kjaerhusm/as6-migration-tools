@@ -127,7 +127,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # --- Added: persist lifetime downloads and optional runs backup, then commit ---
+      # ---------------------- switch to a real branch for commits ----------------------
+      - name: Checkout main for badge commit
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      # -------------------------------------------------------------------------------------
+
+      # --- Persist lifetime downloads and runs backup, then commit ---
       - name: Update lifetime downloads and runs backup badges
         env:
           REPO_FULL: ${{ github.repository }}
@@ -241,3 +249,4 @@ jobs:
             git commit -m "Update lifetime downloads / runs backup badges after release"
             git push
           fi
+  
