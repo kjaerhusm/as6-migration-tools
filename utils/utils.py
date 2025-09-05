@@ -375,7 +375,7 @@ def bump_counter_async(metric: str = "run-clicks") -> None:
 
 # --- Update-check helpers (GitHub Releases) ---
 
-GITHUB_REPO = "br-automation-community/as6-migration-tools"  # owner/repo
+GITHUB_REPO = "kjaerhusm/as6-migration-tools"  # owner/repo TEST!!!
 
 
 def _http_get_json(url: str, timeout: int = 5):
