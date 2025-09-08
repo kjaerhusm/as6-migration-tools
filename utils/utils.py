@@ -4,44 +4,12 @@ import hashlib
 import json
 import os
 import re
-import ssl
 import sys
 from pathlib import Path
 
 from CTkMessagebox import CTkMessagebox
 
 _CACHED_LINKS = None
-
-
-def _make_ssl_context() -> ssl.SSLContext:
-    """
-    Build a verification-enabled SSL context that:
-      - uses OpenSSL defaults, and
-      - on Windows, merges the OS certificate stores (ROOT/CA).
-    This survives corporate TLS interception (custom roots) without external deps.
-    """
-    ctx = ssl.create_default_context()
-    # On Windows, merge ROOT/CA stores into the context
-    if (
-        os.name == "nt"
-        and hasattr(ssl, "enum_certificates")
-        and hasattr(ssl, "DER_cert_to_PEM_cert")
-    ):
-        try:
-            pem_chunks = []
-            for store in ("ROOT", "CA"):
-                for cert, enc, trust in ssl.enum_certificates(store):
-                    if isinstance(cert, bytes):
-                        pem_chunks.append(ssl.DER_cert_to_PEM_cert(cert))
-            if pem_chunks:
-                ctx.load_verify_locations(cadata="".join(pem_chunks))
-        except Exception:
-            # Best-effort: context is still valid even if this fails
-            pass
-    return ctx
-
-
-_SSL_CTX = _make_ssl_context()
 
 
 class ConsoleColors:
