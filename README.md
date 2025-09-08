@@ -26,14 +26,14 @@
   Detecting deprecated libraries & functions, unsupported hardware, and more.
 </div>
 
-</br>
+<br />
 
 <!-- Demo GIF -->
 <div align="center">
   <img src="docs/hero-run.gif" width="85%" alt="AS4 → AS6 analyzer running a project scan" />
 </div>
 
-</br>
+<br />
 
 <!-- CTAs -->
 <p align="center">
@@ -45,7 +45,7 @@
   </a>
 </p>
 
-</br>
+<br />
 
 ## Features
 
