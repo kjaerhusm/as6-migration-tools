@@ -135,6 +135,9 @@ def main():
         check_libraries(logical_path, log, args.verbose)
         check_functions(logical_path, log, args.verbose)
 
+        # Access & Security (UserRoleSystem + ANSL in .hw)
+        check_access_security(physical_path, log, args.verbose)
+
         # Special-domain checks
         check_safety(apj_path, log, args.verbose)  # Safety system issues
         check_vision_settings(apj_path, log, args.verbose)  # mappVision issues
@@ -150,6 +153,18 @@ def main():
         )  # Scene Viewer usage & requirements
 
         # Finish up
+
+        log("─" * 80)
+        log(
+            "After upgrading the Automation Studio 4 project:",
+            when="AS6",
+            severity="INFO",
+        )
+        log(
+            " - The Automation Runtime version, Visual Components version and Technology Package versions must still be set in Runtime versions dialog box."
+            "\n - To ensure correct functionality, it is mandatory to perform a Project / Clean up configuration or Project / Rebuild configuration with AS 6 for all configurations."
+        )
+
         end_time = time.time()
         log(
             "─" * 80
