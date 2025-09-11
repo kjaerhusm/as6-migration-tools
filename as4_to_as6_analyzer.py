@@ -127,6 +127,7 @@ def main():
         )
 
         # Hardware & configuration checks
+        check_ar(physical_path, log, args.verbose)
         check_uad_files(physical_path, log, args.verbose)
         check_hardware(physical_path, log, args.verbose)
         check_file_devices(physical_path, log, args.verbose)

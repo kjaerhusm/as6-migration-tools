@@ -1,4 +1,5 @@
 from .access_security import check_access_security
+from .automation_runtime import check_ar
 from .common import check_project_path_and_name
 from .deprecated_functions import check_functions
 from .file_compatibility import check_files_for_compatibility
