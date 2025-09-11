@@ -24,7 +24,11 @@ def process_pkg_file(file_path, patterns):
     for match in matches:
         for pattern, reason in patterns.items():
             if match.lower() == pattern.lower():
-                results.append((pattern, reason, file_path))
+                # if we find a match, check if we can find a matching *.lby file in the subdir
+                pkg_path = Path(file_path).parent / pattern
+                is_lib = any(pkg_path.rglob("*.lby"))
+                if is_lib:
+                    results.append((pattern, reason, file_path))
     return results
 
 
