@@ -1,5 +1,5 @@
 {
-  "ArAutoId": "Reason for discontinuation not indicated",
+  "ArAutoId": "The content of this library was limited to AutoID-relevant data types, which are now delivered along with an application example for an RFID reader in the OpcUa_Sample project. The project is included in the installation and can be found on the start page of Automation Studio.",
   "ArPubSubD": "Recommended replacement: FxPubSubD",
   "AsARCNET": "Supports SG3 only",
   "AsArLog": "Has been replaced by library ArEventLog",

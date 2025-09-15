@@ -25,7 +25,7 @@ def check_mapp_version(apj_path, log, verbose=False):
                 version_str = f"{major}.{minor}"
                 log(f"Detected Mapp Services version: {version_str}", severity="INFO")
 
-                if major == 5 and minor < 20:
+                if major < 5 or (major == 5 and minor < 20):
                     log(
                         "It is recommended to use a mapp Services version 5.20 or later for the conversion."
                         "\n - If a mapp Services version older than 5.20 is used, the correct conversion of all configuration parameters is not guaranteed."
@@ -33,13 +33,13 @@ def check_mapp_version(apj_path, log, verbose=False):
                         when="AS4",
                         severity="MANDATORY",
                     )
-                else:
-                    log(
-                        "The automatic mapp Services configuration upgrade is only available with mapp Services 6.0."
-                        "\n - Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.",
-                        when="AS6",
-                        severity="MANDATORY",
-                    )
+
+                log(
+                    "The automatic mapp Services configuration upgrade is only available with mapp Services 6.0."
+                    "\n - Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.",
+                    when="AS6",
+                    severity="MANDATORY",
+                )
 
         if "<mappMotion " in line and 'Version="5.' in line:
             m = re.search(r'Version="(\d+)\.(\d+)', line)
