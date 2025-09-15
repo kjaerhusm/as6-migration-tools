@@ -8,6 +8,7 @@ def check_files_for_compatibility(apj_path, extensions, log, verbose=False):
     """
     Checks the compatibility of .apj and .hw files within a apj_path.
     Validates that files have a minimum required version.
+    Generates warning when files are converted to a new format in AS6 that may break references.
     """
     log("─" * 80 + "\nChecking project and hardware files for compatibility...")
 
@@ -38,6 +39,7 @@ def check_files_for_compatibility(apj_path, extensions, log, verbose=False):
             "Please ensure these files are saved at least once with Automation Studio 4.12",
             severity="MANDATORY",
         )
+        return False
     else:
         if verbose:
             log("All project and hardware files are valid.", severity="VERBOSE")
@@ -55,8 +57,10 @@ def check_files_for_compatibility(apj_path, extensions, log, verbose=False):
 
     if reference_files:
         log(
-            "The following .pkg files contain file reference, make sure that the references are valid after converting to AS6:",
+            "Some files are converted to a new format in AS6. This may break references, The following .pkg files contain file reference, make sure that the references are valid after converting to AS6:",
             severity="WARNING",
         )
         for ref_file in reference_files:
             log(f"- {ref_file}")
+
+    return True

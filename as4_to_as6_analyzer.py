@@ -122,9 +122,14 @@ def main():
 
         # Generic file compatibility checks
         file_patterns = [".apj", ".hw"]
-        check_files_for_compatibility(
+        if not check_files_for_compatibility(
             args.project_path, file_patterns, log, args.verbose
-        )
+        ):
+            log(
+                "Project compatibility issues detected. Please resolve these before proceeding with other checks.",
+                severity="ERROR",
+            )
+            return  # Stop further checks if file compatibility fails
 
         # Hardware & configuration checks
         check_ar(physical_path, log, args.verbose)
