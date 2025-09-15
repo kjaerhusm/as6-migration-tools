@@ -4,7 +4,7 @@ from pathlib import Path
 from utils import utils
 
 
-def check_files_for_compatibility(apj_path, extensions, log, verbose=False):
+def check_files_for_compatibility(apj_path, log, verbose=False):
     """
     Checks the compatibility of .apj and .hw files within a apj_path.
     Validates that files have a minimum required version.
@@ -14,6 +14,8 @@ def check_files_for_compatibility(apj_path, extensions, log, verbose=False):
 
     incompatible_files = []
     required_version_prefix = "4.12"
+    extensions = [".apj", ".hw"]
+
     version_pattern = re.compile(r'AutomationStudio (?:Working)?Version="?([\d.]+)')
 
     for ext in extensions:

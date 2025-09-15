@@ -121,10 +121,7 @@ def main():
         physical_path = Path(args.project_path) / "Physical"
 
         # Generic file compatibility checks
-        file_patterns = [".apj", ".hw"]
-        if not check_files_for_compatibility(
-            args.project_path, file_patterns, log, args.verbose
-        ):
+        if not check_files_for_compatibility(args.project_path, log, args.verbose):
             log(
                 "Project compatibility issues detected. Please resolve these before proceeding with other checks.",
                 severity="ERROR",
