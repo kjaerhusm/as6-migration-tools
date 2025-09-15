@@ -51,9 +51,25 @@ def check_files_for_compatibility(apj_path, extensions, log, verbose=False):
         if "mappView" in path.parts:
             continue
         if path.is_file():
-            content = utils.read_file(path)
-            if 'Type="File" Reference="true"' in content:
-                reference_files.append(str(path))
+            try:
+                import xml.etree.ElementTree as ET
+
+                tree = ET.parse(path)
+                root = tree.getroot()
+                # Search for any node with Type="File" and Reference="true" attributes
+                found = False
+                for elem in root.iter():
+                    if (
+                        elem.attrib.get("Type") == "File"
+                        and elem.attrib.get("Reference") == "true"
+                    ):
+                        found = True
+                        break
+                if found:
+                    reference_files.append(str(path))
+            except Exception as e:
+                # Fallback: ignore file if not valid XML
+                pass
 
     if reference_files:
         log(
