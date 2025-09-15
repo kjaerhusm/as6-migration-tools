@@ -4,9 +4,9 @@ from pathlib import Path
 from utils import utils
 
 
-def check_files_for_compatibility(directory, extensions, log, verbose=False):
+def check_files_for_compatibility(apj_path, extensions, log, verbose=False):
     """
-    Checks the compatibility of .apj and .hw files within a directory.
+    Checks the compatibility of .apj and .hw files within a apj_path.
     Validates that files have a minimum required version.
     """
     log("─" * 80 + "\nChecking project and hardware files for compatibility...")
@@ -16,7 +16,7 @@ def check_files_for_compatibility(directory, extensions, log, verbose=False):
     version_pattern = re.compile(r'AutomationStudio (?:Working)?Version="?([\d.]+)')
 
     for ext in extensions:
-        for path in Path(directory).rglob(f"*{ext}"):
+        for path in Path(apj_path).rglob(f"*{ext}"):
             if path.is_file():
                 content = utils.read_file(path)
                 version_match = version_pattern.search(content)
@@ -41,3 +41,22 @@ def check_files_for_compatibility(directory, extensions, log, verbose=False):
     else:
         if verbose:
             log("All project and hardware files are valid.", severity="VERBOSE")
+
+    # --- Search for *.pkg files in config_folder and subfolders ---
+    reference_files = []
+    for path in Path(apj_path + "/Physical").rglob("*.pkg"):
+        # Ignore files in any directory named 'mappView'
+        if "mappView" in path.parts:
+            continue
+        if path.is_file():
+            content = utils.read_file(path)
+            if 'Type="File" Reference="true"' in content:
+                reference_files.append(str(path))
+
+    if reference_files:
+        log(
+            "The following .pkg files contain file reference, make sure that the references are valid after converting to AS6:",
+            severity="WARNING",
+        )
+        for ref_file in reference_files:
+            log(f"- {ref_file}")
