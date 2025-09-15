@@ -121,12 +121,7 @@ def main():
         physical_path = Path(args.project_path) / "Physical"
 
         # Generic file compatibility checks
-        if not check_files_for_compatibility(args.project_path, log, args.verbose):
-            log(
-                "Project compatibility issues detected. Please resolve these before proceeding with other checks.",
-                severity="ERROR",
-            )
-            return  # Stop further checks if file compatibility fails
+        check_files_for_compatibility(args.project_path, log, args.verbose)
 
         # Hardware & configuration checks
         check_ar(physical_path, log, args.verbose)

@@ -41,7 +41,6 @@ def check_files_for_compatibility(apj_path, log, verbose=False):
             "Please ensure these files are saved at least once with Automation Studio 4.12",
             severity="MANDATORY",
         )
-        return False
     else:
         if verbose:
             log("All project and hardware files are valid.", severity="VERBOSE")
@@ -80,5 +79,3 @@ def check_files_for_compatibility(apj_path, log, verbose=False):
         )
         for ref_file in reference_files:
             log(f"- {ref_file}")
-
-    return True
