@@ -1,5 +1,6 @@
 {
   "AsOpcUac": "OPC UA client library updated in AR 6. Manual adjustments required. Consider using the helper asopcua_update.py",
+  "AsOpcUas": "OPC UA server library updated in AR 6. Manual adjustments required. Consider using the helper asopcua_update.py",
   "MTAdvanced": "Must be deleted and re-added with a version >= 6.0",
   "MTHydGen": "Must be deleted and re-added with a version >= 6.0",
   "MTHydPump": "Must be deleted and re-added with a version >= 6.0",
