@@ -82,6 +82,7 @@
 | `helpers/asopcua_update.py`      | Updates OPC UA client code for AR 6 compatibility      |
 | `helpers/create_mapp_folders.py` | Creates the newer folders for the mapp components      |
 | `helpers/mappmotion_update.py`   | Updates mappMotion code for mappMotion 6 compatibility |
+| `helpers/license_checker.py`     | Searching for needed mapp technology licenses          |
 
 Additional helper scripts may be added in future versions - pull requests welcome.
 
