@@ -29,8 +29,6 @@ def mappLicenseAnalyser(project_path: Path):
                 for line in lines:
                     for obj in result["mappView"]["breaseWidgets"]:
                         if "widgets.brease." + obj["name"] in line:
-                            # utils.log("widgets.brease."+obj["name"] + " - " + filePath, severity="INFO",)
-                            # log.append("widgets.brease."+obj["name"] + " - " + filePath)
                             obj["cnt"] += 1
                 break
 
