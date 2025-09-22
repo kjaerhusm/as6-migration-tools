@@ -326,14 +326,16 @@ def read_file(file: Path):
             return file.read_text(encoding=result.encoding, errors="ignore")
     return ""
 
+
 def file_value_count(filePath, pairs):
     with open(filePath, encoding="utf8") as item:
         for line in item:
             for obj in pairs:
-                if "ID=\"" + obj["id"] + "\"" and "Value=\"" + obj["value"] + "\"" in line:
+                if 'ID="' + obj["id"] + '"' and 'Value="' + obj["value"] + '"' in line:
                     obj["cnt"] += 1
-    
+
     return pairs
+
 
 def file_value_by_id(filePath, ids):
     result = []
@@ -342,15 +344,16 @@ def file_value_by_id(filePath, ids):
             for id in ids:
                 if id in line:
                     pos = line.find("Value") + 7
-                    pos2 = line[pos:].find("\"")
-                    result.append({"name": id, "value": line[pos:(pos+pos2)]})
-    
+                    pos2 = line[pos:].find('"')
+                    result.append({"name": id, "value": line[pos : (pos + pos2)]})
+
     return result
+
 
 def file_type_count(filePath, pairs):
     with open(filePath, encoding="utf8") as item:
         for line in item:
             for type in pairs:
-                if "Type=\"" + type["type"] + "\"" in line:
+                if 'Type="' + type["type"] + '"' in line:
                     type["cnt"] += 1
     return pairs
