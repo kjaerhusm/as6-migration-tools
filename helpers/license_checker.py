@@ -36,7 +36,7 @@ def main():
         severity="INFO",
     )
 
-    analyse = ma.mappLicenseAnalyser(project_path)
+    analyse = ma.mappLicenseAnalyser(Path(project_path))
 
     # reporting is done here
     totalLicenses = []
