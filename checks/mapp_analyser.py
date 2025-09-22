@@ -4,19 +4,19 @@ from utils import utils
 from checks import hardware_check
 
 
-def mappLicenseAnalyser(project_path: Path):
+def mapp_license_analyser(project_path: Path):
     result = {}
     logical = project_path / "Logical"
     physical = project_path / "Physical"
-    mappView = None
+    mapp_view_path = None
     # scan the logical folder for a mappView folder
     for item in logical.iterdir():
         if "mappView" in item.name:
-            mappView = item
+            mapp_view_path = item
             break
 
     result["mappView"] = None
-    if mappView is not None:
+    if mapp_view_path is not None:
         result["mappView"] = {
             "breaseWidgets": utils.load_file_info("licenses", "brease_widgets"),
             "uaServerCnt": 0,
