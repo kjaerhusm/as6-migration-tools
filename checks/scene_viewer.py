@@ -61,7 +61,8 @@ def check_scene_viewer(apj_path: Path, log, verbose: bool = False):
             )
 
     # ---- 2b) mapp Trak via .hw ----
-    for hw_file in project_root.rglob("*.hw"):
+    physical_path = project_root / "Physical"
+    for hw_file in physical_path.rglob("*.hw"):
         text = utils.read_file(hw_file)
 
         if re.search(

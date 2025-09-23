@@ -4,7 +4,28 @@ from pathlib import Path
 from utils import utils
 
 
-def check_files_for_compatibility(apj_path, log, verbose=False):
+version_pattern = re.compile(r'AutomationStudio (?:Working)?Version="?([\d.]+)')
+
+
+def check_file_version(file_path):
+    """
+    Checks the version of a given file
+    """
+    required_version_prefix = "4.12"
+
+    result = set()
+    content = utils.read_file(Path(file_path))
+    version_match = version_pattern.search(content)
+    if version_match:
+        version = version_match.group(1)
+        if not version.startswith(required_version_prefix):
+            result.add((file_path, version))
+    else:
+        result.add((file_path, "Version Unknown"))
+    return list(result)
+
+
+def check_files_for_compatibility(project_path, log, verbose=False):
     """
     Checks the compatibility of .apj and .hw files within a apj_path.
     Validates that files have a minimum required version.
@@ -12,31 +33,20 @@ def check_files_for_compatibility(apj_path, log, verbose=False):
     """
     log("─" * 80 + "\nChecking project and hardware files for compatibility...")
 
-    incompatible_files = []
-    required_version_prefix = "4.12"
-    extensions = [".apj", ".hw"]
+    project_path = Path(project_path)
+    physical_path = project_path / "Physical"
 
-    version_pattern = re.compile(r'AutomationStudio (?:Working)?Version="?([\d.]+)')
-
-    for ext in extensions:
-        for path in Path(apj_path).rglob(f"*{ext}"):
-            if path.is_file():
-                content = utils.read_file(path)
-                version_match = version_pattern.search(content)
-                if version_match:
-                    version = version_match.group(1)
-                    if not version.startswith(required_version_prefix):
-                        incompatible_files.append((str(path), f"Version {version}"))
-                else:
-                    incompatible_files.append((str(path), "Version Unknown"))
-
-    if incompatible_files:
+    results = utils.scan_files_parallel(project_path, [".apj"], check_file_version)
+    results += utils.scan_files_parallel(physical_path, [".hw"], check_file_version)
+    if results:
         log(
             "The following files are incompatible with the required version:",
             severity="MANDATORY",
         )
-        for file_path, issue in incompatible_files:
-            log(f"- {file_path}: {issue}")
+        output = ""
+        for file_path, version in results:
+            output += f"\n- {file_path}: {version}"
+        log(output[1:])
         log(
             "Please ensure these files are saved at least once with Automation Studio 4.12",
             severity="MANDATORY",
@@ -47,7 +57,7 @@ def check_files_for_compatibility(apj_path, log, verbose=False):
 
     # --- Search for *.pkg files in config_folder and subfolders ---
     reference_files = []
-    for path in Path(apj_path + "/Physical").rglob("*.pkg"):
+    for path in physical_path.rglob("*.pkg"):
         # Ignore files in any directory named 'mappView'
         if "mappView" in path.parts:
             continue
@@ -74,8 +84,11 @@ def check_files_for_compatibility(apj_path, log, verbose=False):
 
     if reference_files:
         log(
-            "Some files are converted to a new format in AS6. This may break references, The following .pkg files contain file reference, make sure that the references are valid after converting to AS6:",
+            "Some files are converted to a new format in AS6. This may break references, "
+            "The following .pkg files contain file reference, make sure that the references are valid after converting to AS6:",
             severity="WARNING",
         )
+        output = ""
         for ref_file in reference_files:
-            log(f"- {ref_file}")
+            output += f"\n- {ref_file}"
+        log(output[1:])
