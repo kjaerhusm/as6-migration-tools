@@ -330,7 +330,7 @@ def read_file(file: Path):
 def file_value_count(file_path: Path, pairs):
     for line in read_file(file_path).splitlines():
         for obj in pairs:
-            if 'ID="' + obj["id"] + '"' and 'Value="' + obj["value"] + '"' in line:
+            if f'ID="{obj["id"]}"' and f'Value="{obj["value"]}"' in line:
                 obj["cnt"] += 1
 
     return pairs
@@ -339,18 +339,18 @@ def file_value_count(file_path: Path, pairs):
 def file_value_by_id(file_path: Path, ids):
     result = []
     for line in read_file(file_path).splitlines():
-        for id in ids:
-            if id in line:
-                pos = line.find("Value") + 7
-                pos2 = line[pos:].find('"')
-                result.append({"name": id, "value": line[pos : (pos + pos2)]})
+        for item in ids:
+            if item in line:
+                match = re.search(r'Value="([^"]+)"', line)
+                if match:
+                    result.append({"name": item, "value": match.group(1)})
 
     return result
 
 
 def file_type_count(file_path: Path, pairs):
     for line in read_file(file_path).splitlines():
-        for type in pairs:
-            if 'Type="' + type["type"] + '"' in line:
-                type["cnt"] += 1
+        for type_obj in pairs:
+            if f'Type="{type_obj["type"]}"' in line:
+                type_obj["cnt"] += 1
     return pairs
