@@ -65,13 +65,9 @@ def count_hardware(folder: Path):
     result = {}
     for file_path in folder.rglob("*.hw"):
         content = utils.read_file(file_path)
-        for line in content.splitlines():
-            if "<Module " in line:
-                pos = line.find("Type") + 6
-                pos2 = line[pos:].find('"')
-                module = line[pos : (pos + pos2)]
-                if not module in result:
-                    result[module] = {"cnt": 1}
-                else:
-                    result[module]["cnt"] += 1
+        matches = re.findall(r'<Module [^>]*Type="([^"]+)"', content)
+        for match in matches:
+            module = match
+            result.setdefault(module, {"cnt": 0})
+            result[module]["cnt"] += 1
     return result
