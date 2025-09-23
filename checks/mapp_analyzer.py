@@ -4,7 +4,7 @@ from utils import utils
 from checks import hardware_check
 
 
-def mapp_license_analyser(project_path: Path):
+def mapp_license_analyzer(project_path: Path):
     result = {}
     logical = project_path / "Logical"
     physical = project_path / "Physical"

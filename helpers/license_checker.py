@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from checks import mapp_analyser as ma
+from checks import mapp_analyzer as ma
 
 from utils import utils
 
@@ -236,7 +236,7 @@ def main():
         severity="INFO",
     )
 
-    analyse = ma.mapp_license_analyser(Path(project_path))
+    analyse = ma.mapp_license_analyzer(Path(project_path))
 
     # reporting is done here
     total_licenses = []
