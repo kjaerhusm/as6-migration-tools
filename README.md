@@ -71,6 +71,17 @@
 
 ---
 
+#### Windows Defender false positives
+
+⚠️ Newly built `.exe` files may sometimes be flagged by Microsoft Defender (e.g. as *Wacapew.A!ml*).  
+This is a **false positive** caused by the way Python applications are bundled with PyInstaller.
+
+- Microsoft usually clears the detection within a few days.  
+- If you don’t want to wait, you can build from source, or download an older release:  
+  👉 https://github.com/br-automation-community/as6-migration-tools/releases 
+
+---
+
 ## Included Scripts
 
 | Script                           | Purpose                                                |
