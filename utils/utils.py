@@ -301,7 +301,7 @@ def build_web_path(links, url):
             "mapp_services_help": f"{path_help}/services/mapp_services/",
             "mapp_vision_license": f"{path_web}/products/software/mapp-technology/mapp-vision/mapp-vision-licensing/",
             "mapp_vision_help": f"{path_help}/machine_vision/mapp_vision/programming/vfs/",
-            "mapp_motion_help": f"{path_help}/machine_motion/",
+            "mapp_motion_help": f"{path_help}/motion/mapp_motion/",
             "safety_help": f"{path_help}/safety/",
             "opc_ua_help": f"{path_help}/communication/opcua/",
             "as4_migration": f"{path_help}/revinfos/version-info/projekt_aus_automation_studio_4_ubernehmen/automation_studio/",

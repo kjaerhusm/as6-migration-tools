@@ -52,7 +52,7 @@ def check_access_security(physical_path: Path, log, verbose: bool = False):
 
     # (1) Global reminder about changed hashing algorithm in AS6
     log(
-        "Access & Security: Password hashing algorithm changed in AS6."
+        "Access & Security: Password hashing algorithm changed in AS6. (AS6/Migration)"
         "\n - You must re-enter the password for all users configured in the 'AccessAndSecurity/UserRoleSystem'."
         "\n - It is no longer possible to authenticate using the old stored password from the AS 4.12 project.",
         when="AS6",

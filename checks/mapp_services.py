@@ -36,7 +36,7 @@ def check_mapp_version(apj_path, log, verbose=False):
 
                 log(
                     "The automatic mapp Services configuration upgrade is only available with mapp Services 6.0."
-                    "\n - Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions.",
+                    "\n - Please ensure the project is converted using AS6 and mapp Services 6.0 before upgrading to newer mapp versions. (MappServices/Configuration_update)",
                     when="AS6",
                     severity="MANDATORY",
                 )
@@ -49,7 +49,7 @@ def check_mapp_version(apj_path, log, verbose=False):
                 log(f"Detected Mapp Motion version: {version_str}", severity="INFO")
                 log(
                     "\nYou must first upgrade mappMotion to version 6.0 using 'Change runtime versions' in AS6."
-                    "\nOnce mappMotion 6.0 is set, a dialog will assist with converting all project configurations.",
+                    "\nOnce mappMotion 6.0 is set, a dialog will assist with converting all project configurations. (MappMotion/Configuration_update)",
                     when="AS6",
                     severity="MANDATORY",
                 )
