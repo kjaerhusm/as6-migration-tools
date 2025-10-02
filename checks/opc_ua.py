@@ -19,6 +19,7 @@ def check_uad_files(root_dir: Path, log, verbose=False):
 
     log("─" * 80 + "\nChecking OPC configuration...")
 
+    # Find misplaced and old opc ua files
     required_suffix = os.path.normpath(os.path.join("Connectivity", "OpcUA"))
     misplaced_files = []
     old_version = []
@@ -37,6 +38,7 @@ def check_uad_files(root_dir: Path, log, verbose=False):
         except Exception:
             pass
 
+    # report misplaced files
     if misplaced_files:
         log(
             "The following .uad files are not located in the required Connectivity/OpcUA directory:",
@@ -53,6 +55,7 @@ def check_uad_files(root_dir: Path, log, verbose=False):
         if verbose:
             log("- All .uad files are in the correct location.", severity="INFO")
 
+    # report old opc ua file version
     if old_version:
         log(
             "The following .uad files do not have the minimum file version 9:",
@@ -69,3 +72,33 @@ def check_uad_files(root_dir: Path, log, verbose=False):
     else:
         if verbose:
             log("- All .uad files have the correct minimum version.", severity="INFO")
+
+    # Check for OPC UA activation in hardware files
+    # Search in subdirectories for .hw files
+    for subdir in root_dir.iterdir():
+        if subdir.is_dir():
+            for hw_file in subdir.rglob("*.hw"):
+                if hw_file.is_file():
+                    try:
+                        tree = ET.parse(hw_file)
+                        root_element = tree.getroot()
+                        # Search for Parameter with ID="ActivateOpcUa" and Value="1" anywhere in the XML tree
+                        # Handle default XML namespace if present (e.g., xmlns="http://br-automation.co.at/AS/Hardware")
+                        ns = {}
+                        if root_element.tag.startswith("{"):
+                            ns_uri = root_element.tag.split("}", 1)[0][1:]
+                            ns = {"as": ns_uri}
+                            xpath = ".//as:Parameter[@ID='ActivateOpcUa'][@Value='1']"
+                            matches = root_element.findall(xpath, ns)
+                        else:
+                            xpath = ".//Parameter[@ID='ActivateOpcUa'][@Value='1']"
+                            matches = root_element.findall(xpath)
+
+                        if matches:
+                            log(
+                                f"OPC UA model 1 is activated in {hw_file}. OPC UA model 1 is not supported in AS6 and will be automatically converted to model 2. This changes the namespace ID for variables.",
+                                severity="INFO",
+                            )
+                    except Exception:
+                        # Skip files that can't be parsed as XML
+                        continue
