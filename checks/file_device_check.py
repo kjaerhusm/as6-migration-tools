@@ -73,12 +73,14 @@ def check_file_devices(physical_path, log, verbose=False):
             config_name = os.path.basename(os.path.dirname(file_path))
             grouped_results.setdefault(config_name, set()).add((name, path))
 
+        output = ""
         for config_name, entries in grouped_results.items():
             results = []
             for name, path in sorted(entries):
                 results.append(f"{name} ({path})")
             result_string = ", ".join(results)
-            log(f" - Hardware configuration '{config_name}': {result_string}")
+            output += f"\n - Hardware configuration '{config_name}': {result_string}"
+        log(output[1:])
 
         log(
             "Write operations on a system partition (C:, D:, E:) are not allowed on real targets."
