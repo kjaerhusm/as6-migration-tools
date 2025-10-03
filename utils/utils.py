@@ -295,6 +295,7 @@ def build_web_path(links, url):
             "mapp_view_widget_numeric": f"{path_help}/visualization/mappview/widgets/numeric/",
             "mapp_view_widget_media": f"{path_help}/visualization/mappview/widgets/media/",
             "mapp_connect_help": f"{path_help}/visualization/mappconnect/",
+            "mapp_control_help": f"{path_help}/mechatronics/mappcontrol/",
             "mapp_services_license": f"{path_web}/products/software/mapp-technology/mapp-services/mapp-services-licensing/",
             "mapp_services_help": f"{path_help}/services/mapp_services/",
             "mapp_vision_license": f"{path_web}/products/software/mapp-technology/mapp-vision/mapp-vision-licensing/",

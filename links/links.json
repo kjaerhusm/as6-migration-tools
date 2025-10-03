@@ -339,6 +339,10 @@
     "prefix": "mapp_services_help",
     "url": "mpcom/mpcom.html"
   },
+  "mappControl Technology Package": {
+    "prefix": "mapp_control_help",
+    "url": "mappcontrol.html"
+  },
   "mappData": {
     "prefix": "mapp_services_help",
     "url": "mpdata/mpdata.html"

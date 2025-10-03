@@ -6,6 +6,7 @@ from .file_compatibility import check_files_for_compatibility
 from .file_device_check import check_file_devices
 from .hardware_check import check_hardware
 from .library_check import check_libraries
+from .mapp_control import check_mapp_control
 from .mapp_services import check_mapp_version
 from .mapp_view import check_mappView
 from .mapp_view_wdk import check_widget_lib_usage
