@@ -6,6 +6,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from typing import Union, Callable
 
 from CTkMessagebox import CTkMessagebox
 from charset_normalizer import from_path
@@ -210,7 +211,12 @@ def ask_user_gui(message: str, extra_note: str = "") -> bool:
     return response == "Yes"
 
 
-def scan_files_parallel(root_dir, extensions, process_functions, *args):
+def scan_files_parallel(
+    root_dir: Path,
+    extensions: list,
+    process_functions: Union[Callable, list[Callable]],
+    *args,
+):
     """
     Scans files in a directory tree in parallel for specific content.
 
@@ -229,23 +235,15 @@ def scan_files_parallel(root_dir, extensions, process_functions, *args):
 
     results = {func.__name__: [] for func in process_functions}
 
-    file_paths = [
-        str(path)
-        for ext in extensions
-        for path in root_dir.rglob(f"*{ext}")
-        if path.is_file()
-    ]
+    files = []
+    for ext in extensions:
+        files.extend(str(p) for p in root_dir.rglob(f"*{ext}") if p.is_file())
 
     def process_file(path):
-        file_results = {}
-        for func in process_functions:
-            file_results[func.__name__] = func(path, *args)
-        return file_results
+        return {func.__name__: func(path, *args) for func in process_functions}
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = {executor.submit(process_file, path): path for path in file_paths}
-        for future in concurrent.futures.as_completed(futures):
-            func_results = future.result()
+        for func_results in executor.map(process_file, files):
             for func_name, result in func_results.items():
                 results[func_name].extend(result)
 
