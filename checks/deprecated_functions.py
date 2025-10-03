@@ -184,17 +184,14 @@ def process_st_c_file(file_path, patterns):
         list: Matches found in the file.
     """
     results = []
-    matched_files = set()  # To store file paths and ensure uniqueness
     content = utils.read_file(Path(file_path))
 
-    # Check for other patterns if necessary
-    for pattern, reason in patterns.items():
-        if (
-            re.search(rf"\b{re.escape(pattern)}\b", content)
-            and file_path not in matched_files
-        ):
-            results.append((pattern, reason, file_path))
-            matched_files.add(file_path)  # Ensure file is added only once
+    pattern_map = {p.lower(): (p, reason) for p, reason in patterns.items()}
+    matches = re.findall(r"\b([A-Za-z0-9_]+)\b", content)
+    for match in matches:
+        key = match.lower()
+        if key in pattern_map:
+            results.append((pattern_map[key][0], pattern_map[key][1], file_path))
     return results
 
 
