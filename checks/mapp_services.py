@@ -9,7 +9,7 @@ def check_mapp_version(apj_path, log, verbose=False):
     per configuration. Respects referenced packages in cpu.pkg.
     """
 
-    log("─" * 80 + "\nChecking mapp version in project file...")
+    log("─" * 80 + "\nChecking mapp configuration in project file...")
 
     # --- Read .apj as plain text (robust vs. namespaces/BOM) ---
     txt = utils.read_file(apj_path)
@@ -135,3 +135,34 @@ def check_mapp_version(apj_path, log, verbose=False):
             )
         message += "\n\nYou can use the script 'helpers/create_mapp_folders.py' to create the mapp folder structure in the Physical directory."
         log(message, when="AS4", severity="MANDATORY")
+
+    # Check access rights in mpfile
+    # Search in subdirectories for .mpfilemanager files
+    for subdir in physical_path.iterdir():
+        if subdir.is_dir():
+            for mpfilemanager in subdir.rglob("*.mpfilemanager"):
+                if mpfilemanager.is_file():
+                    try:
+                        import xml.etree.ElementTree as ET
+
+                        tree = ET.parse(mpfilemanager)
+                        root_element = tree.getroot()
+
+                        # Detect and handle default namespace if present
+                        if root_element.tag.startswith("{"):
+                            ns_uri = root_element.tag.split("}", 1)[0][1:]
+                            ns = {"as": ns_uri}
+                            xpath = ".//as:Property[@ID='Role'][@Value='Everyone']"
+                            matches = root_element.findall(xpath, ns)
+                        else:
+                            xpath = ".//Property[@ID='Role'][@Value='Everyone']"
+                            matches = root_element.findall(xpath)
+
+                        if matches:
+                            log(
+                                f"Detected file manager access role 'Everyone' in: {mpfilemanager}. This will no longer work unless the user anonymous also has one of the well-known roles. See help (MappServices/mapp File/Configuration) under access rights for more details.",
+                                severity="MANDATORY",
+                            )
+                    except Exception:
+                        # Skip files that can't be parsed as XML
+                        continue

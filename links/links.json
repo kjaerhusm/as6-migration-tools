@@ -27,6 +27,10 @@
     "prefix": "mapp_services_help",
     "url": "allgemeines/anderungen/konfigurations-update.html"
   },
+  "MappServices/mapp File/Configuration": {
+    "prefix": "mapp_services_help",
+    "url": "mpfile/config/mpfilemanager_konfiguration.html"
+  },
   "MappMotion/Configuration_update": {
     "prefix": "mapp_services_help",
     "url": "allgemeines/versionsinformation/migration.html"
