@@ -1,5 +1,5 @@
 import os
-import xml.etree.ElementTree as ET
+from lxml import etree
 from pathlib import Path
 
 
@@ -30,7 +30,7 @@ def check_uad_files(root_dir: Path, log, verbose=False):
             misplaced_files.append(str(path))
 
         try:
-            tree = ET.parse(path)
+            tree = etree.parse(path)
             root_element = tree.getroot()
             file_version = int(root_element.attrib.get("FileVersion", 0))
             if file_version < 9:
@@ -57,48 +57,48 @@ def check_uad_files(root_dir: Path, log, verbose=False):
 
     # report old opc ua file version
     if old_version:
-        log(
-            "The following .uad files do not have the minimum file version 9:",
-            when="AS4",
-            severity="MANDATORY",
+        output = (
+            "The following .uad files do not have the minimum file version 9.\n"
+            + "Please edit these, make a small change and save them to trigger the update.\n"
         )
         for file_path in old_version:
-            log(f"- {file_path}")
-        log(
-            "Please edit the uad file, make a small change and save the file to trigger the file update.",
-            when="AS4",
-            severity="MANDATORY",
-        )
+            output += f"\n- {file_path}"
+        log(output, when="AS4", severity="MANDATORY")
     else:
         if verbose:
             log("- All .uad files have the correct minimum version.", severity="INFO")
 
     # Check for OPC UA activation in hardware files
     # Search in subdirectories for .hw files
+    output = ""
     for subdir in root_dir.iterdir():
-        if subdir.is_dir():
-            for hw_file in subdir.rglob("*.hw"):
-                if hw_file.is_file():
-                    try:
-                        tree = ET.parse(hw_file)
-                        root_element = tree.getroot()
-                        # Search for Parameter with ID="ActivateOpcUa" and Value="1" anywhere in the XML tree
-                        # Handle default XML namespace if present (e.g., xmlns="http://br-automation.co.at/AS/Hardware")
-                        ns = {}
-                        if root_element.tag.startswith("{"):
-                            ns_uri = root_element.tag.split("}", 1)[0][1:]
-                            ns = {"as": ns_uri}
-                            xpath = ".//as:Parameter[@ID='ActivateOpcUa'][@Value='1']"
-                            matches = root_element.findall(xpath, ns)
-                        else:
-                            xpath = ".//Parameter[@ID='ActivateOpcUa'][@Value='1']"
-                            matches = root_element.findall(xpath)
+        if not subdir.is_dir():
+            continue
 
-                        if matches:
-                            log(
-                                f"OPC UA model 1 is activated in {hw_file}. OPC UA model 1 is not supported in AS6 and will be automatically converted to model 2. This changes the namespace ID for variables.",
-                                severity="INFO",
-                            )
-                    except Exception:
-                        # Skip files that can't be parsed as XML
-                        continue
+        for hw_file in subdir.rglob("*.hw"):
+            if not hw_file.is_file():
+                continue
+
+            try:
+                tree = etree.parse(hw_file)
+                root_element = tree.getroot()
+                # Search for Parameter with ID="ActivateOpcUa" and Value="1" anywhere in the XML tree
+                matches = root_element.xpath(
+                    ".//*[local-name()='Parameter'][@ID='ActivateOpcUa'][@Value='1']"
+                )
+
+                if matches:
+                    if len(output) == 0:
+                        output += (
+                            "OPC UA model 1 is not supported in AS6 and will be automatically converted to model 2. "
+                            "This changes the namespace ID for variables."
+                            "\nThe following hardware files have OPC UA model 1 activated:\n"
+                        )
+                    output += f"\n- {hw_file}"
+
+            except Exception:
+                # Skip files that can't be parsed as XML
+                continue
+
+    if output:
+        log(output, severity="INFO")
