@@ -1,5 +1,7 @@
 import re
 
+from lxml import etree
+
 from utils import utils
 
 
@@ -98,15 +100,11 @@ def check_mapp_version(apj_path, log, verbose=False):
         if not missing:
             continue
 
-        # 2) If missing, try to resolve via cpu.pkg references (case-insensitive name for the file)
+        # 2) If missing, try to resolve via cpu.pkg references
         def _find_cpu_pkg_path(cfg_dir):
-            for sub in sorted(cfg_dir.iterdir()):
-                if not sub.is_dir():
-                    continue
-                for candidate in ("cpu.pkg", "Cpu.pkg", "CPU.pkg"):
-                    p = sub / candidate
-                    if p.exists():
-                        return p
+            for sub in cfg_dir.rglob("cpu.pkg"):
+                if sub.is_file():
+                    return sub
             return None
 
         cpu_pkg_path = _find_cpu_pkg_path(config_folder)
@@ -139,30 +137,25 @@ def check_mapp_version(apj_path, log, verbose=False):
     # Check access rights in mpfile
     # Search in subdirectories for .mpfilemanager files
     for subdir in physical_path.iterdir():
-        if subdir.is_dir():
-            for mpfilemanager in subdir.rglob("*.mpfilemanager"):
-                if mpfilemanager.is_file():
-                    try:
-                        import xml.etree.ElementTree as ET
+        if not subdir.is_dir():
+            continue
 
-                        tree = ET.parse(mpfilemanager)
-                        root_element = tree.getroot()
+        for mpfilemanager in subdir.rglob("*.mpfilemanager"):
+            if not mpfilemanager.is_file():
+                continue
 
-                        # Detect and handle default namespace if present
-                        if root_element.tag.startswith("{"):
-                            ns_uri = root_element.tag.split("}", 1)[0][1:]
-                            ns = {"as": ns_uri}
-                            xpath = ".//as:Property[@ID='Role'][@Value='Everyone']"
-                            matches = root_element.findall(xpath, ns)
-                        else:
-                            xpath = ".//Property[@ID='Role'][@Value='Everyone']"
-                            matches = root_element.findall(xpath)
+            try:
+                tree = etree.parse(mpfilemanager)
+                xpath = ".//*[local-name()='Property'][@ID='Role'][@Value='Everyone']"
+                matches = tree.xpath(xpath)
 
-                        if matches:
-                            log(
-                                f"Detected file manager access role 'Everyone' in: {mpfilemanager}. This will no longer work unless the user anonymous also has one of the well-known roles. See help (MappServices/mapp File/Configuration) under access rights for more details.",
-                                severity="MANDATORY",
-                            )
-                    except Exception:
-                        # Skip files that can't be parsed as XML
-                        continue
+                if matches:
+                    log(
+                        f"Detected file manager access role 'Everyone' in: {mpfilemanager}. "
+                        "This will no longer work unless the user anonymous also has one of the well-known roles. "
+                        "See help (MappServices/mapp File/Configuration) under access rights for more details.",
+                        severity="MANDATORY",
+                    )
+            except Exception:
+                # Skip files that can't be parsed as XML
+                continue
