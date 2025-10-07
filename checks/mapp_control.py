@@ -1,6 +1,6 @@
 import re
-import xml.etree.ElementTree as ET
 
+from lxml import etree
 from pathlib import Path
 
 from utils import utils
@@ -18,7 +18,7 @@ def check_mapp_control(apj_path: Path, log, verbose=False):
     # 1. Check .apj file in root for mappControl
     if apj_path:
         try:
-            tree = ET.parse(apj_path)
+            tree = etree.parse(str(apj_path))
             root = tree.getroot()
             mapp_control = root.find(".//{*}mappControl")
             if mapp_control is not None:

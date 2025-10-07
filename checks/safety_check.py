@@ -1,5 +1,6 @@
 import re
-import xml.etree.ElementTree as ET
+
+from lxml import etree
 
 from utils import utils
 
@@ -14,7 +15,7 @@ def check_safety_release(apj_path, log, verbose=False):
     # 1. Check .apj file in root for MappSafety
     if apj_path:
         try:
-            tree = ET.parse(apj_path)
+            tree = etree.parse(apj_path)
             root = tree.getroot()
             # Check <mappSafety Version="..."/>
             if root.find(".//{*}mappSafety") is not None:

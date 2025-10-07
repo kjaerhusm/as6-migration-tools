@@ -12,10 +12,10 @@ Action:
   and provide a link to the B&R community.
 """
 
+from enum import Enum
+from lxml import etree
 from pathlib import Path
 from typing import Iterator, Optional
-from enum import Enum
-import xml.etree.ElementTree as ET
 
 
 class WidgetLibraryType(Enum):
@@ -79,7 +79,7 @@ def _detect_widget_library_type(widget_lib_path: Path) -> Optional[WidgetLibrary
     mapping_file = widget_lib_path / "WidgetLibrary.mapping"
     if mapping_file.exists():
         # Parse xml file WidgetLibrary.mapping and search for the first "Mapping" in the Mapping node test if a <oType> attribute exists
-        tree = ET.parse(mapping_file)
+        tree = etree.parse(mapping_file)
         root = tree.getroot()
         mapping_node = root.find("Mapping")
         if mapping_node is not None and mapping_node.get("oType") is not None:

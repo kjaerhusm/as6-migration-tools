@@ -1,5 +1,6 @@
 import re
-import xml.etree.ElementTree as ET
+
+from lxml import etree
 
 from utils import utils
 
@@ -54,11 +55,11 @@ def check_mappView(apj_path, log, verbose=False):
             logical_path = apj_path.parent / "Logical"
             try:
                 for content_path in logical_path.rglob("*.content"):
-                    tree = ET.parse(content_path)
+                    tree = etree.parse(str(content_path))
                     root_elem = tree.getroot()
 
-                    for widget in root_elem.findall(".//c:Widget", ns):
-                        xsi_type = widget.attrib.get(f"{{{ns['xsi']}}}type")
+                    for widget in root_elem.xpath(".//c:Widget", namespaces=ns):
+                        xsi_type = widget.get(f"{{{ns['xsi']}}}type")
                         if xsi_type in {
                             "widgets.brease.AuditList",
                             "widgets.brease.TextPad",
@@ -70,7 +71,7 @@ def check_mappView(apj_path, log, verbose=False):
                                 "\n - Check in the following (Configuration View/AccessAndSecurity/UserRoleSystem/User.user) that a user with role BR_Engineer is present",
                                 severity="INFO",
                             )
-            except ET.ParseError as e:
+            except etree.ParseError as e:
                 log(f"XML parsing error in {content_path}: {e}", severity="ERROR")
             except Exception as e:
                 log(

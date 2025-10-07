@@ -1,4 +1,6 @@
 import re
+
+from lxml import etree
 from pathlib import Path
 
 from utils import utils
@@ -63,20 +65,11 @@ def check_files_for_compatibility(project_path, log, verbose=False):
             continue
         if path.is_file():
             try:
-                import xml.etree.ElementTree as ET
-
-                tree = ET.parse(path)
+                tree = etree.parse(str(path))
                 root = tree.getroot()
-                # Search for any node with Type="File" and Reference="true" attributes
-                found = False
-                for elem in root.iter():
-                    if (
-                        elem.attrib.get("Type") == "File"
-                        and elem.attrib.get("Reference") == "true"
-                    ):
-                        found = True
-                        break
-                if found:
+                # Suche mit XPath nach allen Elementen mit Type="File" und Reference="true"
+                matches = root.xpath('.//*[@Type="File" and @Reference="true"]')
+                if matches:
                     reference_files.append(str(path))
             except Exception as e:
                 # Fallback: ignore file if not valid XML
