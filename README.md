@@ -1,12 +1,10 @@
 <!-- Logo -->
 <div align="center">
   <a href="https://github.com/br-automation-community/as6-migration-tools/releases/latest" target="_blank" rel="noopener noreferrer">
-
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.svg" />
       <img alt="as6-migration-tools logo" src="docs/logo-light.svg" width="720" />
     </picture>
-
   </a>
 </div>
 
@@ -14,14 +12,10 @@
 <p align="center">
   <img src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2Fbr-automation-community%2Fas6-migration-tools&label=Visitors&icon=heart-fill&color=%23495057&message=&style=flat&tz=localtime" alt="Visitors"/>
   <a href="https://github.com/br-automation-community/as6-migration-tools/releases" target="_blank" rel="noopener noreferrer">
-
     <img src="https://img.shields.io/github/downloads/br-automation-community/as6-migration-tools/total.svg" alt="Downloads"/>
-
   </a>
   <a href="https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg" target="_blank" rel="noopener noreferrer">
-
     <img src="https://github.com/hilch/BandR-badges/blob/main/Made-For-BrAutomation.svg" alt="Made for B&R"/>
-
   </a>
 </p>
 
@@ -44,14 +38,10 @@
 <!-- CTAs -->
 <p align="center">
   <a href="https://github.com/br-automation-community/as6-migration-tools/releases/latest" target="_blank" rel="noopener noreferrer">
-
     <img alt="Download EXE" src="https://img.shields.io/badge/Download-EXE-informational?style=for-the-badge&logo=windows&logoColor=white" />
-
   </a>
   <a href="https://github.com/br-automation-community/as6-migration-tools/issues/new/choose" target="_blank" rel="noopener noreferrer">
-
     <img alt="Report Issue" src="https://img.shields.io/badge/Report-Issue-critical?style=for-the-badge&logo=github" />
-
   </a>
 </p>
 
@@ -59,21 +49,22 @@
 
 ## Features
 
-* Reduce manual grepping and trial-and-error when opening AS4 projects in AS6.
-* Catch breaking changes early: libraries, function blocks/functions, hardware, mapp, and common pitfalls.
-* Repeatable, deterministic scans you can run before every commit or release.
-* Non-destructive by default: analyze first; apply helper conversions when you’re ready.
-* Works fully offline; no telemetry; everything runs locally.
-* Fast feedback on large projects; verbose mode for deep dives.
-* One clean, shareable report per run (severity + path + hint).
-* Windows EXE for one-click usage; Python CLI for power users and CI.
+- Reduce manual grepping and trial-and-error when opening AS4 projects in AS6.
+- Catch breaking changes early: libraries, function blocks/functions, hardware, mapp, and common pitfalls.
+- Repeatable, deterministic scans you can run before every commit or release.
+- Non-destructive by default: analyze first; apply helper conversions when you’re ready.
+- Works fully offline; no telemetry; everything runs locally.
+- Fast feedback on large projects; verbose mode for deep dives.
+- One clean, shareable report per run (severity + path + hint).
+- Windows EXE for one-click usage; Python CLI for power users and CI.
 
 ---
 
+
 ## Get started
 
-* **Windows (recommended):** [Download latest release](https://github.com/br-automation-community/as6-migration-tools/releases/latest) → Unzip → Run `as6-migration-tools.exe`
-* **From source (devs):** `pip install -r requirements.txt` → `python gui_launcher.py` **or** `python as4_to_as6_analyzer.py "<path>"`
+- **Windows (recommended):** [Download latest release](https://github.com/br-automation-community/as6-migration-tools/releases/latest) → Unzip → Run `as6-migration-tools.exe`
+- **From source (devs):** `pip install -r requirements.txt` → `python gui_launcher.py` **or** `python as4_to_as6_analyzer.py "<path>"`
 
 > 💡 **Tip:** If you're using WSL, convert Windows paths like this:  
 > `C:\Projects\MyProject` → `/mnt/c/Projects/MyProject`
@@ -82,11 +73,11 @@
 
 #### Windows Defender false positives
 
-⚠️ Newly built `.exe` files may sometimes be flagged by Microsoft Defender (e.g. as *Wacapew. A!ml*).  
+⚠️ Newly built `.exe` files may sometimes be flagged by Microsoft Defender (e.g. as *Wacapew.A!ml*).  
 This is a **false positive** caused by the way Python applications are bundled with PyInstaller.
 
-* Microsoft usually clears the detection within a few days.  
-* If you don’t want to wait, you can build from source, or download an older release:  
+- Microsoft usually clears the detection within a few days.  
+- If you don’t want to wait, you can build from source, or download an older release:  
   👉 https://github.com/br-automation-community/as6-migration-tools/releases 
 
 ---
@@ -95,13 +86,13 @@ This is a **false positive** caused by the way Python applications are bundled w
 
 | Script                           | Purpose                                                |
 |----------------------------------|--------------------------------------------------------|
-| `gui_launcher.py` | GUI for running the scripts                            |
-| `as4_to_as6_analyzer.py` | Main analysis and migration report generator           |
-| `helpers/asmath_to_asbrmath.py` | Replaces deprecated AsMath functions                   |
+| `gui_launcher.py`                | GUI for running the scripts                            |
+| `as4_to_as6_analyzer.py`         | Main analysis and migration report generator           |
+| `helpers/asmath_to_asbrmath.py`  | Replaces deprecated AsMath functions                   |
 | `helpers/asstring_to_asbrstr.py` | Replaces deprecated AsString functions                 |
-| `helpers/asopcua_update.py` | Updates OPC UA client code for AR 6 compatibility      |
-| `helpers/mappmotion_update.py` | Updates mappMotion code for mappMotion 6 compatibility |
-| `helpers/license_checker.py` | Searching for needed mapp technology licenses          |
+| `helpers/asopcua_update.py`      | Updates OPC UA client code for AR 6 compatibility      |
+| `helpers/mappmotion_update.py`   | Updates mappMotion code for mappMotion 6 compatibility |
+| `helpers/license_checker.py`     | Searching for needed mapp technology licenses          |
 
 Additional helper scripts may be added in future versions - pull requests welcome.
 
@@ -114,29 +105,27 @@ To prevent this, either use the GUI or change the call to `python -m helpers.<an
 
 ## Requirements
 
-* Python 3.12 (tested)
-* Designed for Automation Studio 4.12 projects
-* Generates reports to assist in migration to Automation Studio 6.x
+- Python 3.12 (tested)
+- Designed for Automation Studio 4.12 projects
+- Generates reports to assist in migration to Automation Studio 6.x
 
 ---
 
 ## Limitations
 
-* This tool does not perform full automatic migration of projects.
-* It provides analysis and recommendations to assist developers during migration.
-* Helper scripts make best-effort changes based on known patterns, but may not cover all edge cases.
-* Manual review and validation is always required after running the tool.
-
----
+- This tool does not perform full automatic migration of projects.
+- It provides analysis and recommendations to assist developers during migration.
+- Helper scripts make best-effort changes based on known patterns, but may not cover all edge cases.
+- Manual review and validation is always required after running the tool.
 
 ## Update Notifications
 
 On startup the GUI automatically checks if a newer release is available on GitHub.
 If a newer version exists a popup appears with:
 
-* Link to the release (opens default browser)
-* Release notes (truncated)
-* Checkbox: "Ignore this version" – suppresses further notices for that exact tag/build.
+- Link to the release (opens default browser)
+- Release notes (truncated)
+- Checkbox: "Ignore this version" – suppresses further notices for that exact tag/build.
 
 The ignored version is stored locally inside a small JSON file and you will only be notified again once a higher version is published.
 
@@ -144,10 +133,10 @@ The ignored version is stored locally inside a small JSON file and you will only
 
 ## Contributing
 
-* Found an issue? Please open a GitHub issue.
-* Have ideas or improvements?  
+- Found an issue? Please open a GitHub issue.
+- Have ideas or improvements?  
   Fork the repo and submit a pull request - contributions are very welcome!
-  + Please run the [black](https://black.readthedocs.io/en/stable/) formatter prior to committing any changes to ensure a consistent style. \
+  - Please run the [black](https://black.readthedocs.io/en/stable/) formatter prior to committing any changes to ensure a consistent style. \
     Hint: PyCharm allows to do so automatically via Settings->Tools->Black
 
 ---
