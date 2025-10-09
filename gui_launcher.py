@@ -105,7 +105,6 @@ class ModernMigrationGUI:
             "AsMathToAsBrMath": self.resource_path("helpers/asmath_to_asbrmath.py"),
             "AsStringToAsBrStr": self.resource_path("helpers/asstring_to_asbrstr.py"),
             "OpcUa Update": self.resource_path("helpers/asopcua_update.py"),
-            "Create mapp folders": self.resource_path("helpers/create_mapp_folders.py"),
             "MappMotion Update": self.resource_path("helpers/mappmotion_update.py"),
             "License checker": self.resource_path("helpers/license_checker.py"),
         }
