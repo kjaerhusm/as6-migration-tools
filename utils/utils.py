@@ -37,7 +37,10 @@ def get_version() -> str:
     # 1) CI-provided environment variable
     env_ver = os.getenv("RELEASE_VERSION")
     if env_ver:
-        return env_ver.strip()
+        # Strip optional build metadata (e.g. 2025.10.09.0955+g67b92ee -> 2025.10.09.0955)
+        base = env_ver.strip().split("+", 1)[0]
+        if base:
+            return base
 
     # 2) When frozen by PyInstaller, read bundled version.txt if present
     try:
@@ -51,7 +54,9 @@ def get_version() -> str:
                 if vf.is_file():
                     txt = read_file(vf).strip()
                     if txt:
-                        return txt
+                        txt_base = txt.split("+", 1)[0]
+                        if txt_base:
+                            return txt_base
     except Exception:
         pass
 

@@ -116,6 +116,11 @@ class ModernMigrationGUI:
         self.update_menubar_theme()
         self.selected_folder.trace_add("write", self.toggle_run_button)
         self.toggle_run_button()
+        # After building UI trigger async update check
+        try:
+            threading.Thread(target=self._async_check_updates, daemon=True).start()
+        except Exception:
+            pass
 
     def resource_path(self, rel_path):
         base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
@@ -1020,6 +1025,144 @@ class ModernMigrationGUI:
 
     def run(self):
         self.root.mainloop()
+
+    # --- Update Check Integration ---
+    def _async_check_updates(self):
+        try:
+            from update_check import check_for_newer
+
+            current = utils.get_version()
+
+            info = check_for_newer(current)
+            if info:
+                # Schedule popup in main thread
+                self.root.after(0, lambda: self._show_update_popup(info))
+        except Exception:
+            pass
+
+    def _show_update_popup(self, info: dict):
+        # Do not show if window already destroyed
+        if not hasattr(self, "root"):
+            return
+        appearance = ctk.get_appearance_mode()
+        bg = "#f0f0f0" if appearance == "Light" else "#2a2d2e"
+        fg = "#000000" if appearance == "Light" else "#ffffff"
+
+        win = tk.Toplevel(self.root)
+        win.withdraw()
+        win.title("Update Available")
+        win.configure(bg=bg)
+        win.geometry("720x420")
+        win.resizable(False, False)
+        try:
+            icon_path = os.path.join(
+                getattr(sys, "_MEIPASS", os.path.abspath(".")), "gui_icon.ico"
+            )
+            win.iconbitmap(icon_path)
+        except Exception:
+            pass
+
+        tag = info.get("tag")
+        url = info.get("html_url") or info.get("download_url")
+        raw_body = info.get("body", "") or ""
+        body = raw_body.strip()[:4000]
+
+        # Header
+        tk.Label(win, text=f"New Version: {tag}", font=LABEL_FONT, bg=bg, fg=fg).pack(
+            pady=(10, 4), anchor="w", padx=16
+        )
+
+        # Scrollable release notes (use CTkTextbox if available; else fallback to tk.Text)
+        text_frame = tk.Frame(win, bg=bg)
+        text_frame.pack(fill="both", expand=True, padx=16)
+        notes = tk.Text(
+            text_frame,
+            wrap="word",
+            height=10,
+            bg=bg,
+            fg=fg,
+            relief="flat",
+            borderwidth=0,
+        )
+        notes.insert("1.0", body or "(No release notes)")
+        notes.configure(state="disabled")
+        notes.pack(fill="both", expand=True)
+
+        # Ignore checkbox
+        ignore_var = tk.BooleanVar(value=False)
+        chk = tk.Checkbutton(
+            win,
+            text="Ignore this version",
+            variable=ignore_var,
+            bg=bg,
+            fg=fg,
+            activebackground=bg,
+            activeforeground=fg,
+            selectcolor=bg,
+        )
+        chk.pack(anchor="w", padx=16, pady=(6, 0))
+
+        # Button row
+        btn_row = tk.Frame(win, bg=bg)
+        btn_row.pack(fill="x", pady=14, padx=16)
+
+        def open_release():
+            if url:
+                webbrowser.open_new(url)
+            win.destroy()
+
+        def later():
+            if ignore_var.get():
+                try:
+                    from update_check import set_ignored_version
+
+                    set_ignored_version(tag)
+                except Exception:
+                    pass
+            win.destroy()
+
+        ctk.CTkButton(
+            btn_row,
+            text="Open Release",
+            command=open_release,
+            fg_color=B_R_BLUE,
+            hover_color=HOVER_BLUE,
+            font=BUTTON_FONT,
+            width=160,
+            height=36,
+            corner_radius=8,
+        ).pack(side="left")
+        ctk.CTkButton(
+            btn_row,
+            text="Later",
+            command=later,
+            fg_color="#444444",
+            hover_color="#555555",
+            font=BUTTON_FONT,
+            width=120,
+            height=36,
+            corner_radius=8,
+        ).pack(side="right")
+
+        # Center and show
+        win.update_idletasks()
+        x = self.root.winfo_rootx() + (self.root.winfo_width() // 2) - (720 // 2)
+        y = self.root.winfo_rooty() + (self.root.winfo_height() // 2) - (420 // 2)
+        win.geometry(f"+{x}+{y}")
+        win.transient(self.root)
+        win.grab_set()
+        win.focus_set()
+        win.bind("<Escape>", lambda e: win.destroy())
+        win.deiconify()
+
+    def _center_window(self, win, w, h):
+        try:
+            win.update_idletasks()
+            x = self.root.winfo_rootx() + (self.root.winfo_width() // 2) - (w // 2)
+            y = self.root.winfo_rooty() + (self.root.winfo_height() // 2) - (h // 2)
+            win.geometry(f"{w}x{h}+{x}+{y}")
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
