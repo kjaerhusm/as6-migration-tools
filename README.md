@@ -91,7 +91,6 @@ This is a **false positive** caused by the way Python applications are bundled w
 | `helpers/asmath_to_asbrmath.py`  | Replaces deprecated AsMath functions                   |
 | `helpers/asstring_to_asbrstr.py` | Replaces deprecated AsString functions                 |
 | `helpers/asopcua_update.py`      | Updates OPC UA client code for AR 6 compatibility      |
-| `helpers/create_mapp_folders.py` | Creates the newer folders for the mapp components      |
 | `helpers/mappmotion_update.py`   | Updates mappMotion code for mappMotion 6 compatibility |
 | `helpers/license_checker.py`     | Searching for needed mapp technology licenses          |
 
