@@ -134,7 +134,7 @@ jobs:
             // Head = the commit we built (squash-merge on main)
             const head = `${{ needs.build.outputs.built_sha }}`;
 
-            let md = '## Commit messages\n\n';
+            let md = '### Changes\n\n';
             if (!baseTag) {
               md += 'Initial release.\n';
             } else {
@@ -151,7 +151,6 @@ jobs:
               }).join('\n') || '- No commits';
 
               md += `**Since ${baseTag}:**\n${commits}\n\n`;
-              md += `**Full Changelog:** https://github.com/${owner}/${repo}/compare/${baseTag}...${head}\n`;
             }
 
             core.setOutput('markdown', md);
@@ -190,6 +189,7 @@ jobs:
           body: |
             ✅ This release contains:
             - The latest GUI tool (`as6-migration-tools.zip`)
+            - SHA-256 checksum file (`as6-migration-tools.zip.sha256`) to verify the ZIP
             - Auto-generated source archives by GitHub (see "Source code" links)
 
             ${{ steps.notes.outputs.markdown }}
