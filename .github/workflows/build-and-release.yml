@@ -110,30 +110,31 @@ jobs:
           name: release-artifacts
           path: release
 
-      - name: Generate changelog since last release
+      # === Commit messages only (since last release) ===
+      - name: Generate commit messages since last release
         id: notes
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // Determine repo
+            // Identify repository
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
 
-            // Base = latest non-draft, non-prerelease tag
+            // Base = latest non-draft, non-prerelease release tag
             let baseTag = null;
             try {
               const last = await github.rest.repos.getLatestRelease({ owner, repo });
               baseTag = last.data.tag_name; // e.g. v2025.10.08.0930
               core.info(`Previous release: ${baseTag}`);
-            } catch (e) {
+            } catch {
               core.info('No previous release found (initial release).');
             }
 
-            // Head = the commit you built in the build job (squash-merge on main)
+            // Head = the commit we built (squash-merge on main)
             const head = `${{ needs.build.outputs.built_sha }}`;
 
-            let md = '## Changes\n\n';
+            let md = '## Commit messages\n\n';
             if (!baseTag) {
               md += 'Initial release.\n';
             } else {
@@ -141,30 +142,24 @@ jobs:
                 owner, repo, basehead: `${baseTag}...${head}`
               });
 
+              // Map to single-line commit subjects, no @mentions
               const commits = (cmp.data.commits || []).map(c => {
                 const sha   = c.sha.substring(0,7);
-                const title = (c.commit.message || '').split('\n')[0];
-                const who   = c.author?.login || c.commit?.author?.name || 'unknown';
-                return `- \`${sha}\` ${title} (@${who})`;
+                let title   = (c.commit.message || '').split('\n')[0];
+                if (title.length > 120) title = title.slice(0,117) + '...';
+                return `- [${sha}] ${title}`;
               }).join('\n') || '- No commits';
 
-              const files = (cmp.data.files || []).map(f => {
-                const ad = f.additions ?? 0;
-                const de = f.deletions ?? 0;
-                return `- **${(f.status || '').toUpperCase()}** ${f.filename} (+${ad}/-${de})`;
-              }).join('\n') || '- No file changes';
-
-              md += `**Commits since ${baseTag}:**\n${commits}\n\n`;
-              md += `**Changed files:**\n${files}\n`;
+              md += `**Since ${baseTag}:**\n${commits}\n\n`;
+              md += `**Full Changelog:** https://github.com/${owner}/${repo}/compare/${baseTag}...${head}\n`;
             }
 
-            core.setOutput('markdown', md)
+            core.setOutput('markdown', md);
 
-      # Save the markdown as an artifact (use heredoc to preserve formatting)
+      # Save the markdown as an artifact (heredoc preserves formatting)
       - name: Save changelog artifact
         shell: bash
         run: |
-          # Write the multi-line Markdown exactly as-is (no shell expansion)
           cat > release-notes.md <<'EOF'
           ${{ steps.notes.outputs.markdown }}
           EOF
@@ -190,12 +185,13 @@ jobs:
           name: "AS6 Migration Tools ${{ needs.prepare.outputs.version_ui }}" # 2025.08.27.1109+gabc1234
           make_latest: true
           prerelease: false
-          generate_release_notes: false
+          # Enable GitHub auto-notes (PR-oriented) AND keep your commit-only section above
+          generate_release_notes: true
           body: |
             ✅ This release contains:
             - The latest GUI tool (`as6-migration-tools.zip`)
             - Auto-generated source archives by GitHub (see "Source code" links)
-            
+
             ${{ steps.notes.outputs.markdown }}
           files: |
             release/as6-migration-tools.zip
