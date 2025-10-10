@@ -134,7 +134,7 @@ jobs:
             // Head = the commit we built (squash-merge on main)
             const head = `${{ needs.build.outputs.built_sha }}`;
 
-            let md = '### Changelog:\n\n';
+            let md = '#### Changelog:\n\n';
             if (!baseTag) {
               md += 'Initial release.\n';
             } else {
