@@ -110,7 +110,7 @@ jobs:
           name: release-artifacts
           path: release
 
-      # === Commit messages only (since last release) ===
+      # === Minimal commit messages (since last release), no "Since ..." line ===
       - name: Generate commit messages since last release
         id: notes
         uses: actions/github-script@v7
@@ -134,7 +134,7 @@ jobs:
             // Head = the commit we built (squash-merge on main)
             const head = `${{ needs.build.outputs.built_sha }}`;
 
-            let md = '### Changes\n\n';
+            let md = '### Changelog:\n\n';
             if (!baseTag) {
               md += 'Initial release.\n';
             } else {
@@ -142,15 +142,15 @@ jobs:
                 owner, repo, basehead: `${baseTag}...${head}`
               });
 
-              // Map to single-line commit subjects, no @mentions
-              const commits = (cmp.data.commits || []).map(c => {
+              // Map to single-line commit subjects (no @mentions, no bullets)
+              const lines = (cmp.data.commits || []).map(c => {
                 const sha   = c.sha.substring(0,7);
                 let title   = (c.commit.message || '').split('\n')[0];
                 if (title.length > 120) title = title.slice(0,117) + '...';
-                return `- [${sha}] ${title}`;
-              }).join('\n') || '- No commits';
+                return `[${sha}] ${title}`;
+              });
 
-              md += `**Since ${baseTag}:**\n${commits}\n\n`;
+              md += (lines.length ? lines.join('\n') : 'No commits') + '\n';
             }
 
             core.setOutput('markdown', md);
@@ -184,8 +184,7 @@ jobs:
           name: "AS6 Migration Tools ${{ needs.prepare.outputs.version_ui }}" # 2025.08.27.1109+gabc1234
           make_latest: true
           prerelease: false
-          # Enable GitHub auto-notes (PR-oriented) AND keep your commit-only section above
-          generate_release_notes: true
+          generate_release_notes: false
           body: |
             ✅ This release contains:
             - The latest GUI tool (`as6-migration-tools.zip`)
